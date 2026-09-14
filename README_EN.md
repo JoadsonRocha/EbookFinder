@@ -1,5 +1,7 @@
 ﻿<div align="center">
 
+<img src="./logo.png" width="130" alt="EbookFinder Logo" style="border-radius:24px; box-shadow:0 8px 30px rgba(229, 169, 59, 0.35); margin-bottom:12px;" />
+
 # 📚 EbookFinder
 
 ### Smart Local E-book and Digital Document Organizer & Reader

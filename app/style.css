@@ -120,6 +120,28 @@ header#appHeader {
   transition: var(--transition-normal);
 }
 
+.logo-img {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: 0 4px 18px var(--amber-glow);
+  transition: var(--transition-normal);
+  border: 1px solid rgba(229, 169, 59, 0.3);
+}
+
+.logo:hover .logo-img {
+  transform: rotate(-5deg) scale(1.06);
+}
+
+.popup-logo-img {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px var(--amber-glow);
+  border: 1px solid rgba(229, 169, 59, 0.4);
+}
 .logo:hover .logo-icon {
   transform: rotate(-6deg) scale(1.06);
 }
