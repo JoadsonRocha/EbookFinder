@@ -1,0 +1,292 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EbookFinder — Organizador e Leitor de Livros Digitais</title>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       CABEÇALHO PRINCIPAL
+       ============================================================ -->
+  <header id="appHeader">
+    <div class="logo" id="logoApp" title="EbookFinder">
+      <div class="logo-icon">📚</div>
+      <div class="logo-info">
+        <h1 class="logo-text">EbookFinder</h1>
+        <span class="logo-badge">v1.0</span>
+      </div>
+    </div>
+
+    <!-- Campo de Busca por Título e Autor -->
+    <div class="search-group">
+      <div class="search-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <input 
+        id="inputBusca" 
+        type="search" 
+        placeholder="Pesquise por título do livro ou autor..." 
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="btnLimparBusca" class="btn-clear-search" hidden aria-label="Limpar pesquisa">&times;</button>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="header-actions">
+      <button id="btnTrocarPastaHeader" class="btn-header" title="Escolher pasta de e-books">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span class="btn-label">Biblioteca</span>
+      </button>
+
+      <button id="menuToggle" class="menu-toggle" aria-label="Menu principal" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MENU DROPDOWN
+       ============================================================ -->
+  <nav id="menuDropdown" class="menu-dropdown" hidden>
+    <div class="menu-section">
+      <span class="menu-section-title">Estantes de Leitura</span>
+      <ul>
+        <li>
+          <button data-action="all" class="menu-item active" id="menuItemAll">
+            <span class="item-icon">📚</span>
+            <span class="item-text">Todos os Livros</span>
+            <span class="badge-count" id="countAllBadge">0</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="fav" class="menu-item" id="menuItemFav">
+            <span class="item-icon">⭐</span>
+            <span class="item-text">Favoritos</span>
+            <span class="badge-count" id="countFavBadge">0</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="lendo" class="menu-item">
+            <span class="item-icon">📖</span>
+            <span class="item-text">Lendo Atualmente</span>
+            <span class="badge-count" id="countLendoBadge">0</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="concluidos" class="menu-item">
+            <span class="item-icon">✅</span>
+            <span class="item-text">Concluídos</span>
+            <span class="badge-count" id="countConcluidosBadge">0</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="quero-ler" class="menu-item">
+            <span class="item-icon">📌</span>
+            <span class="item-text">Quero Ler</span>
+            <span class="badge-count" id="countQueroLerBadge">0</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="menu-section">
+      <span class="menu-section-title">Opções</span>
+      <ul>
+        <li>
+          <button data-action="trocar-pasta" class="menu-item">
+            <span class="item-icon">📁</span>
+            <span class="item-text">Mudar Pasta de E-books</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="recarregar" class="menu-item">
+            <span class="item-icon">🔄</span>
+            <span class="item-text">Recarregar Biblioteca</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="toggle-recursivo" class="menu-item">
+            <span class="item-icon">📂</span>
+            <span class="item-text">Subpastas: <strong id="lblRecursivo">Desativado</strong></span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="menu-section">
+      <span class="menu-section-title">Sobre</span>
+      <ul>
+        <li>
+          <button data-action="sobre" class="menu-item">
+            <span class="item-icon">ℹ️</span>
+            <span class="item-text">Sobre o EbookFinder</span>
+          </button>
+        </li>
+        <li>
+          <button data-action="dev" class="menu-item">
+            <span class="item-icon">👨‍💻</span>
+            <span class="item-text">Desenvolvedor</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       BARRA DE CONTROLE: ESTANTES E ORDENAÇÃO
+       ============================================================ -->
+  <section class="control-bar">
+    <div class="tabs-group">
+      <button class="tab-btn active" data-tab="todos" id="tabTodos">
+        📚 Todos <span class="tab-badge" id="tabCountTodos">0</span>
+      </button>
+      <button class="tab-btn" data-tab="favoritos" id="tabFavoritos">
+        ⭐ Favoritos <span class="tab-badge" id="tabCountFav">0</span>
+      </button>
+      <button class="tab-btn" data-tab="lendo" id="tabLendo">
+        📖 Lendo <span class="tab-badge" id="tabCountLendo">0</span>
+      </button>
+      <button class="tab-btn" data-tab="concluidos" id="tabConcluidos">
+        ✅ Concluídos <span class="tab-badge" id="tabCountConcluidos">0</span>
+      </button>
+      <button class="tab-btn" data-tab="quero-ler" id="tabQueroLer">
+        📌 Quero Ler <span class="tab-badge" id="tabCountQueroLer">0</span>
+      </button>
+    </div>
+
+    <div class="current-path-info" id="currentPathInfo" title="Clique para trocar pasta">
+      <span class="path-icon">📁</span>
+      <span class="path-text" id="lblPastaAtual">Nenhuma pasta selecionada</span>
+    </div>
+
+    <div class="sort-group">
+      <label for="selectOrdenacao" class="sort-label">Ordenar:</label>
+      <select id="selectOrdenacao" class="sort-select">
+        <option value="titulo-asc">Título (A - Z)</option>
+        <option value="titulo-desc">Título (Z - A)</option>
+        <option value="autor-asc">Autor (A - Z)</option>
+        <option value="data-desc">Mais Recentes</option>
+        <option value="tamanho-desc">Maior Tamanho</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CONTEÚDO PRINCIPAL: ESTANTE DE LIVROS
+       ============================================================ -->
+  <main id="mainContent">
+    <div class="results-header" id="resultsHeader">
+      <span id="resultsCount">Carregando estante...</span>
+    </div>
+
+    <div id="grid" class="book-grid">
+      <!-- Injetado dinamicamente -->
+    </div>
+  </main>
+
+  <!-- ============================================================
+       MODAL DE DETALHES E LEITURA DO LIVRO
+       ============================================================ -->
+  <div id="modalLivro" class="modal-backdrop" hidden>
+    <div class="book-dialog">
+      <div class="book-dialog-header">
+        <span class="dialog-badge" id="modalBadgeFormato">EPUB</span>
+        <button id="btnFecharModal" class="btn-close-modal">&times;</button>
+      </div>
+
+      <div class="book-dialog-body">
+        <div class="book-dialog-cover" id="modalCapaContainer">
+          <!-- Capa ou fallback -->
+        </div>
+
+        <div class="book-dialog-info">
+          <h2 id="modalTitulo">Título do Livro</h2>
+          <p class="book-author" id="modalAutor">Autor Desconhecido</p>
+
+          <div class="book-meta-specs" id="modalSpecs">
+            <!-- Tamanho, formato, data -->
+          </div>
+
+          <!-- Seletor de Status da Estante -->
+          <div class="status-selector-group">
+            <label class="status-label">Status de Leitura:</label>
+            <div class="status-buttons">
+              <button class="btn-status" data-status="lendo">📖 Lendo</button>
+              <button class="btn-status" data-status="concluidos">✅ Concluído</button>
+              <button class="btn-status" data-status="quero-ler">📌 Quero Ler</button>
+              <button class="btn-status" data-status="nenhum">Nenhum</button>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="book-dialog-actions">
+            <button id="btnAbrirLeitorWindows" class="btn-primary-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              Abrir no Leitor do Windows
+            </button>
+            <button id="btnRevelarExplorer" class="btn-secondary-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Mostrar na Pasta
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       POPUP DE SELEÇÃO INICIAL
+       ============================================================ -->
+  <div id="popupPasta" class="popup-backdrop" hidden>
+    <div class="popup-card">
+      <div class="popup-icon">📚</div>
+      <h2>Bem-vindo ao EbookFinder</h2>
+      <p>Selecione a pasta onde seus livros digitais (.epub, .pdf, .cbz, etc.) estão guardados para organizar sua estante.</p>
+
+      <div class="popup-buttons">
+        <button id="popupSelecionar" class="popup-btn primary">Selecionar Pasta de Livros</button>
+        <button id="popupCancelar" class="popup-btn secondary">Mais Tarde</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       RODAPÉ
+       ============================================================ -->
+  <footer id="appFooter">
+    <p>
+      <strong>EbookFinder</strong> &copy; 2025-2026 — Desenvolvido por 
+      <a href="#" id="linkAutor">Joadson Rocha</a>. 
+      Licenciado sob <span class="license-tag">GNU GPLv3</span>.
+    </p>
+  </footer>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+﻿{
+  "name": "ebookfinder",
+  "version": "1.0.0",
+  "description": "Organizador e leitor inteligente de e-books e documentos digitais locais",
+  "main": "main.js",
+  "license": "GPL-3.0",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --win"
+  },
+  "author": "Joadson Rocha <joadson.dev@gmail.com>",
+  "build": {
+    "appId": "com.ebookfinder.app",
+    "productName": "EbookFinder",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "win": {
+      "icon": "app/ebookFinder.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "electron": "^39.1.1",
+    "electron-builder": "^25.1.8"
+  }
+}
