@@ -733,11 +733,14 @@ function abrirModalLivro(livro) {
 
   const specs = document.getElementById("modalSpecs");
   if (specs) {
+    const totPaginas = livro.progresso?.totalPaginas;
     specs.innerHTML = `
-      <p><strong>Arquivo:</strong> <span style="font-size:0.75rem; word-break:break-all; color:#e5a93b;">${livro.nome}</span></p>
-      <p><strong>Formato:</strong> ${formato}</p>
-      <p><strong>Tamanho:</strong> ${formatarTamanho(livro.tamanho)}</p>
-      <p><strong>Caminho:</strong> <span style="font-size:0.75rem; word-break:break-all; color:#aba5cd;">${livro.caminho}</span></p>
+      <div class="modal-specs-pills">
+        <span class="spec-pill">${formato}</span>
+        <span class="spec-pill">${formatarTamanho(livro.tamanho)}</span>
+        ${totPaginas ? `<span class="spec-pill">${totPaginas} págs</span>` : ""}
+      </div>
+      <div class="modal-filepath" title="${livro.caminho}">📁 ${livro.nome}</div>
     `;
   }
 

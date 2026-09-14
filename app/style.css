@@ -911,16 +911,17 @@ main#mainContent {
 .book-dialog {
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.75);
   width: 100%;
-  max-width: 720px;
-  overflow: hidden;
-  animation: zoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 530px;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: zoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .book-dialog-header {
-  padding: 16px 24px;
+  padding: 10px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -928,11 +929,11 @@ main#mainContent {
 }
 
 .dialog-badge {
-  font-size: 0.74rem;
+  font-size: 0.70rem;
   font-weight: 700;
   background: var(--amber);
   color: #1a1200;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
 }
 
@@ -940,31 +941,31 @@ main#mainContent {
   background: rgba(255, 255, 255, 0.08);
   border: none;
   color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   transition: var(--transition-fast);
 }
 .btn-close-modal:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
 
 .book-dialog-body {
-  padding: 24px;
+  padding: 14px 18px;
   display: flex;
-  gap: 28px;
+  gap: 16px;
 }
 
 .book-dialog-cover {
-  width: 200px;
-  height: 290px;
+  width: 110px;
+  height: 152px;
   flex-shrink: 0;
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: var(--shadow-book);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 .book-dialog-cover img { width: 100%; height: 100%; object-fit: cover; }
@@ -973,40 +974,83 @@ main#mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .book-dialog-info h2 {
   font-family: var(--font-title);
-  font-size: 1.4rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #fff;
-  line-height: 1.3;
+  line-height: 1.25;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.book-dialog-info .book-author {
+  font-size: 0.78rem;
+  color: var(--amber);
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-specs-pills {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 1px;
+}
+
+.spec-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.modal-filepath {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 320px;
 }
 
 .status-selector-group {
-  margin-top: 10px;
+  margin-top: 4px;
 }
 .status-label {
-  font-size: 0.8rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 3px;
   display: block;
 }
 .status-buttons {
   display: flex;
-  gap: 8px;
+  gap: 5px;
   flex-wrap: wrap;
 }
 .btn-status {
-  padding: 6px 12px;
+  padding: 4px 8px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   cursor: pointer;
   transition: var(--transition-fast);
 }
@@ -1019,17 +1063,17 @@ main#mainContent {
 }
 
 /* ============================================================
-   SEÇÃO DE PROGRESSO DE LEITURA & MARCADOR NO MODAL
+   SEÇÃO DE PROGRESSO DE LEITURA & MARCADOR NO MODAL (COMPACTA)
    ============================================================ */
 .reading-progress-section {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(229, 169, 59, 0.2);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  margin-top: 10px;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -1040,19 +1084,18 @@ main#mainContent {
 }
 
 .progress-percentage-label {
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--amber);
   background: rgba(229, 169, 59, 0.12);
-  padding: 2px 10px;
+  padding: 1px 7px;
   border-radius: var(--radius-full);
   border: 1px solid rgba(229, 169, 59, 0.3);
-  letter-spacing: 0.3px;
 }
 
 .progress-bar-track {
   width: 100%;
-  height: 8px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -1064,24 +1107,24 @@ main#mainContent {
   background: linear-gradient(90deg, #c27d1a, var(--amber));
   border-radius: var(--radius-full);
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px var(--amber-glow);
+  box-shadow: 0 0 8px var(--amber-glow);
 }
 
 .progress-bar-fill.concluido {
   background: linear-gradient(90deg, #059669, var(--emerald));
-  box-shadow: 0 0 10px var(--emerald-glow);
+  box-shadow: 0 0 8px var(--emerald-glow);
 }
 
 .page-controls-row {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
 }
 
 .page-input-block {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
   flex: 1.3;
 }
 
@@ -1090,16 +1133,16 @@ main#mainContent {
 }
 
 .input-mini-label {
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .page-stepper-wrap {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
 }
 
@@ -1108,11 +1151,11 @@ main#mainContent {
   background: rgba(14, 13, 22, 0.85);
   border: 1px solid var(--border-subtle);
   color: #fff;
-  border-radius: var(--radius-sm);
-  padding: 7px 10px;
-  font-size: 0.88rem;
+  border-radius: 4px;
+  padding: 4px 7px;
+  font-size: 0.78rem;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast);
   width: 100%;
 }
 
@@ -1121,30 +1164,28 @@ main#mainContent {
   -webkit-appearance: none;
   margin: 0;
 }
-
 .page-input-block input[type="number"] {
   -moz-appearance: textfield;
 }
 
 .page-input-block input[type="number"]:focus,
 .bookmark-input-block input[type="text"]:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px var(--amber-glow);
+  border-color: var(--amber);
 }
 
 .quick-step-buttons {
   display: flex;
-  gap: 3px;
+  gap: 2px;
 }
 
 .btn-step {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 6px 7px;
-  border-radius: 6px;
+  padding: 3px 5px;
+  border-radius: 4px;
   cursor: pointer;
   transition: var(--transition-fast);
   user-select: none;
@@ -1155,38 +1196,32 @@ main#mainContent {
   background: rgba(229, 169, 59, 0.2);
   color: #fff;
   border-color: var(--amber);
-  transform: translateY(-1px);
-}
-
-.btn-step:active {
-  transform: translateY(1px);
 }
 
 .bookmark-input-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .progress-footer-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-  padding-top: 8px;
+  gap: 8px;
+  margin-top: 2px;
+  padding-top: 5px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  flex-wrap: wrap;
 }
 
 .last-read-info {
-  font-size: 0.73rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 
 .progress-action-btns {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
@@ -1194,51 +1229,47 @@ main#mainContent {
   background: rgba(229, 169, 59, 0.15);
   border: 1px solid var(--amber);
   color: var(--amber);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
+  padding: 4px 9px;
+  border-radius: 4px;
   cursor: pointer;
   transition: var(--transition-fast);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .btn-save-progress:hover {
   background: var(--amber);
   color: #1a1200;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--amber-glow);
 }
 
 .btn-finish-reading {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid var(--emerald);
   color: var(--emerald);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: var(--transition-fast);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .btn-finish-reading:hover {
   background: var(--emerald);
   color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--emerald-glow);
 }
 
 .book-dialog-actions {
   display: flex;
-  gap: 12px;
-  margin-top: auto;
-  padding-top: 16px;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 8px;
 }
 
 .btn-primary-action {
@@ -1246,33 +1277,34 @@ main#mainContent {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   background: linear-gradient(135deg, var(--amber), #c27d1a);
   color: #1a1200;
   font-weight: 700;
   border: none;
-  padding: 12px 18px;
-  border-radius: var(--radius-md);
-  font-size: 0.92rem;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.80rem;
   cursor: pointer;
   transition: var(--transition-fast);
-  box-shadow: 0 4px 14px var(--amber-glow);
+  box-shadow: 0 2px 10px var(--amber-glow);
 }
 .btn-primary-action:hover { filter: brightness(1.12); transform: translateY(-1px); }
 
 .btn-secondary-action {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  font-size: 0.92rem;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.80rem;
   cursor: pointer;
   transition: var(--transition-fast);
 }
+.btn-secondary-action:hover { background: rgba(255, 255, 255, 0.15); }
 .btn-secondary-action:hover { background: rgba(255, 255, 255, 0.15); }
 
 /* ============================================================

@@ -238,107 +238,105 @@
     <div class="book-dialog">
       <div class="book-dialog-header">
         <span class="dialog-badge" id="modalBadgeFormato">EPUB</span>
-        <button id="btnFecharModal" class="btn-close-modal">&times;</button>
+        <button id="btnFecharModal" class="btn-close-modal" aria-label="Fechar detalhes">&times;</button>
       </div>
 
       <div class="book-dialog-body">
-        <div class="book-dialog-cover" id="modalCapaContainer">
-          <!-- Capa ou fallback -->
+        <!-- Linha Superior: Capa + Metadados e Status Lado a Lado -->
+        <div class="book-dialog-top">
+          <div class="book-dialog-cover" id="modalCapaContainer">
+            <!-- Capa ou fallback -->
+          </div>
+
+          <div class="book-dialog-info">
+            <h2 id="modalTitulo">Título do Livro</h2>
+            <p class="book-author" id="modalAutor">Autor Desconhecido</p>
+
+            <div class="book-meta-specs" id="modalSpecs">
+              <!-- Tamanho, formato, data injetados dinamicamente -->
+            </div>
+
+            <!-- Seletor de Status da Estante -->
+            <div class="status-selector-group">
+              <span class="status-label">Status de Leitura:</span>
+              <div class="status-buttons">
+                <button class="btn-status" data-status="lendo">📖 Lendo</button>
+                <button class="btn-status" data-status="concluidos">✅ Lido</button>
+                <button class="btn-status" data-status="quero-ler">📌 Quero Ler</button>
+                <button class="btn-status" data-status="nenhum">Nenhum</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="book-dialog-info">
-          <h2 id="modalTitulo">Título do Livro</h2>
-          <p class="book-author" id="modalAutor">Autor Desconhecido</p>
-
-          <div class="book-meta-specs" id="modalSpecs">
-            <!-- Tamanho, formato, data -->
+        <!-- Seção de Progresso e Marcador (Horizontal e Compacta) -->
+        <div class="reading-progress-section" id="readingProgressSection">
+          <div class="progress-section-header">
+            <span class="status-label">Progresso da Leitura</span>
+            <span class="progress-percentage-label" id="lblProgressoPercentual">0%</span>
           </div>
 
-          <!-- Seletor de Status da Estante -->
-          <div class="status-selector-group">
-            <label class="status-label">Status de Leitura:</label>
-            <div class="status-buttons">
-              <button class="btn-status" data-status="lendo">📖 Lendo</button>
-              <button class="btn-status" data-status="concluidos">✅ Concluído</button>
-              <button class="btn-status" data-status="quero-ler">📌 Quero Ler</button>
-              <button class="btn-status" data-status="nenhum">Nenhum</button>
-            </div>
+          <!-- Barra de Progresso Visual -->
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
           </div>
 
-          <!-- Progresso de Leitura & Marcador de Página -->
-          <div class="reading-progress-section" id="readingProgressSection">
-            <div class="progress-section-header">
-              <span class="status-label">Progresso de Leitura</span>
-              <span class="progress-percentage-label" id="lblProgressoPercentual">0%</span>
-            </div>
-
-            <!-- Barra de Progresso Visual -->
-            <div class="progress-bar-track">
-              <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
-            </div>
-
-            <!-- Campos de Página e Total com Ajuste Rápido -->
-            <div class="page-controls-row">
-              <div class="page-input-block">
-                <label for="inputPaginaAtual" class="input-mini-label">Última Pág. Lida:</label>
-                <div class="page-stepper-wrap">
-                  <input type="number" id="inputPaginaAtual" min="0" value="0" placeholder="0" />
-                  <div class="quick-step-buttons">
-                    <button type="button" class="btn-step" data-step="-1" title="Voltar 1 página">-1</button>
-                    <button type="button" class="btn-step" data-step="1" title="Avançar 1 página">+1</button>
-                    <button type="button" class="btn-step" data-step="5" title="Avançar 5 páginas">+5</button>
-                    <button type="button" class="btn-step" data-step="10" title="Avançar 10 páginas">+10</button>
-                  </div>
+          <!-- Controles de Página e Anotação em Linha Balanceada -->
+          <div class="page-controls-compact-row">
+            <div class="page-stepper-box">
+              <span class="input-mini-label">Página:</span>
+              <div class="page-stepper-wrap">
+                <input type="number" id="inputPaginaAtual" min="0" value="0" placeholder="0" title="Última página lida" />
+                <span class="page-divider">/</span>
+                <input type="number" id="inputTotalPaginas" min="0" value="0" placeholder="Total" title="Total de páginas" />
+                <div class="quick-step-buttons">
+                  <button type="button" class="btn-step" data-step="-1" title="Voltar 1 página">-1</button>
+                  <button type="button" class="btn-step" data-step="1" title="Avançar 1 página">+1</button>
+                  <button type="button" class="btn-step" data-step="5" title="Avançar 5 páginas">+5</button>
                 </div>
               </div>
-
-              <div class="page-input-block total-pages-block">
-                <label for="inputTotalPaginas" class="input-mini-label">Total de Páginas:</label>
-                <input type="number" id="inputTotalPaginas" min="0" value="0" placeholder="Total" />
-              </div>
             </div>
 
-            <!-- Marcador / Anotações de Leitura -->
             <div class="bookmark-input-block">
-              <label for="inputAnotacoes" class="input-mini-label">Marcador & Anotação:</label>
+              <span class="input-mini-label">Marcador:</span>
               <input 
                 type="text" 
                 id="inputAnotacoes" 
-                placeholder="Ex: Capítulo 5, notas de leitura..." 
+                placeholder="Ex: Cap. 3, notas..." 
                 maxlength="140"
               />
             </div>
+          </div>
 
-            <!-- Rodapé do Progresso: Data da Última Leitura e Ação Salvar -->
-            <div class="progress-footer-row">
-              <span class="last-read-info" id="lblUltimaLeitura">Nenhuma leitura registrada</span>
-              <div class="progress-action-btns">
-                <button type="button" class="btn-finish-reading" id="btnConcluirLeitura" title="Marcar como lido 100%">
-                  🏁 Concluir Livro
-                </button>
-                <button type="button" class="btn-save-progress" id="btnSalvarProgresso">
-                  💾 Salvar Progresso
-                </button>
-              </div>
+          <!-- Rodapé do Progresso: Data da Última Leitura e Ações Salvar -->
+          <div class="progress-footer-row">
+            <span class="last-read-info" id="lblUltimaLeitura">Nenhuma leitura registrada</span>
+            <div class="progress-action-btns">
+              <button type="button" class="btn-finish-reading" id="btnConcluirLeitura" title="Marcar como lido 100%">
+                🏁 Concluir
+              </button>
+              <button type="button" class="btn-save-progress" id="btnSalvarProgresso">
+                💾 Salvar
+              </button>
             </div>
           </div>
+        </div>
 
-          <!-- Ações -->
-          <div class="book-dialog-actions">
-            <button id="btnAbrirLeitorWindows" class="btn-primary-action">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-              </svg>
-              Abrir no Leitor do Windows
-            </button>
-            <button id="btnRevelarExplorer" class="btn-secondary-action">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-              Mostrar na Pasta
-            </button>
-          </div>
+        <!-- Ações Principais -->
+        <div class="book-dialog-actions">
+          <button id="btnAbrirLeitorWindows" class="btn-primary-action">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            Abrir no Leitor do Windows
+          </button>
+          <button id="btnRevelarExplorer" class="btn-secondary-action">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Mostrar na Pasta
+          </button>
         </div>
       </div>
     </div>
