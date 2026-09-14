@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="./logo.png" width="130" alt="EbookFinder Logo" style="border-radius:24px; box-shadow:0 8px 30px rgba(229, 169, 59, 0.35); margin-bottom:12px;" />
 
@@ -28,6 +28,11 @@
 
 - ⚡ **Extração de Capas Ultrarrápida (Zero FFmpeg)**: Extrai capas originais e metadados de arquivos `.epub` e `.cbz` diretamente da estrutura ZIP interna em milissegundos.
 - 📖 **Proporção Real de Livro (2:3)**: Cards desenhados no formato clássico de livros físicos, com sombreamento de lombada e textura realista.
+- 🔖 **Progresso de Leitura & Marcador Digital**:
+  - Salve a última página lida e o total de páginas da obra com botões de incremento rápido (`+1`, `+5`, `+10`, `-1`).
+  - Barra de progresso animada com porcentagem calculada em tempo real exibida tanto nos cards da estante quanto no modal de detalhes.
+  - Marcador de capítulo e anotações de leitura personalizadas.
+  - Transição inteligente de status: move automaticamente para *"Lendo"* ao iniciar e para *"Concluído"* ao finalizar.
 - 📚 **Estantes Virtuais de Leitura**:
   - 📚 **Todos os Livros**: Catálogo geral de obras.
   - ⭐ **Favoritos**: Acesso rápido aos livros do coração.

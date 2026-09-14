@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="./logo.png" width="130" alt="EbookFinder Logo" style="border-radius:24px; box-shadow:0 8px 30px rgba(229, 169, 59, 0.35); margin-bottom:12px;" />
 
@@ -28,6 +28,11 @@
 
 - ⚡ **Ultra-Fast Cover Extraction (Zero FFmpeg)**: Extracts original cover artwork and metadata from `.epub` and `.cbz` files directly from internal ZIP structures in mere milliseconds.
 - 📖 **Authentic Book Proportions (2:3)**: Card layout designed with realistic 3D book spine shadows and paper aesthetics.
+- 🔖 **Reading Progress & Digital Bookmark**:
+  - Save the last read page and total page count with quick adjustment stepper buttons (`+1`, `+5`, `+10`, `-1`).
+  - Real-time animated progress bar with percentage indicator on both bookshelf cards and the book details dialog.
+  - Custom bookmarks and chapter/reading notes.
+  - Smart status transition: automatically updates to *"Currently Reading"* when started and *"Completed"* when reaching the final page.
 - 📚 **Virtual Reading Shelves**:
   - 📚 **All Books**: Complete catalog of digital media.
   - ⭐ **Favorites**: Quick access to your most cherished books.
