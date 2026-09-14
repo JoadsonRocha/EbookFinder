@@ -57,6 +57,14 @@
   box-sizing: border-box;
 }
 
+[hidden],
+.popup-backdrop[hidden],
+.modal-backdrop[hidden],
+.drop-overlay[hidden],
+.menu-dropdown[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-main);
