@@ -10,6 +10,11 @@
  * ============================================================================
  */
 
+// Inicializa o Worker do PDF.js para extração rápida de capas da página 1
+if (window.pdfjsLib) {
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
+}
+
 // ============================================================================
 // 1. ESTADO GLOBAL DA APLICAÇÃO
 // ============================================================================
@@ -20,10 +25,226 @@ const state = {
   abaAtiva: "todos", // "todos" | "favoritos" | "lendo" | "concluidos" | "quero-ler"
   termoBusca: "",
   ordenacaoAtual: "titulo-asc",
+  modoVisualizacao: localStorage.getItem("ef_modo_visualizacao") || "normal", // "normal" | "compact" | "list"
   buscaRecursiva: localStorage.getItem("ef_recursivo") !== "false",
   favoritos: new Set(JSON.parse(localStorage.getItem("ef_favoritos") || "[]")),
   livroSelecionado: null
 };
+
+// ============================================================================
+// TEMAS DE CAPA DURA & FORMATAÇÃO HUMANIZADA
+// ============================================================================
+const PALETAS_CAPA = [
+  { tema: "sapphire", bg: "linear-gradient(145deg, #132238, #0b1524)", borda: "#38bdf8", tag: "#0284c7" },
+  { tema: "emerald",  bg: "linear-gradient(145deg, #063c2e, #02241b)", borda: "#34d399", tag: "#059669" },
+  { tema: "burgundy", bg: "linear-gradient(145deg, #3d0718, #22020b)", borda: "#fb7185", tag: "#e11d48" },
+  { tema: "obsidian", bg: "linear-gradient(145deg, #1c1926, #0e0d16)", borda: "#e5a93b", tag: "#d97706" },
+  { tema: "amethyst", bg: "linear-gradient(145deg, #2d0b4e, #18042b)", borda: "#c084fc", tag: "#9333ea" },
+  { tema: "indigo",   bg: "linear-gradient(145deg, #181842, #0d0c24)", borda: "#818cf8", tag: "#4f46e5" }
+];
+
+function obterPaletaCapa(str) {
+  if (!str) return PALETAS_CAPA[0];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = (hash << 5) - hash + str.charCodeAt(i);
+  return PALETAS_CAPA[Math.abs(hash) % PALETAS_CAPA.length];
+}
+
+/**
+ * Converte nomes mecânicos de arquivos (ex: hashes de concurso ou sequências de hífens)
+ * em títulos elegantes, limpos e agradáveis de ler.
+ */
+function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
+  let str = (tituloOriginal || nomeArquivo || "").replace(/\.(pdf|epub|mobi|cbr|cbz|txt|azw3?)$/i, "");
+
+  // Concurso / Cursos com numeração de aula e professor
+  // Ex: "curso-380456-aula-00-prof-andre-castro-734d-completo"
+  const matchCurso = str.match(/curso[-_]\d+[-_]aula[-_](\d+)(?:[-_]prof[-_]([a-z0-9-]+))?(?:[-_][a-f0-9]{4,})?(?:[-_]completo)?/i);
+  if (matchCurso) {
+    const numAula = matchCurso[1];
+    let prof = matchCurso[2] ? matchCurso[2].replace(/-/g, " ") : "";
+    if (prof) {
+      prof = prof.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      return `Aula ${numAula} • Prof. ${prof}`;
+    }
+    return `Aula ${numAula}`;
+  }
+
+  // Padrão genérico de aula: "aula-01-...", "Aula 02 ..."
+  const matchAula = str.match(/aula[-_ ]*(\d+)/i);
+  if (matchAula && (str.toLowerCase().includes("curso") || str.toLowerCase().includes("prof") || str.length > 28)) {
+    const matchProf = str.match(/prof[-_ ]*([a-zA-Z-]+)/i);
+    if (matchProf) {
+      const profName = matchProf[1].replace(/[-_]/g, " ").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      return `Aula ${matchAula[1]} • Prof. ${profName}`;
+    }
+    return `Aula ${matchAula[1]}`;
+  }
+
+  // Limpar sequências pontilhadas artificiais como .B..a..c..k..u..p
+  if (/\.[a-zA-Z]\./.test(str)) {
+    str = str.replace(/\.+/g, "");
+  }
+
+  // Substituir hífens e underscores isolados por espaços
+  str = str.replace(/[_-]+/g, " ");
+
+  // Remover hashes mecânicos no fim ex: " 734d", " 3059"
+  str = str.replace(/\b[a-f0-9]{4,8}\b/gi, "");
+  str = str.replace(/\bcompleto\b/gi, "");
+
+  // Limpar espaços extras
+  str = str.replace(/\s+/g, " ").trim();
+
+  if (!str) str = tituloOriginal || nomeArquivo || "Documento Sem Título";
+
+  // Capitalização harmoniosa se tudo estiver em caixa baixa
+  if (str === str.toLowerCase()) {
+    str = str.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+
+  return str;
+}
+
+// ============================================================================
+// FILA DE EXTRAÇÃO DE CAPAS DE PDF VIA CANVAS
+// ============================================================================
+let filaCapasPdf = [];
+let processandoFilaCapas = false;
+
+function enfileirarExtracaoCapasPdf(livros) {
+  if (!Array.isArray(livros)) return;
+  const pendentes = livros.filter(l => l.extensao === ".pdf" && !l.thumbnail);
+  if (pendentes.length === 0) return;
+
+  pendentes.forEach(l => {
+    if (!filaCapasPdf.some(item => item.caminho === l.caminho)) {
+      filaCapasPdf.push(l);
+    }
+  });
+
+  processarFilaCapas();
+}
+
+async function processarFilaCapas() {
+  if (processandoFilaCapas || filaCapasPdf.length === 0) return;
+  processandoFilaCapas = true;
+
+  while (filaCapasPdf.length > 0) {
+    const livro = filaCapasPdf.shift();
+    if (livro.thumbnail) continue;
+
+    try {
+      const capaUrl = await extrairCapaPdf(livro);
+      if (capaUrl) {
+        livro.thumbnail = capaUrl;
+        atualizarCapaNoDom(livro.caminho, capaUrl, livro.tituloHumanizado || livro.titulo);
+      }
+    } catch (err) {
+      console.warn("Erro ao processar capa:", livro.caminho, err);
+    }
+
+    // Intervalo de 50ms para manter a interface fluida a 60fps
+    await new Promise(r => setTimeout(r, 50));
+  }
+
+  processandoFilaCapas = false;
+}
+
+/**
+ * Lê o buffer do PDF via IPC, renderiza a Página 1 no Canvas HTML5 com resolução de alta qualidade
+ * e salva o resultado no cache local em disco (thumbs/).
+ */
+async function extrairCapaPdf(livro) {
+  if (!window.pdfjsLib) return null;
+  const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
+  if (!buffer || buffer.length === 0) return null;
+
+  try {
+    const uint8 = new Uint8Array(buffer);
+    const loadingTask = window.pdfjsLib.getDocument({
+      data: uint8,
+      disableFontFace: false
+    });
+    const pdfDoc = await loadingTask.promise;
+    const page = await pdfDoc.getPage(1);
+
+    const unscaled = page.getViewport({ scale: 1.0 });
+    const scale = Math.min(2.0, Math.max(0.6, 360 / (unscaled.width || 360)));
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext("2d", { alpha: false });
+
+    // Fundo branco caso o PDF possua fundo transparente
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({
+      canvasContext: ctx,
+      viewport
+    }).promise;
+
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const caminhoCache = await window.api?.salvarCapaCache?.(livro.caminho, dataUrl);
+    return caminhoCache || dataUrl;
+  } catch (err) {
+    console.error("Falha ao renderizar capa do PDF:", livro.caminho, err);
+    return null;
+  }
+}
+
+/**
+ * Atualiza o elemento no DOM em tempo real com fade-in suave assim que a capa é extraída.
+ */
+function atualizarCapaNoDom(caminho, thumbUrl, titulo) {
+  const card = document.querySelector(`.book-card[data-caminho="${CSS.escape(caminho)}"]`);
+  if (card) {
+    const wrapper = card.querySelector(".book-cover-wrapper");
+    if (wrapper) {
+      const fallback = wrapper.querySelector(".book-cover-fallback");
+      if (fallback) fallback.remove();
+
+      let img = wrapper.querySelector(".book-cover-image");
+      if (!img) {
+        img = document.createElement("img");
+        img.className = "book-cover-image cover-fade-in";
+        img.alt = titulo;
+        img.loading = "lazy";
+        wrapper.prepend(img);
+      }
+      img.src = thumbUrl;
+    }
+  }
+
+  if (state.livroSelecionado && state.livroSelecionado.caminho === caminho) {
+    const modalCapa = document.getElementById("modalCapaContainer");
+    if (modalCapa) {
+      modalCapa.innerHTML = `<img src="${thumbUrl}" alt="${titulo}" class="cover-fade-in">`;
+    }
+  }
+}
+
+/**
+ * Alterna entre modos de visualização: normal, compacto ou lista.
+ */
+function aplicarModoVisualizacao(modo) {
+  state.modoVisualizacao = modo || "normal";
+  localStorage.setItem("ef_modo_visualizacao", state.modoVisualizacao);
+
+  const grid = document.getElementById("grid");
+  if (grid) {
+    grid.classList.remove("compact", "list-view");
+    if (state.modoVisualizacao === "compact") grid.classList.add("compact");
+    if (state.modoVisualizacao === "list") grid.classList.add("list-view");
+  }
+
+  document.querySelectorAll(".btn-view-mode").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === state.modoVisualizacao);
+  });
+}
 
 // ============================================================================
 // 2. UTILITÁRIOS
@@ -172,9 +393,13 @@ async function carregarBiblioteca() {
     }
 
     const livros = await window.api?.buscarEbooks?.("", state.buscaRecursiva);
-    state.todosLivros = Array.isArray(livros) ? livros : [];
+    state.todosLivros = (Array.isArray(livros) ? livros : []).map(l => ({
+      ...l,
+      tituloHumanizado: formatarTituloHumanizado(l.titulo, l.nome)
+    }));
 
     aplicarFiltrosEOrdenacao();
+    enfileirarExtracaoCapasPdf(state.todosLivros);
   } catch (err) {
     console.error("❌ Erro ao carregar biblioteca:", err);
     showToast("Erro ao ler livros da pasta.");
@@ -233,11 +458,12 @@ function aplicarFiltrosEOrdenacao() {
     lista = lista.filter(l => l.status === "quero-ler");
   }
 
-  // 2. Busca por Título ou Autor
+  // 2. Busca por Título, Título Humanizado ou Autor
   const termo = state.termoBusca.trim().toLowerCase();
   if (termo) {
     lista = lista.filter(l => 
       (l.titulo && l.titulo.toLowerCase().includes(termo)) ||
+      (l.tituloHumanizado && l.tituloHumanizado.toLowerCase().includes(termo)) ||
       (l.autor && l.autor.toLowerCase().includes(termo)) ||
       (l.nome && l.nome.toLowerCase().includes(termo))
     );
@@ -245,9 +471,12 @@ function aplicarFiltrosEOrdenacao() {
 
   // 3. Ordenação
   lista.sort((a, b) => {
+    const titA = a.tituloHumanizado || a.titulo || a.nome;
+    const titB = b.tituloHumanizado || b.titulo || b.nome;
+
     switch (state.ordenacaoAtual) {
       case "titulo-desc":
-        return (b.titulo || b.nome).localeCompare(a.titulo || a.nome, undefined, { numeric: true });
+        return titB.localeCompare(titA, undefined, { numeric: true });
       case "autor-asc":
         return (a.autor || "").localeCompare(b.autor || "");
       case "data-desc":
@@ -256,7 +485,7 @@ function aplicarFiltrosEOrdenacao() {
         return (b.tamanho || 0) - (a.tamanho || 0);
       case "titulo-asc":
       default:
-        return (a.titulo || a.nome).localeCompare(b.titulo || b.nome, undefined, { numeric: true });
+        return titA.localeCompare(titB, undefined, { numeric: true });
     }
   });
 
@@ -342,10 +571,13 @@ function renderizarGrade(lista) {
   lista.forEach(livro => {
     const card = document.createElement("div");
     card.className = "book-card";
+    card.setAttribute("data-caminho", livro.caminho);
 
     const isFav = state.favoritos.has(livro.caminho);
     const formato = (livro.extensao || "").replace(".", "").toUpperCase();
     const tamanho = formatarTamanho(livro.tamanho);
+    const tituloExibicao = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
+    const paleta = obterPaletaCapa(livro.titulo || livro.nome);
 
     // Label do status de leitura
     let statusBadge = "";
@@ -357,16 +589,17 @@ function renderizarGrade(lista) {
       statusBadge = `<span class="badge-reading-status quero-ler">📌 Quero Ler</span>`;
     }
 
-    // Capa ou Fallback
+    // Capa Extraída ou Fallback Estilo Capa Dura Clássica
     const capaConteudo = livro.thumbnail
-      ? `<img class="book-cover-image" src="${livro.thumbnail}" alt="${livro.titulo}" loading="lazy" />`
+      ? `<img class="book-cover-image" src="${livro.thumbnail}" alt="${tituloExibicao}" loading="lazy" />`
       : `
-        <div class="book-cover-fallback">
+        <div class="book-cover-fallback theme-${paleta.tema}" style="background: ${paleta.bg}; border-left-color: ${paleta.borda};">
+          <div class="fallback-book-ribbon" style="background: ${paleta.borda};"></div>
           <div class="fallback-book-header">
-            <span style="font-size:0.7rem; letter-spacing:1px; color:#e5a93b; font-weight:700;">${formato}</span>
+            <span class="fallback-book-format" style="color: ${paleta.borda};">${formato}</span>
           </div>
-          <h4 class="fallback-book-title">${livro.titulo}</h4>
-          <p class="fallback-book-author">${livro.autor !== "Desconhecido" ? livro.autor : ""}</p>
+          <h4 class="fallback-book-title">${tituloExibicao}</h4>
+          <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca Digital"}</p>
           <div class="fallback-book-footer">📖</div>
         </div>
       `;
@@ -402,36 +635,50 @@ function renderizarGrade(lista) {
         ${statusBadge}
 
         <button class="fav-btn ${isFav ? "active" : ""}" title="Favoritar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? "#e5a93b" : "rgba(255,255,255,0.7)"}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav ? "#e5a93b" : "rgba(255,255,255,0.7)"}">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
         </button>
+
+        <div class="cover-hover-overlay">
+          <button class="btn-cover-read" title="Abrir e ler no leitor do Windows">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Ler</span>
+          </button>
+        </div>
       </div>
 
       <div class="book-card-body">
-        <h3 class="book-title" title="${livro.titulo}">${livro.titulo}</h3>
-        <p class="book-author" title="${livro.autor}">${livro.autor}</p>
+        <h3 class="book-title" title="${livro.titulo} (${livro.nome})">${tituloExibicao}</h3>
+        <p class="book-author" title="${livro.autor}">${livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca"}</p>
         <div class="book-meta">
-          <span>${formato}</span>
-          <span>${tamanho}</span>
+          <span class="meta-ext">${formato}</span>
+          <span class="meta-size">${tamanho}</span>
         </div>
         ${progressHtml}
         <div class="book-card-quick-actions">
-          <button class="btn-quick-read" title="Abrir e ler no leitor do Windows">📖 Abrir</button>
-          <button class="btn-quick-details" title="Ver detalhes e progresso">ℹ️ Detalhes</button>
+          <button class="btn-quick-read" title="Abrir e ler no leitor do Windows">▶ Ler</button>
+          <button class="btn-quick-details" title="Ver detalhes e anotações">ℹ️ Detalhes</button>
         </div>
       </div>
     `;
 
+    // Ação do Botão Flutuante de Leitura na Capa
+    card.querySelector(".btn-cover-read")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.api?.abrirNoWindows?.(livro.caminho);
+      showToast(`Abrindo "${tituloExibicao}" no Windows...`);
+    });
+
     // Duplo clique no Card: Abre diretamente no leitor do Windows
     card.addEventListener("dblclick", () => {
       window.api?.abrirNoWindows?.(livro.caminho);
-      showToast(`Abrindo "${livro.titulo}" no Windows...`);
+      showToast(`Abrindo "${tituloExibicao}" no Windows...`);
     });
 
     // Clique no Card: Abre o Modal de Detalhes
     card.addEventListener("click", (e) => {
-      if (e.target.closest(".fav-btn") || e.target.closest(".btn-quick-read") || e.target.closest(".btn-quick-details")) return;
+      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-quick-read") || e.target.closest(".btn-quick-details")) return;
       abrirModalLivro(livro);
     });
 
@@ -439,7 +686,7 @@ function renderizarGrade(lista) {
     card.querySelector(".btn-quick-read")?.addEventListener("click", (e) => {
       e.stopPropagation();
       window.api?.abrirNoWindows?.(livro.caminho);
-      showToast(`Abrindo "${livro.titulo}" no Windows...`);
+      showToast(`Abrindo "${tituloExibicao}" no Windows...`);
     });
 
     // Botão de Detalhes
@@ -495,15 +742,19 @@ function abrirModalLivro(livro) {
   if (!modal) return;
 
   state.livroSelecionado = livro;
+  const tituloLimpo = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
+  const formato = (livro.extensao || "").replace(".", "").toUpperCase();
+  const paleta = obterPaletaCapa(livro.titulo || livro.nome);
 
-  document.getElementById("modalTitulo").textContent = livro.titulo;
-  document.getElementById("modalAutor").textContent = livro.autor || "Autor Desconhecido";
-  document.getElementById("modalBadgeFormato").textContent = (livro.extensao || "").replace(".", "").toUpperCase();
+  document.getElementById("modalTitulo").textContent = tituloLimpo;
+  document.getElementById("modalAutor").textContent = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
+  document.getElementById("modalBadgeFormato").textContent = formato;
 
   const specs = document.getElementById("modalSpecs");
   if (specs) {
     specs.innerHTML = `
-      <p><strong>Formato:</strong> ${(livro.extensao || "").toUpperCase()}</p>
+      <p><strong>Arquivo:</strong> <span style="font-size:0.75rem; word-break:break-all; color:#e5a93b;">${livro.nome}</span></p>
+      <p><strong>Formato:</strong> ${formato}</p>
       <p><strong>Tamanho:</strong> ${formatarTamanho(livro.tamanho)}</p>
       <p><strong>Caminho:</strong> <span style="font-size:0.75rem; word-break:break-all; color:#aba5cd;">${livro.caminho}</span></p>
     `;
@@ -512,12 +763,16 @@ function abrirModalLivro(livro) {
   const coverContainer = document.getElementById("modalCapaContainer");
   if (coverContainer) {
     if (livro.thumbnail) {
-      coverContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${livro.titulo}">`;
+      coverContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${tituloLimpo}" class="cover-fade-in">`;
     } else {
       coverContainer.innerHTML = `
-        <div class="book-cover-fallback" style="height:100%;">
-          <h4 class="fallback-book-title">${livro.titulo}</h4>
-          <p class="fallback-book-author">${livro.autor}</p>
+        <div class="book-cover-fallback theme-${paleta.tema}" style="height:100%; background:${paleta.bg}; border-left-color:${paleta.borda};">
+          <div class="fallback-book-ribbon" style="background:${paleta.borda};"></div>
+          <div class="fallback-book-header">
+            <span class="fallback-book-format" style="color:${paleta.borda};">${formato}</span>
+          </div>
+          <h4 class="fallback-book-title">${tituloLimpo}</h4>
+          <p class="fallback-book-author" style="color:${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca Digital"}</p>
           <div class="fallback-book-footer">📖</div>
         </div>
       `;
@@ -872,9 +1127,18 @@ document.addEventListener("DOMContentLoaded", () => {
     window.api?.openExternal?.("https://joadsonrocha.github.io/");
   });
 
+  // Alternadores de Modo de Visualização (Normal, Compacto, Lista)
+  document.querySelectorAll(".btn-view-mode").forEach(btn => {
+    btn.addEventListener("click", () => {
+      aplicarModoVisualizacao(btn.dataset.mode);
+    });
+  });
+  aplicarModoVisualizacao(state.modoVisualizacao);
+
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;
   window.alternarSubpastas = alternarSubpastas;
+  window.aplicarModoVisualizacao = aplicarModoVisualizacao;
 
   carregarBiblioteca();
 });

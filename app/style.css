@@ -440,8 +440,43 @@ header#appHeader {
   cursor: pointer;
 }
 
+/* Alternadores de Modo de Visualização */
+.view-mode-group {
+  display: flex;
+  align-items: center;
+  background: rgba(30, 26, 48, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.btn-view-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-view-mode:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-view-mode.active {
+  background: rgba(229, 169, 59, 0.2);
+  color: var(--amber);
+}
+
 /* ============================================================
-   GRADE DE LIVROS (BOOK GRID)
+   GRADE DE LIVROS (ESTANTE HARMONIOSA E COMPACTA)
    ============================================================ */
 main#mainContent {
   flex: 1;
@@ -454,18 +489,42 @@ main#mainContent {
 .results-header {
   font-size: 0.88rem;
   color: var(--text-muted);
-  margin-bottom: 22px;
+  margin-bottom: 18px;
   display: flex;
   justify-content: space-between;
 }
 
+/* Grade Normal (Equilibrada: 150px - 175px) */
 .book-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 175px));
+  gap: 20px;
+  justify-content: start;
 }
 
-/* Card Estilo Livro Real */
+/* Grade Compacta (Mais livros visíveis) */
+.book-grid.compact {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 138px));
+  gap: 14px;
+}
+
+.book-grid.compact .book-title {
+  font-size: 0.84rem;
+}
+.book-grid.compact .book-author {
+  font-size: 0.72rem;
+}
+.book-grid.compact .book-card-body {
+  padding: 8px 10px;
+  gap: 2px;
+}
+.book-grid.compact .btn-quick-read,
+.book-grid.compact .btn-quick-details {
+  font-size: 0.72rem;
+  padding: 4px 6px;
+}
+
+/* Card Estilo Livro Físico */
 .book-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -475,14 +534,14 @@ main#mainContent {
   flex-direction: column;
   position: relative;
   cursor: pointer;
-  box-shadow: var(--shadow-book);
-  transition: var(--transition-normal);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .book-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  border-color: var(--border-medium);
-  box-shadow: var(--shadow-book-hover);
+  transform: translateY(-6px) scale(1.015);
+  border-color: rgba(229, 169, 59, 0.4);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 15px rgba(229, 169, 59, 0.15);
   background: var(--bg-card-hover);
 }
 
@@ -491,10 +550,27 @@ main#mainContent {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
-  background: #151224;
+  background: #110e1c;
   overflow: hidden;
-  /* Efeito de lombada do livro */
-  box-shadow: inset 4px 0 8px rgba(0,0,0,0.5);
+  box-shadow: inset 3px 0 6px rgba(0,0,0,0.6);
+}
+
+/* Efeito 3D da lombada/vinco do livro à esquerda */
+.book-cover-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 12px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(0, 0, 0, 0.22) 28%, 
+    rgba(0, 0, 0, 0.55) 75%, 
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  z-index: 5;
+  pointer-events: none;
 }
 
 .book-cover-image {
@@ -506,23 +582,104 @@ main#mainContent {
 
 .book-card:hover .book-cover-image { transform: scale(1.05); }
 
-/* Fallback de Capa com Textura de Livro */
+/* Animação suave para quando a capa for extraída em tempo real */
+.cover-fade-in {
+  animation: coverFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes coverFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Overlay de Ação Rápida ao passar o mouse na Capa */
+.cover-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 18, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  z-index: 4;
+}
+
+.book-card:hover .cover-hover-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.btn-cover-read {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #e5a93b, #d97706);
+  color: #120e03;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(229, 169, 59, 0.45);
+  transform: translateY(6px);
+  transition: all 0.2s ease;
+}
+
+.book-card:hover .btn-cover-read {
+  transform: translateY(0);
+}
+
+.btn-cover-read:hover {
+  transform: scale(1.07) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(229, 169, 59, 0.65);
+  background: linear-gradient(135deg, #f5b74c, #e5a93b);
+}
+
+/* Fallback de Capa com Textura de Livro Físico */
 .book-cover-fallback {
   width: 100%;
   height: 100%;
-  padding: 20px 14px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(145deg, #221c38, #181329);
-  border-left: 5px solid var(--amber);
+  border-left: 4px solid var(--amber);
   color: var(--text-primary);
   text-align: center;
+  position: relative;
+}
+
+/* Fita marcadora de páginas */
+.fallback-book-ribbon {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  width: 9px;
+  height: 22px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);
+  opacity: 0.85;
+}
+
+.fallback-book-header {
+  display: flex;
+  justify-content: center;
+}
+
+.fallback-book-format {
+  font-size: 0.68rem;
+  letter-spacing: 1.2px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .fallback-book-title {
   font-family: var(--font-title);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 700;
   line-height: 1.35;
   color: #fff;
@@ -531,11 +688,12 @@ main#mainContent {
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
+  margin: 6px 0;
+  word-break: break-word;
 }
 
 .fallback-book-author {
-  font-size: 0.8rem;
-  color: var(--amber);
+  font-size: 0.72rem;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -543,59 +701,57 @@ main#mainContent {
 }
 
 .fallback-book-footer {
-  display: flex;
-  justify-content: center;
-  opacity: 0.7;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  opacity: 0.45;
 }
 
 /* Badges e Botões na Capa */
 .badge-format {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(14, 13, 22, 0.85);
+  top: 8px;
+  left: 8px;
+  background: rgba(14, 13, 22, 0.88);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 3px 7px;
-  border-radius: 5px;
+  padding: 2px 6px;
+  border-radius: 4px;
   z-index: 2;
 }
 
 .badge-reading-status {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  font-size: 0.72rem;
+  bottom: 8px;
+  left: 8px;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 2px 7px;
+  border-radius: 5px;
   z-index: 2;
 }
 
 .badge-reading-status.lendo {
-  background: rgba(16, 185, 129, 0.9);
+  background: rgba(16, 185, 129, 0.92);
   color: #fff;
 }
 .badge-reading-status.concluidos {
-  background: rgba(229, 169, 59, 0.9);
+  background: rgba(229, 169, 59, 0.92);
   color: #1a1200;
 }
 .badge-reading-status.quero-ler {
-  background: rgba(147, 51, 234, 0.9);
+  background: rgba(147, 51, 234, 0.92);
   color: #fff;
 }
 
 .fav-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(14, 13, 22, 0.8);
@@ -611,6 +767,82 @@ main#mainContent {
 .fav-btn.active {
   background: rgba(229, 169, 59, 0.25);
   border-color: var(--amber);
+}
+
+/* Temas de Capa Dura Clássica */
+.theme-sapphire { background: linear-gradient(145deg, #132238, #0b1524); border-left-color: #38bdf8 !important; }
+.theme-emerald  { background: linear-gradient(145deg, #063c2e, #02241b); border-left-color: #34d399 !important; }
+.theme-burgundy { background: linear-gradient(145deg, #3d0718, #22020b); border-left-color: #fb7185 !important; }
+.theme-obsidian { background: linear-gradient(145deg, #1c1926, #0e0d16); border-left-color: #e5a93b !important; }
+.theme-amethyst { background: linear-gradient(145deg, #2d0b4e, #18042b); border-left-color: #c084fc !important; }
+.theme-indigo   { background: linear-gradient(145deg, #181842, #0d0c24); border-left-color: #818cf8 !important; }
+
+/* Modo de Exibição em Lista */
+.book-grid.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.book-grid.list-view .book-card {
+  flex-direction: row;
+  height: 74px;
+  align-items: center;
+  padding-right: 18px;
+}
+
+.book-grid.list-view .book-cover-wrapper {
+  width: 50px;
+  min-width: 50px;
+  height: 74px;
+  aspect-ratio: auto;
+  border-radius: 4px 0 0 4px;
+}
+
+.book-grid.list-view .badge-format,
+.book-grid.list-view .badge-reading-status,
+.book-grid.list-view .fav-btn,
+.book-grid.list-view .cover-hover-overlay {
+  display: none !important;
+}
+
+.book-grid.list-view .book-card-body {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 16px;
+}
+
+.book-grid.list-view .book-title {
+  font-size: 0.92rem;
+  max-width: 380px;
+  margin: 0;
+}
+
+.book-grid.list-view .book-author {
+  font-size: 0.8rem;
+  max-width: 200px;
+  margin: 0;
+}
+
+.book-grid.list-view .book-meta {
+  margin: 0;
+  gap: 12px;
+}
+
+.book-grid.list-view .card-reading-progress {
+  min-width: 140px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.book-grid.list-view .book-card-quick-actions {
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 /* Corpo de Informações do Card */
