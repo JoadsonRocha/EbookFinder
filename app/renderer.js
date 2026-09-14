@@ -57,14 +57,19 @@ function obterPaletaCapa(str) {
 function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
   let str = (tituloOriginal || nomeArquivo || "").replace(/\.(pdf|epub|mobi|cbr|cbz|txt|azw3?)$/i, "");
 
+  // Remover marcas d'água e sufixos mecânicos frequentes
+  str = str.replace(/[-_](somente[-_ ]*em[-_ ]*pdf|versao[-_ ]*impressao|sem[-_ ]*marca|completo|simplificado|resumo)\b/gi, "");
+  str = str.replace(/[-_][a-f0-9]{4,8}\b/gi, "");
+
   // Concurso / Cursos com numeração de aula e professor
-  // Ex: "curso-380456-aula-00-prof-andre-castro-734d-completo"
-  const matchCurso = str.match(/curso[-_]\d+[-_]aula[-_](\d+)(?:[-_]prof[-_]([a-z0-9-]+))?(?:[-_][a-f0-9]{4,})?(?:[-_]completo)?/i);
+  // Ex: "curso-380456-aula-00-prof-a-paolla-ramos"
+  const matchCurso = str.match(/curso[-_](\d+)[-_]aula[-_](\d+)(?:[-_]prof[-_]([a-zA-Z0-9\s-]+))?/i);
   if (matchCurso) {
-    const numAula = matchCurso[1];
-    let prof = matchCurso[2] ? matchCurso[2].replace(/-/g, " ") : "";
+    const numAula = matchCurso[2];
+    let prof = matchCurso[3] ? matchCurso[3].replace(/[-_]/g, " ").trim() : "";
+    prof = prof.replace(/\b(somente|em|pdf|completo)\b/gi, "").trim();
     if (prof) {
-      prof = prof.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      prof = prof.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
       return `Aula ${numAula} • Prof. ${prof}`;
     }
     return `Aula ${numAula}`;
@@ -72,11 +77,14 @@ function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
 
   // Padrão genérico de aula: "aula-01-...", "Aula 02 ..."
   const matchAula = str.match(/aula[-_ ]*(\d+)/i);
-  if (matchAula && (str.toLowerCase().includes("curso") || str.toLowerCase().includes("prof") || str.length > 28)) {
-    const matchProf = str.match(/prof[-_ ]*([a-zA-Z-]+)/i);
+  if (matchAula) {
+    const matchProf = str.match(/prof[-_ ]*([a-zA-Z\s-]+)/i);
     if (matchProf) {
-      const profName = matchProf[1].replace(/[-_]/g, " ").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-      return `Aula ${matchAula[1]} • Prof. ${profName}`;
+      let profName = matchProf[1].replace(/[-_]/g, " ").replace(/\b(somente|em|pdf|completo)\b/gi, "").trim();
+      if (profName) {
+        profName = profName.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+        return `Aula ${matchAula[1]} • Prof. ${profName}`;
+      }
     }
     return `Aula ${matchAula[1]}`;
   }
@@ -86,19 +94,11 @@ function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
     str = str.replace(/\.+/g, "");
   }
 
-  // Substituir hífens e underscores isolados por espaços
-  str = str.replace(/[_-]+/g, " ");
-
-  // Remover hashes mecânicos no fim ex: " 734d", " 3059"
-  str = str.replace(/\b[a-f0-9]{4,8}\b/gi, "");
-  str = str.replace(/\bcompleto\b/gi, "");
-
-  // Limpar espaços extras
-  str = str.replace(/\s+/g, " ").trim();
+  // Limpar traços e underscores
+  str = str.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
 
   if (!str) str = tituloOriginal || nomeArquivo || "Documento Sem Título";
 
-  // Capitalização harmoniosa se tudo estiver em caixa baixa
   if (str === str.toLowerCase()) {
     str = str.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   }
@@ -595,16 +595,12 @@ function renderizarGrade(lista) {
       : `
         <div class="book-cover-fallback theme-${paleta.tema}" style="background: ${paleta.bg}; border-left-color: ${paleta.borda};">
           <div class="fallback-book-ribbon" style="background: ${paleta.borda};"></div>
-          <div class="fallback-book-header">
-            <span class="fallback-book-format" style="color: ${paleta.borda};">${formato}</span>
-          </div>
           <h4 class="fallback-book-title">${tituloExibicao}</h4>
-          <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca Digital"}</p>
-          <div class="fallback-book-footer">📖</div>
+          <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : ""}</p>
         </div>
       `;
 
-    // Progresso de Leitura no Card
+    // Progresso de Leitura no Card (apenas para obras que já foram iniciadas)
     const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0 };
     const paginaAtual = prog.paginaAtual || 0;
     const totalPaginas = prog.totalPaginas || 0;
@@ -613,16 +609,12 @@ function renderizarGrade(lista) {
       : (prog.porcentagem || 0);
 
     let progressHtml = "";
-    if (paginaAtual > 0 || totalPaginas > 0) {
+    if (paginaAtual > 0) {
       const isConcluido = porcentagem >= 100;
       progressHtml = `
         <div class="card-reading-progress" title="Página ${paginaAtual}${totalPaginas ? ` de ${totalPaginas}` : ''} (${porcentagem}%)">
           <div class="card-progress-bar-bg">
             <div class="card-progress-bar-fill ${isConcluido ? 'concluido' : ''}" style="width: ${porcentagem}%"></div>
-          </div>
-          <div class="card-progress-info">
-            <span>Pág. ${paginaAtual}${totalPaginas ? ` / ${totalPaginas}` : ''}</span>
-            <span class="card-progress-pct">${porcentagem}%</span>
           </div>
         </div>
       `;
@@ -635,30 +627,26 @@ function renderizarGrade(lista) {
         ${statusBadge}
 
         <button class="fav-btn ${isFav ? "active" : ""}" title="Favoritar">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav ? "#e5a93b" : "rgba(255,255,255,0.7)"}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="${isFav ? "#e5a93b" : "rgba(255,255,255,0.7)"}">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
         </button>
 
         <div class="cover-hover-overlay">
-          <button class="btn-cover-read" title="Abrir e ler no leitor do Windows">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <button class="btn-cover-read" title="Abrir e ler no Windows">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>Ler</span>
           </button>
+          <button class="btn-cover-info" title="Ver detalhes da obra">ℹ️</button>
         </div>
+        ${progressHtml}
       </div>
 
       <div class="book-card-body">
         <h3 class="book-title" title="${livro.titulo} (${livro.nome})">${tituloExibicao}</h3>
-        <p class="book-author" title="${livro.autor}">${livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca"}</p>
         <div class="book-meta">
-          <span class="meta-ext">${formato}</span>
           <span class="meta-size">${tamanho}</span>
-        </div>
-        ${progressHtml}
-        <div class="book-card-quick-actions">
-          <button class="btn-quick-read" title="Abrir e ler no leitor do Windows">▶ Ler</button>
-          <button class="btn-quick-details" title="Ver detalhes e anotações">ℹ️ Detalhes</button>
+          ${paginaAtual > 0 ? `<span class="meta-prog">${porcentagem}%</span>` : `<span class="meta-ext">${formato}</span>`}
         </div>
       </div>
     `;
@@ -670,6 +658,12 @@ function renderizarGrade(lista) {
       showToast(`Abrindo "${tituloExibicao}" no Windows...`);
     });
 
+    // Ação do Botão de Detalhes na Capa
+    card.querySelector(".btn-cover-info")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      abrirModalLivro(livro);
+    });
+
     // Duplo clique no Card: Abre diretamente no leitor do Windows
     card.addEventListener("dblclick", () => {
       window.api?.abrirNoWindows?.(livro.caminho);
@@ -678,20 +672,7 @@ function renderizarGrade(lista) {
 
     // Clique no Card: Abre o Modal de Detalhes
     card.addEventListener("click", (e) => {
-      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-quick-read") || e.target.closest(".btn-quick-details")) return;
-      abrirModalLivro(livro);
-    });
-
-    // Botão de Leitura Rápida
-    card.querySelector(".btn-quick-read")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      window.api?.abrirNoWindows?.(livro.caminho);
-      showToast(`Abrindo "${tituloExibicao}" no Windows...`);
-    });
-
-    // Botão de Detalhes
-    card.querySelector(".btn-quick-details")?.addEventListener("click", (e) => {
-      e.stopPropagation();
+      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-cover-info")) return;
       abrirModalLivro(livro);
     });
 
