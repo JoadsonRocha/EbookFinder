@@ -30,6 +30,16 @@ contextBridge.exposeInMainWorld("api", {
   escolherPasta: () => safeInvoke("escolher-pasta"),
 
   /**
+   * Abre o diálogo nativo do sistema para selecionar arquivos (.pdf, .epub, etc.).
+   */
+  escolherArquivos: () => safeInvoke("escolher-arquivos"),
+
+  /**
+   * Define uma pasta diretamente (usado no drag and drop).
+   */
+  definirPasta: (caminho) => safeInvoke("definir-pasta", caminho),
+
+  /**
    * Retorna informações de versão e status dos módulos internos.
    */
   obterStatusSistema: () => safeInvoke("obter-status-sistema"),

@@ -416,12 +416,35 @@ function renderizarGrade(lista) {
           <span>${tamanho}</span>
         </div>
         ${progressHtml}
+        <div class="book-card-quick-actions">
+          <button class="btn-quick-read" title="Abrir e ler no leitor do Windows">📖 Abrir</button>
+          <button class="btn-quick-details" title="Ver detalhes e progresso">ℹ️ Detalhes</button>
+        </div>
       </div>
     `;
 
+    // Duplo clique no Card: Abre diretamente no leitor do Windows
+    card.addEventListener("dblclick", () => {
+      window.api?.abrirNoWindows?.(livro.caminho);
+      showToast(`Abrindo "${livro.titulo}" no Windows...`);
+    });
+
     // Clique no Card: Abre o Modal de Detalhes
     card.addEventListener("click", (e) => {
-      if (e.target.closest(".fav-btn")) return;
+      if (e.target.closest(".fav-btn") || e.target.closest(".btn-quick-read") || e.target.closest(".btn-quick-details")) return;
+      abrirModalLivro(livro);
+    });
+
+    // Botão de Leitura Rápida
+    card.querySelector(".btn-quick-read")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.api?.abrirNoWindows?.(livro.caminho);
+      showToast(`Abrindo "${livro.titulo}" no Windows...`);
+    });
+
+    // Botão de Detalhes
+    card.querySelector(".btn-quick-details")?.addEventListener("click", (e) => {
+      e.stopPropagation();
       abrirModalLivro(livro);
     });
 
@@ -438,15 +461,29 @@ function renderizarGrade(lista) {
 
 function renderizarEstadoSemPasta() {
   const grid = document.getElementById("grid");
+  const resultsCount = document.getElementById("resultsCount");
+  if (resultsCount) resultsCount.textContent = "Nenhuma pasta selecionada";
   if (!grid) return;
   grid.innerHTML = `
     <div class="empty-state">
       <div class="empty-icon">📁</div>
       <h3 class="empty-title">Nenhuma pasta selecionada</h3>
-      <p class="empty-desc">Escolha a pasta do seu computador onde seus e-books (.epub, .pdf, etc.) estão localizados.</p>
-      <button class="btn-empty-action" onclick="abrirPopupPasta()">Selecionar Pasta Agora</button>
+      <p class="empty-desc">Escolha a pasta do seu computador onde seus e-books (.pdf, .epub, etc.) estão localizados ou selecione arquivos diretamente.</p>
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px;">
+        <button class="btn-empty-action" onclick="abrirPopupPasta()">📁 Selecionar Pasta</button>
+        <button class="btn-empty-action" id="btnEscolherArquivosVazio" style="background: rgba(229, 169, 59, 0.15); border: 1px solid rgba(229, 169, 59, 0.4); color: #e5a93b;">📄 Selecionar Arquivos PDF</button>
+      </div>
     </div>
   `;
+  document.getElementById("btnEscolherArquivosVazio")?.addEventListener("click", () => {
+    window.api?.escolherArquivos?.().then(novaPasta => {
+      if (novaPasta) {
+        state.pastaAtual = novaPasta;
+        showToast("Pasta de e-books selecionada!");
+        carregarBiblioteca();
+      }
+    });
+  });
 }
 
 // ============================================================
@@ -665,7 +702,7 @@ document.addEventListener("DOMContentLoaded", () => {
     aplicarFiltrosEOrdenacao();
   });
 
-  // Troca de Pasta
+  // Troca de Pasta e Seleção de Arquivos
   const acaoTrocarPasta = async () => {
     fecharMenu();
     fecharPopupPasta();
@@ -677,11 +714,60 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const acaoEscolherArquivos = async () => {
+    fecharMenu();
+    fecharPopupPasta();
+    const novaPasta = await window.api?.escolherArquivos?.();
+    if (novaPasta) {
+      state.pastaAtual = novaPasta;
+      showToast("Pasta de e-books selecionada!");
+      carregarBiblioteca();
+    }
+  };
+
   document.getElementById("btnTrocarPastaHeader")?.addEventListener("click", acaoTrocarPasta);
   document.getElementById("currentPathInfo")?.addEventListener("click", acaoTrocarPasta);
   document.getElementById("btnToggleSubpastas")?.addEventListener("click", alternarSubpastas);
   document.getElementById("popupSelecionar")?.addEventListener("click", acaoTrocarPasta);
+  document.getElementById("popupSelecionarArquivos")?.addEventListener("click", acaoEscolherArquivos);
   document.getElementById("popupCancelar")?.addEventListener("click", fecharPopupPasta);
+
+  // Drag and Drop global para carregar pastas ou PDFs arrastados
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const overlay = document.getElementById("dropOverlay");
+    if (overlay) overlay.hidden = false;
+  });
+
+  window.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.relatedTarget === null) {
+      const overlay = document.getElementById("dropOverlay");
+      if (overlay) overlay.hidden = true;
+    }
+  });
+
+  window.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const overlay = document.getElementById("dropOverlay");
+    if (overlay) overlay.hidden = true;
+
+    if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const caminho = file.path;
+      if (caminho) {
+        const novaPasta = await window.api?.definirPasta?.(caminho);
+        if (novaPasta) {
+          state.pastaAtual = novaPasta;
+          showToast(`Pasta configurada: ${truncarCaminho(novaPasta)}`);
+          carregarBiblioteca();
+        }
+      }
+    }
+  });
 
   // Menu Dropdown
   document.getElementById("menuToggle")?.addEventListener("click", (e) => {

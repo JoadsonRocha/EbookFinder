@@ -1174,3 +1174,75 @@ footer a:hover { text-decoration: underline; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dropIn { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); } }
 @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); } }
+
+/* Drag and Drop Overlay */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 13, 22, 0.88);
+  backdrop-filter: blur(8px);
+  border: 3px dashed var(--amber);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease;
+}
+.drop-content {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(26, 23, 42, 0.95);
+  padding: 24px 38px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--amber);
+  box-shadow: 0 12px 40px var(--amber-glow);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Ações Rápidas nos Cards */
+.book-card-quick-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.btn-quick-read {
+  flex: 1;
+  background: rgba(229, 169, 59, 0.15);
+  border: 1px solid rgba(229, 169, 59, 0.35);
+  color: var(--amber);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.btn-quick-read:hover {
+  background: var(--amber);
+  color: #1a1200;
+  border-color: var(--amber);
+}
+.btn-quick-details {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-quick-details:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}

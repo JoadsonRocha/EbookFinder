@@ -327,13 +327,29 @@
   <div id="popupPasta" class="popup-backdrop" hidden>
     <div class="popup-card">
       <img src="logo.png" alt="EbookFinder Logo" class="popup-logo-img" />
-      <h2>Bem-vindo ao EbookFinder</h2>
-      <p>Selecione a pasta onde seus livros digitais (.epub, .pdf, .cbz, etc.) estão guardados para organizar sua estante.</p>
+      <h2>Biblioteca de E-books</h2>
+      <p>Escolha como deseja carregar seus livros e documentos digitais:</p>
 
-      <div class="popup-buttons">
-        <button id="popupSelecionar" class="popup-btn primary">Selecionar Pasta de Livros</button>
-        <button id="popupCancelar" class="popup-btn secondary">Mais Tarde</button>
+      <div class="popup-buttons" style="flex-direction: column; gap: 10px; width: 100%;">
+        <button id="popupSelecionar" class="popup-btn primary" style="width: 100%;">
+          📁 Selecionar Pasta de Livros (com Subpastas)
+        </button>
+        <button id="popupSelecionarArquivos" class="popup-btn secondary" style="width: 100%; border-color: rgba(229, 169, 59, 0.4); color: #e5a93b;">
+          📄 Selecionar Arquivos PDF / E-books Diretamente
+        </button>
+        <button id="popupCancelar" class="popup-btn secondary" style="width: 100%;">Cancelar</button>
       </div>
+
+      <p style="font-size: 0.78rem; color: #aba5cd; margin-top: 14px; line-height: 1.4;">
+        💡 <em>Dica: No seletor de pastas do Windows, os arquivos PDF ficam ocultos pelo próprio sistema (são mostradas apenas as pastas). Basta selecionar a pasta principal e clicar em "Selecionar Pasta"! Você também pode arrastar e soltar PDFs diretamente nesta janela.</em>
+      </p>
+    </div>
+  </div>
+
+  <!-- Overlay para Arrastar e Soltar -->
+  <div id="dropOverlay" class="drop-overlay" hidden>
+    <div class="drop-content">
+      <span>📥</span> Solte sua pasta ou arquivo PDF aqui para abrir na estante!
     </div>
   </div>
 

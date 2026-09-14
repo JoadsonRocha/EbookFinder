@@ -27,24 +27,42 @@ try {
 // 1. DIRETÓRIOS E CONFIGURAÇÃO PERSISTENTE
 // ============================================================================
 
+app.name = "EbookFinder";
+const userDataPath = path.join(app.getPath("appData"), "EbookFinder");
+if (!fs.existsSync(userDataPath)) {
+  fs.mkdirSync(userDataPath, { recursive: true });
+}
+app.setPath("userData", userDataPath);
+
 // Pasta para armazenamento em cache das capas dos livros
-const thumbsDir = path.join(app.getPath("userData"), "thumbs");
+const thumbsDir = path.join(userDataPath, "thumbs");
 if (!fs.existsSync(thumbsDir)) {
   fs.mkdirSync(thumbsDir, { recursive: true });
 }
 
 // Arquivo de configuração da pasta de livros
-const pastaConfigFile = path.join(app.getPath("userData"), "pasta_ebooks.json");
+const pastaConfigFile = path.join(userDataPath, "pasta_ebooks.json");
 let pastaEbooks = null;
 
-if (fs.existsSync(pastaConfigFile)) {
-  try {
-    const data = JSON.parse(fs.readFileSync(pastaConfigFile, "utf8"));
-    if (data.pasta && fs.existsSync(data.pasta)) {
-      pastaEbooks = data.pasta;
+// Tenta ler do diretório oficial ou de diretórios legados
+const possiveisCaminhosConfig = [
+  pastaConfigFile,
+  path.join(app.getPath("appData"), "ebookfinder", "pasta_ebooks.json"),
+  path.join(app.getPath("appData"), "Electron", "pasta_ebooks.json")
+];
+
+for (const cfg of possiveisCaminhosConfig) {
+  if (fs.existsSync(cfg)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(cfg, "utf8"));
+      if (data.pasta && fs.existsSync(data.pasta)) {
+        pastaEbooks = data.pasta;
+        console.log("📖 Pasta de e-books carregada:", pastaEbooks);
+        break;
+      }
+    } catch (e) {
+      console.error("❌ Erro ao ler", cfg, e);
     }
-  } catch (e) {
-    console.error("❌ Erro ao ler pasta_ebooks.json:", e);
   }
 }
 
@@ -433,6 +451,33 @@ ipcMain.handle("escolher-pasta", async () => {
   if (result.canceled || !result.filePaths.length) return null;
   salvarPasta(result.filePaths[0]);
   return pastaEbooks;
+});
+
+ipcMain.handle("escolher-arquivos", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Selecione arquivos PDF ou outros e-books",
+    properties: ["openFile", "multiSelections"],
+    filters: [
+      { name: "Livros e Documentos Digitais", extensions: ["pdf", "epub", "mobi", "cbr", "cbz", "azw", "azw3", "fb2", "txt"] }
+    ]
+  });
+
+  if (result.canceled || !result.filePaths.length) return null;
+  const pastaDoArquivo = path.dirname(result.filePaths[0]);
+  salvarPasta(pastaDoArquivo);
+  return pastaEbooks;
+});
+
+ipcMain.handle("definir-pasta", (e, caminho) => {
+  if (!caminho || !fs.existsSync(caminho)) return null;
+  try {
+    const stats = fs.statSync(caminho);
+    const dirFinal = stats.isDirectory() ? caminho : path.dirname(caminho);
+    salvarPasta(dirFinal);
+    return pastaEbooks;
+  } catch (err) {
+    return null;
+  }
 });
 
 ipcMain.handle("obter-status-sistema", () => ({
