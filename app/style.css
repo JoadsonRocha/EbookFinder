@@ -847,15 +847,15 @@ main#mainContent {
 
 /* Corpo de Informações do Card */
 .book-card-body {
-  padding: 12px 14px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .book-title {
   font-family: var(--font-title);
-  font-size: 0.96rem;
+  font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text-primary);
@@ -865,7 +865,7 @@ main#mainContent {
 }
 
 .book-author {
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   color: var(--amber);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -873,9 +873,9 @@ main#mainContent {
 }
 
 .book-meta {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
   justify-content: space-between;
 }
