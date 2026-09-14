@@ -468,6 +468,29 @@ ipcMain.handle("escolher-arquivos", async () => {
   return pastaEbooks;
 });
 
+ipcMain.handle("ler-arquivo-buffer", async (e, caminho) => {
+  if (!caminho || !fs.existsSync(caminho)) return null;
+  try {
+    return fs.readFileSync(caminho);
+  } catch (err) {
+    return null;
+  }
+});
+
+ipcMain.handle("salvar-capa-cache", async (e, caminho, dataUrl) => {
+  if (!caminho || !dataUrl) return false;
+  try {
+    const hash = gerarHashCaminho(caminho);
+    const nomeCapa = `${hash}_cover.jpg`;
+    const capaCompleta = path.join(thumbsDir, nomeCapa);
+    const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+    fs.writeFileSync(capaCompleta, Buffer.from(base64Data, "base64"));
+    return `file://${capaCompleta.replace(/\\/g, "/")}`;
+  } catch (err) {
+    return false;
+  }
+});
+
 ipcMain.handle("definir-pasta", (e, caminho) => {
   if (!caminho || !fs.existsSync(caminho)) return null;
   try {
@@ -536,11 +559,13 @@ ipcMain.handle("buscar-ebooks", async (event, termo = "", recursivo = true) => {
       }
     }
 
+    const thumbUrl = temCapa ? `file://${capaCompleta.replace(/\\/g, "/")}` : null;
+
     lista.push({
       ...item,
       titulo,
       autor,
-      thumbnail: temCapa ? capaCompleta : null
+      thumbnail: thumbUrl
     });
   }
 

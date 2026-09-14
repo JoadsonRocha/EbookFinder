@@ -40,6 +40,16 @@ contextBridge.exposeInMainWorld("api", {
   definirPasta: (caminho) => safeInvoke("definir-pasta", caminho),
 
   /**
+   * Lê o buffer binário de um arquivo local (para extração de capa do PDF).
+   */
+  lerArquivoBuffer: (caminho) => safeInvoke("ler-arquivo-buffer", caminho),
+
+  /**
+   * Salva a imagem da capa extraída no cache persistente em disco.
+   */
+  salvarCapaCache: (caminho, dataUrl) => safeInvoke("salvar-capa-cache", caminho, dataUrl),
+
+  /**
    * Retorna informações de versão e status dos módulos internos.
    */
   obterStatusSistema: () => safeInvoke("obter-status-sistema"),

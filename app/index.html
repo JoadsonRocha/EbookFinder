@@ -11,6 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css" />
+  <!-- Suporte a Renderização de Capas de PDF via Canvas -->
+  <script src="vendor/pdf.min.js"></script>
 </head>
 <body>
 
@@ -192,6 +194,19 @@
         <option value="data-desc">Mais Recentes</option>
         <option value="tamanho-desc">Maior Tamanho</option>
       </select>
+    </div>
+
+    <!-- Alternador de Visualização (Normal, Compacto, Lista) -->
+    <div class="view-mode-group" id="viewModeGroup">
+      <button class="btn-view-mode active" data-mode="normal" title="Grade Normal (Equilibrada)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      </button>
+      <button class="btn-view-mode" data-mode="compact" title="Grade Compacta (Mais livros na tela)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="4" height="4"></rect><rect x="10" y="3" width="4" height="4"></rect><rect x="17" y="3" width="4" height="4"></rect><rect x="3" y="10" width="4" height="4"></rect><rect x="10" y="10" width="4" height="4"></rect><rect x="17" y="10" width="4" height="4"></rect><rect x="3" y="17" width="4" height="4"></rect><rect x="10" y="17" width="4" height="4"></rect><rect x="17" y="17" width="4" height="4"></rect></svg>
+      </button>
+      <button class="btn-view-mode" data-mode="list" title="Exibição em Lista">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      </button>
     </div>
   </section>
 
