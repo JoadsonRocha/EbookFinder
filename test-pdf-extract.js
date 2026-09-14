@@ -2,6 +2,8 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+require('./main.js');
+
 app.whenReady().then(async () => {
   const win = new BrowserWindow({
     show: false,
