@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * EbookFinder - Processo de Renderização (Frontend / DOM)
  * ============================================================================
@@ -57,6 +57,88 @@ function truncarCaminho(caminho, maxChars = 38) {
   if (!caminho) return "Nenhuma pasta selecionada";
   if (caminho.length <= maxChars) return caminho;
   return "..." + caminho.slice(caminho.length - maxChars);
+}
+
+function formatarDataLeitura(timestamp) {
+  if (!timestamp) return "Nenhuma leitura registrada";
+  try {
+    const data = new Date(timestamp);
+    return `Lido em ${data.toLocaleDateString("pt-BR")} às ${data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+  } catch (e) {
+    return "Nenhuma leitura registrada";
+  }
+}
+
+function atualizarProgressoVisual(pag, tot) {
+  const p = Math.max(0, parseInt(pag, 10) || 0);
+  const t = Math.max(0, parseInt(tot, 10) || 0);
+  const pct = t > 0 ? Math.min(100, Math.round((p / t) * 100)) : 0;
+
+  const lblPct = document.getElementById("lblProgressoPercentual");
+  const barFill = document.getElementById("progressBarFill");
+
+  if (lblPct) lblPct.textContent = `${pct}%`;
+  if (barFill) {
+    barFill.style.width = `${pct}%`;
+    barFill.classList.toggle("concluido", pct >= 100);
+  }
+
+  return { paginaAtual: p, totalPaginas: t, porcentagem: pct };
+}
+
+async function salvarProgressoModal(marcarConcluido = false) {
+  if (!state.livroSelecionado) return;
+
+  const inputPagina = document.getElementById("inputPaginaAtual");
+  const inputTotal = document.getElementById("inputTotalPaginas");
+  const inputNotas = document.getElementById("inputAnotacoes");
+  const lblUltima = document.getElementById("lblUltimaLeitura");
+
+  let pag = Math.max(0, parseInt(inputPagina?.value, 10) || 0);
+  let tot = Math.max(0, parseInt(inputTotal?.value, 10) || 0);
+  const notas = inputNotas?.value || "";
+
+  if (marcarConcluido && tot > 0) {
+    pag = tot;
+    if (inputPagina) inputPagina.value = pag;
+  }
+
+  const { porcentagem } = atualizarProgressoVisual(pag, tot);
+
+  const dadosProgresso = {
+    paginaAtual: pag,
+    totalPaginas: tot,
+    porcentagem,
+    anotacoes: notas
+  };
+
+  const resultado = await window.api?.salvarProgressoLeitura?.(state.livroSelecionado.caminho, dadosProgresso);
+
+  if (resultado) {
+    state.livroSelecionado.progresso = resultado;
+    if (resultado.status) {
+      state.livroSelecionado.status = resultado.status;
+      document.querySelectorAll(".btn-status").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.status === resultado.status);
+      });
+    }
+
+    if (lblUltima && resultado.ultimaLeituraEm) {
+      lblUltima.textContent = formatarDataLeitura(resultado.ultimaLeituraEm);
+    }
+
+    // Atualiza também na lista global
+    const idx = state.todosLivros.findIndex(l => l.caminho === state.livroSelecionado.caminho);
+    if (idx !== -1) {
+      state.todosLivros[idx].progresso = resultado;
+      if (resultado.status) state.todosLivros[idx].status = resultado.status;
+    }
+
+    aplicarFiltrosEOrdenacao();
+    showToast(marcarConcluido ? "Parabéns! Obra concluída." : `Progresso salvo: Pág. ${pag}${tot ? `/${tot}` : ''} (${porcentagem}%)`);
+  } else {
+    showToast("Erro ao salvar progresso.");
+  }
 }
 
 // ============================================================================
@@ -247,6 +329,30 @@ function renderizarGrade(lista) {
         </div>
       `;
 
+    // Progresso de Leitura no Card
+    const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0 };
+    const paginaAtual = prog.paginaAtual || 0;
+    const totalPaginas = prog.totalPaginas || 0;
+    const porcentagem = totalPaginas > 0
+      ? Math.min(100, Math.round((paginaAtual / totalPaginas) * 100))
+      : (prog.porcentagem || 0);
+
+    let progressHtml = "";
+    if (paginaAtual > 0 || totalPaginas > 0) {
+      const isConcluido = porcentagem >= 100;
+      progressHtml = `
+        <div class="card-reading-progress" title="Página ${paginaAtual}${totalPaginas ? ` de ${totalPaginas}` : ''} (${porcentagem}%)">
+          <div class="card-progress-bar-bg">
+            <div class="card-progress-bar-fill ${isConcluido ? 'concluido' : ''}" style="width: ${porcentagem}%"></div>
+          </div>
+          <div class="card-progress-info">
+            <span>Pág. ${paginaAtual}${totalPaginas ? ` / ${totalPaginas}` : ''}</span>
+            <span class="card-progress-pct">${porcentagem}%</span>
+          </div>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div class="book-cover-wrapper">
         ${capaConteudo}
@@ -267,6 +373,7 @@ function renderizarGrade(lista) {
           <span>${formato}</span>
           <span>${tamanho}</span>
         </div>
+        ${progressHtml}
       </div>
     `;
 
@@ -343,6 +450,20 @@ function abrirModalLivro(livro) {
     btn.classList.toggle("active", btn.dataset.status === (livro.status || "nenhum"));
   });
 
+  // Preenche dados do progresso de leitura
+  const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0, anotacoes: "", ultimaLeituraEm: null };
+  const inputPagina = document.getElementById("inputPaginaAtual");
+  const inputTotal = document.getElementById("inputTotalPaginas");
+  const inputNotas = document.getElementById("inputAnotacoes");
+  const lblUltima = document.getElementById("lblUltimaLeitura");
+
+  if (inputPagina) inputPagina.value = prog.paginaAtual || 0;
+  if (inputTotal) inputTotal.value = prog.totalPaginas || 0;
+  if (inputNotas) inputNotas.value = prog.anotacoes || "";
+  if (lblUltima) lblUltima.textContent = formatarDataLeitura(prog.ultimaLeituraEm);
+
+  atualizarProgressoVisual(prog.paginaAtual, prog.totalPaginas);
+
   modal.hidden = false;
   document.addEventListener("keydown", lidarTeclasModal);
 }
@@ -363,6 +484,22 @@ async function atualizarStatusLeitura(status) {
 
   state.livroSelecionado.status = status;
   await window.api?.salvarStatusLeitura?.(state.livroSelecionado.caminho, status);
+
+  // Se marcar como concluído diretamente e houver total de páginas, completa o progresso
+  if (status === "concluidos" && state.livroSelecionado.progresso?.totalPaginas > 0) {
+    const tot = state.livroSelecionado.progresso.totalPaginas;
+    const inputPagina = document.getElementById("inputPaginaAtual");
+    if (inputPagina) inputPagina.value = tot;
+    atualizarProgressoVisual(tot, tot);
+    await window.api?.salvarProgressoLeitura?.(state.livroSelecionado.caminho, {
+      paginaAtual: tot,
+      totalPaginas: tot,
+      porcentagem: 100,
+      anotacoes: document.getElementById("inputAnotacoes")?.value || ""
+    });
+    state.livroSelecionado.progresso.paginaAtual = tot;
+    state.livroSelecionado.progresso.porcentagem = 100;
+  }
 
   // Atualiza botões na interface do modal
   document.querySelectorAll(".btn-status").forEach(btn => {
@@ -544,11 +681,57 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => atualizarStatusLeitura(btn.dataset.status));
   });
 
+  // Ações de Progresso de Leitura no Modal
+  const inputPaginaAtual = document.getElementById("inputPaginaAtual");
+  const inputTotalPaginas = document.getElementById("inputTotalPaginas");
+  const inputAnotacoes = document.getElementById("inputAnotacoes");
+
+  const onPageInputChange = () => {
+    atualizarProgressoVisual(inputPaginaAtual?.value, inputTotalPaginas?.value);
+  };
+  inputPaginaAtual?.addEventListener("input", onPageInputChange);
+  inputTotalPaginas?.addEventListener("input", onPageInputChange);
+
+  // Botões de Passo Rápido (-1, +1, +5, +10)
+  document.querySelectorAll(".btn-step").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const step = parseInt(btn.dataset.step, 10) || 0;
+      let pag = parseInt(inputPaginaAtual?.value, 10) || 0;
+      pag = Math.max(0, pag + step);
+      const tot = parseInt(inputTotalPaginas?.value, 10) || 0;
+      if (tot > 0 && pag > tot) pag = tot;
+      if (inputPaginaAtual) inputPaginaAtual.value = pag;
+      atualizarProgressoVisual(pag, tot);
+    });
+  });
+
+  // Salvar Progresso
+  document.getElementById("btnSalvarProgresso")?.addEventListener("click", () => {
+    salvarProgressoModal(false);
+  });
+
+  // Concluir Livro (100%)
+  document.getElementById("btnConcluirLeitura")?.addEventListener("click", () => {
+    salvarProgressoModal(true);
+  });
+
+  // Tecla Enter nos campos de progresso salva diretamente
+  [inputPaginaAtual, inputTotalPaginas, inputAnotacoes].forEach(inp => {
+    inp?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        salvarProgressoModal(false);
+      }
+    });
+  });
+
   // Abrir no Windows
   document.getElementById("btnAbrirLeitorWindows")?.addEventListener("click", () => {
     if (state.livroSelecionado?.caminho) {
       window.api?.abrirNoWindows?.(state.livroSelecionado.caminho);
-      showToast("Abrindo no leitor do Windows...");
+      showToast("Abrindo no leitor do Windows... Boas leituras!");
+      // Registra timestamp de última leitura
+      salvarProgressoModal(false);
     }
   });
 

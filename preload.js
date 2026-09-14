@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * EbookFinder - Preload Script (Ponte Segura IPC)
  * ============================================================================
@@ -35,9 +35,19 @@ contextBridge.exposeInMainWorld("api", {
   obterStatusSistema: () => safeInvoke("obter-status-sistema"),
 
   /**
-   * Atualiza a estante / status de leitura da obra ("lendo", "lido", "quero-ler", "nenhum").
+   * Atualiza a estante / status de leitura da obra ("lendo", "concluidos", "quero-ler", "nenhum").
    */
   salvarStatusLeitura: (caminho, status) => safeInvoke("salvar-status-leitura", caminho, status),
+
+  /**
+   * Salva o progresso de leitura (página atual, total de páginas, marcador/anotações).
+   */
+  salvarProgressoLeitura: (caminho, dados) => safeInvoke("salvar-progresso-leitura", caminho, dados),
+
+  /**
+   * Obtém o progresso de leitura registrado de um livro.
+   */
+  obterProgressoLeitura: (caminho) => safeInvoke("obter-progresso-leitura", caminho),
 
   /**
    * Busca livros e documentos digitais na pasta configurada.

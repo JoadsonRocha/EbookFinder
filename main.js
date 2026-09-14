@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * EbookFinder - Processo Principal (Electron Main Process)
  * ============================================================================
@@ -81,6 +81,89 @@ function salvarStatusObra(caminho, status) {
   } catch (e) {
     console.error("❌ Erro ao salvar status da obra:", e);
   }
+}
+
+// Arquivo para armazenar progresso detalhado de leitura (páginas, marcador, notas)
+const progressoConfigFile = path.join(app.getPath("userData"), "progresso_leitura.json");
+let progressoLeitura = {};
+
+if (fs.existsSync(progressoConfigFile)) {
+  try {
+    progressoLeitura = JSON.parse(fs.readFileSync(progressoConfigFile, "utf8")) || {};
+  } catch (e) {
+    progressoLeitura = {};
+  }
+}
+
+/**
+ * Salva o progresso de leitura de um livro (página atual, total, anotações, timestamp).
+ */
+function salvarProgressoObra(caminho, dados) {
+  if (!caminho || !dados) return false;
+
+  const paginaAtual = Math.max(0, parseInt(dados.paginaAtual, 10) || 0);
+  const totalPaginas = Math.max(0, parseInt(dados.totalPaginas, 10) || 0);
+  const porcentagem = totalPaginas > 0
+    ? Math.min(100, Math.max(0, Math.round((paginaAtual / totalPaginas) * 100)))
+    : 0;
+
+  progressoLeitura[caminho] = {
+    paginaAtual,
+    totalPaginas,
+    porcentagem,
+    anotacoes: typeof dados.anotacoes === "string" ? dados.anotacoes.trim() : "",
+    ultimaLeituraEm: Date.now()
+  };
+
+  try {
+    fs.writeFileSync(progressoConfigFile, JSON.stringify(progressoLeitura, null, 2));
+  } catch (e) {
+    console.error("❌ Erro ao salvar progresso de leitura:", e);
+  }
+
+  // Transição inteligente do status da estante:
+  const statusAtual = estanteStatus[caminho] || "nenhum";
+  if (totalPaginas > 0 && paginaAtual >= totalPaginas) {
+    if (statusAtual !== "concluidos") {
+      salvarStatusObra(caminho, "concluidos");
+    }
+  } else if (paginaAtual > 0 && (statusAtual === "nenhum" || statusAtual === "quero-ler")) {
+    salvarStatusObra(caminho, "lendo");
+  }
+
+  return {
+    ...progressoLeitura[caminho],
+    status: estanteStatus[caminho] || "nenhum"
+  };
+}
+
+/**
+ * Helper rápido para tentar extrair contagem de páginas de PDFs sem dependências pesadas.
+ */
+function extrairTotalPaginasPdf(caminhoPdf) {
+  try {
+    const fd = fs.openSync(caminhoPdf, "r");
+    const stat = fs.fstatSync(fd);
+    const bufferTamanho = Math.min(stat.size, 65536);
+    const buffer = Buffer.alloc(bufferTamanho);
+    fs.readSync(fd, buffer, 0, bufferTamanho, 0);
+    let texto = buffer.toString("latin1");
+
+    let match = texto.match(/\/Type\s*\/Pages[^>]*\/Count\s+(\d+)/i) || texto.match(/\/Count\s+(\d+)[^>]*\/Type\s*\/Pages/i);
+    if (!match && stat.size > 65536) {
+      const finalOffset = Math.max(0, stat.size - 65536);
+      fs.readSync(fd, buffer, 0, bufferTamanho, finalOffset);
+      texto = buffer.toString("latin1");
+      match = texto.match(/\/Type\s*\/Pages[^>]*\/Count\s+(\d+)/i) || texto.match(/\/Count\s+(\d+)[^>]*\/Type\s*\/Pages/i);
+    }
+    fs.closeSync(fd);
+
+    if (match && match[1]) {
+      const paginas = parseInt(match[1], 10);
+      if (paginas > 0 && paginas < 50000) return paginas;
+    }
+  } catch (err) {}
+  return 0;
 }
 
 // ============================================================================
@@ -224,12 +307,13 @@ function processarEpub(caminhoEpub, pastaDestino, nomeCapa) {
 }
 
 /**
- * Extrai a primeira imagem de um arquivo CBZ (Histórias em Quadrinhos).
+ * Extrai a primeira imagem de um arquivo CBZ (Histórias em Quadrinhos) e conta páginas.
  */
 function processarCbz(caminhoCbz, pastaDestino, nomeCapa) {
-  if (!AdmZip) return false;
+  let resultado = { temCapa: false, totalPaginas: 0 };
+  if (!AdmZip) return resultado;
   const capaDestino = path.join(pastaDestino, nomeCapa);
-  if (fs.existsSync(capaDestino)) return true;
+  resultado.temCapa = fs.existsSync(capaDestino);
 
   try {
     const zip = new AdmZip(caminhoCbz);
@@ -238,12 +322,14 @@ function processarCbz(caminhoCbz, pastaDestino, nomeCapa) {
       .filter(e => !e.isDirectory && /\.(jpe?g|png|webp)$/i.test(e.entryName))
       .sort((a, b) => a.entryName.localeCompare(b.entryName));
 
-    if (imageEntries.length > 0) {
+    resultado.totalPaginas = imageEntries.length;
+
+    if (!resultado.temCapa && imageEntries.length > 0) {
       fs.writeFileSync(capaDestino, imageEntries[0].getData());
-      return true;
+      resultado.temCapa = true;
     }
   } catch (err) {}
-  return false;
+  return resultado;
 }
 
 /**
@@ -278,6 +364,19 @@ function buscarEbooksNaPasta(dir, termo = "", recursivo = false) {
                 modificadoEm = stat.mtimeMs;
               } catch (e) {}
 
+              const prog = progressoLeitura[caminhoCompleto] || {
+                paginaAtual: 0,
+                totalPaginas: 0,
+                porcentagem: 0,
+                anotacoes: "",
+                ultimaLeituraEm: null
+              };
+
+              let totalPaginasDetectado = prog.totalPaginas || 0;
+              if (!totalPaginasDetectado && ext === ".pdf") {
+                totalPaginasDetectado = extrairTotalPaginasPdf(caminhoCompleto);
+              }
+
               resultados.push({
                 nome: entrada.name,
                 titulo: baseNome,
@@ -286,7 +385,11 @@ function buscarEbooksNaPasta(dir, termo = "", recursivo = false) {
                 extensao: ext,
                 tamanho,
                 modificadoEm,
-                status: estanteStatus[caminhoCompleto] || "nenhum"
+                status: estanteStatus[caminhoCompleto] || "nenhum",
+                progresso: {
+                  ...prog,
+                  totalPaginas: prog.totalPaginas || totalPaginasDetectado || 0
+                }
               });
             }
           }
@@ -332,6 +435,18 @@ ipcMain.handle("salvar-status-leitura", (e, caminho, status) => {
   return false;
 });
 
+ipcMain.handle("salvar-progresso-leitura", (e, caminho, dados) => {
+  if (caminho && dados) {
+    return salvarProgressoObra(caminho, dados);
+  }
+  return null;
+});
+
+ipcMain.handle("obter-progresso-leitura", (e, caminho) => {
+  if (!caminho) return null;
+  return progressoLeitura[caminho] || null;
+});
+
 ipcMain.handle("buscar-ebooks", async (event, termo = "", recursivo = false) => {
   if (!pastaEbooks) return [];
 
@@ -353,7 +468,11 @@ ipcMain.handle("buscar-ebooks", async (event, termo = "", recursivo = false) => 
       if (dadosEpub.autor) autor = dadosEpub.autor;
       temCapa = dadosEpub.capaExtraida || fs.existsSync(capaCompleta);
     } else if (item.extensao === ".cbz") {
-      temCapa = processarCbz(item.caminho, thumbsDir, nomeCapa);
+      const dadosCbz = processarCbz(item.caminho, thumbsDir, nomeCapa);
+      temCapa = dadosCbz.temCapa;
+      if (!item.progresso.totalPaginas && dadosCbz.totalPaginas > 0) {
+        item.progresso.totalPaginas = dadosCbz.totalPaginas;
+      }
     }
 
     lista.push({
