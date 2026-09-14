@@ -198,6 +198,10 @@ function createWindow() {
     mainWindow.show();
   });
 
+  mainWindow.webContents.on("console-message", (event, level, message, line, sourceId) => {
+    console.log(`[Renderer]: ${message}`);
+  });
+
   Menu.setApplicationMenu(null);
 
   mainWindow.loadFile(path.join(appPath, "index.html")).catch(err => {
@@ -335,21 +339,30 @@ function processarCbz(caminhoCbz, pastaDestino, nomeCapa) {
 /**
  * Varre o diretório e coleta os livros digitais.
  */
-function buscarEbooksNaPasta(dir, termo = "", recursivo = false) {
+function buscarEbooksNaPasta(dir, termo = "", recursivo = true) {
   if (!dir || !fs.existsSync(dir)) return [];
 
   const termoLower = termo ? termo.toLowerCase() : "";
   const resultados = [];
+  const pastasIgnoradas = new Set([
+    ".git", "node_modules", "$recycle.bin", "system volume information",
+    "dist", "build", ".vscode", ".idea"
+  ]);
 
   function lerDiretorio(caminhoAtual) {
     try {
       const entradas = fs.readdirSync(caminhoAtual, { withFileTypes: true });
 
       for (const entrada of entradas) {
-        const caminhoCompleto = path.join(caminhoAtual, entrada.name);
-
-        if (entrada.isDirectory() && recursivo) {
-          lerDiretorio(caminhoCompleto);
+        // Ignora pastas ocultas e de sistema
+        if (entrada.isDirectory()) {
+          const nomeLower = entrada.name.toLowerCase();
+          if (pastasIgnoradas.has(nomeLower) || (entrada.name.startsWith(".") && entrada.name.length > 1)) {
+            continue;
+          }
+          if (recursivo) {
+            lerDiretorio(path.join(caminhoAtual, entrada.name));
+          }
         } else if (entrada.isFile()) {
           const ext = path.extname(entrada.name).toLowerCase();
           if (EXTENSOES_EBOOKS.includes(ext)) {
@@ -359,11 +372,12 @@ function buscarEbooksNaPasta(dir, termo = "", recursivo = false) {
               let tamanho = 0;
               let modificadoEm = 0;
               try {
-                const stat = fs.statSync(caminhoCompleto);
+                const stat = fs.statSync(path.join(caminhoAtual, entrada.name));
                 tamanho = stat.size;
                 modificadoEm = stat.mtimeMs;
               } catch (e) {}
 
+              const caminhoCompleto = path.join(caminhoAtual, entrada.name);
               const prog = progressoLeitura[caminhoCompleto] || {
                 paginaAtual: 0,
                 totalPaginas: 0,
@@ -447,10 +461,12 @@ ipcMain.handle("obter-progresso-leitura", (e, caminho) => {
   return progressoLeitura[caminho] || null;
 });
 
-ipcMain.handle("buscar-ebooks", async (event, termo = "", recursivo = false) => {
+ipcMain.handle("buscar-ebooks", async (event, termo = "", recursivo = true) => {
   if (!pastaEbooks) return [];
+  console.log(`📚 Buscando e-books em: "${pastaEbooks}" (recursivo: ${recursivo})`);
 
   const arquivos = buscarEbooksNaPasta(pastaEbooks, termo, recursivo);
+  console.log(`✅ ${arquivos.length} obra(s) encontrada(s) no total.`);
   const lista = [];
 
   for (const item of arquivos) {

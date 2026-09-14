@@ -393,6 +393,31 @@ header#appHeader {
 .current-path-info:hover { background: rgba(42, 37, 68, 0.8); color: #fff; }
 .path-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.btn-subpastas-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(30, 26, 48, 0.6);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-family: inherit;
+}
+.btn-subpastas-toggle:hover {
+  background: rgba(42, 37, 68, 0.8);
+  color: #fff;
+}
+.btn-subpastas-toggle.active {
+  background: rgba(229, 169, 59, 0.15);
+  border-color: rgba(229, 169, 59, 0.4);
+  color: var(--amber);
+  font-weight: 600;
+}
+
 .sort-group { display: flex; align-items: center; gap: 8px; }
 .sort-label { font-size: 0.88rem; color: var(--text-muted); }
 .sort-select {

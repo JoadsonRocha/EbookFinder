@@ -20,7 +20,7 @@ const state = {
   abaAtiva: "todos", // "todos" | "favoritos" | "lendo" | "concluidos" | "quero-ler"
   termoBusca: "",
   ordenacaoAtual: "titulo-asc",
-  buscaRecursiva: false,
+  buscaRecursiva: localStorage.getItem("ef_recursivo") !== "false",
   favoritos: new Set(JSON.parse(localStorage.getItem("ef_favoritos") || "[]")),
   livroSelecionado: null
 };
@@ -190,6 +190,29 @@ function atualizarIndicadorPasta() {
   if (boxPasta && state.pastaAtual) {
     boxPasta.title = `Pasta de e-books: ${state.pastaAtual} (Clique para alterar)`;
   }
+  atualizarIndicadorSubpastas();
+}
+
+function atualizarIndicadorSubpastas() {
+  const lblMenu = document.getElementById("lblRecursivo");
+  if (lblMenu) lblMenu.textContent = state.buscaRecursiva ? "Ativado" : "Desativado";
+
+  const btnBar = document.getElementById("btnToggleSubpastas");
+  const lblBar = document.getElementById("lblSubpastasBar");
+  if (btnBar) {
+    btnBar.classList.toggle("active", state.buscaRecursiva);
+  }
+  if (lblBar) {
+    lblBar.textContent = `Subpastas: ${state.buscaRecursiva ? "Ativado" : "Desativado"}`;
+  }
+}
+
+function alternarSubpastas() {
+  state.buscaRecursiva = !state.buscaRecursiva;
+  localStorage.setItem("ef_recursivo", state.buscaRecursiva);
+  atualizarIndicadorSubpastas();
+  showToast(state.buscaRecursiva ? "Busca em subpastas ATIVADA." : "Busca em subpastas DESATIVADA.");
+  carregarBiblioteca();
 }
 
 // ============================================================================
@@ -277,6 +300,7 @@ function renderizarGrade(lista) {
   if (!lista || lista.length === 0) {
     let tituloVazio = "Nenhum livro encontrado";
     let descVazio = "Não há livros que correspondam ao filtro atual.";
+    let botaoAcao = `<button class="btn-empty-action" onclick="alternarAba('todos')">Ver Todos os Livros</button>`;
 
     if (state.abaAtiva === "favoritos") {
       tituloVazio = "Nenhum livro favoritado";
@@ -284,6 +308,22 @@ function renderizarGrade(lista) {
     } else if (state.abaAtiva === "lendo") {
       tituloVazio = "Nenhuma leitura em andamento";
       descVazio = "Abra um livro e marque seu status como 'Lendo' para acompanhar seu progresso.";
+    } else if (state.abaAtiva === "concluidos") {
+      tituloVazio = "Nenhum livro concluído";
+      descVazio = "Marque seus livros como concluídos conforme terminar de lê-los.";
+    } else if (state.abaAtiva === "quero-ler") {
+      tituloVazio = "Lista de desejos vazia";
+      descVazio = "Adicione livros em 'Quero Ler' para organizar suas próximas leituras.";
+    } else if (state.todosLivros.length === 0) {
+      if (!state.buscaRecursiva) {
+        tituloVazio = "Nenhum e-book na raiz da pasta";
+        descVazio = `Não encontramos e-books diretamente na pasta selecionada. Seus arquivos podem estar dentro de subpastas!`;
+        botaoAcao = `<button class="btn-empty-action" id="btnAtivarSubpastasVazio">📂 Ativar Busca em Subpastas</button>`;
+      } else {
+        tituloVazio = "Nenhum e-book encontrado";
+        descVazio = `Nenhum arquivo compatível (.epub, .pdf, .mobi, .cbr, .cbz, .txt) foi encontrado em "${truncarCaminho(state.pastaAtual)}".`;
+        botaoAcao = `<button class="btn-empty-action" onclick="abrirPopupPasta()">📁 Escolher Outra Pasta</button>`;
+      }
     }
 
     grid.innerHTML = `
@@ -291,9 +331,11 @@ function renderizarGrade(lista) {
         <div class="empty-icon">📚</div>
         <h3 class="empty-title">${tituloVazio}</h3>
         <p class="empty-desc">${descVazio}</p>
-        <button class="btn-empty-action" onclick="alternarAba('todos')">Ver Todos os Livros</button>
+        ${botaoAcao}
       </div>
     `;
+
+    document.getElementById("btnAtivarSubpastasVazio")?.addEventListener("click", alternarSubpastas);
     return;
   }
 
@@ -637,6 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnTrocarPastaHeader")?.addEventListener("click", acaoTrocarPasta);
   document.getElementById("currentPathInfo")?.addEventListener("click", acaoTrocarPasta);
+  document.getElementById("btnToggleSubpastas")?.addEventListener("click", alternarSubpastas);
   document.getElementById("popupSelecionar")?.addEventListener("click", acaoTrocarPasta);
   document.getElementById("popupCancelar")?.addEventListener("click", fecharPopupPasta);
 
@@ -659,13 +702,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (action === "quero-ler") { alternarAba("quero-ler"); fecharMenu(); }
     else if (action === "trocar-pasta") { acaoTrocarPasta(); }
     else if (action === "recarregar") { fecharMenu(); carregarBiblioteca(); showToast("Biblioteca recarregada!"); }
-    else if (action === "toggle-recursivo") {
-      state.buscaRecursiva = !state.buscaRecursiva;
-      const lbl = document.getElementById("lblRecursivo");
-      if (lbl) lbl.textContent = state.buscaRecursiva ? "Ativado" : "Desativado";
-      showToast(state.buscaRecursiva ? "Subpastas ativadas." : "Subpastas desativadas.");
-      carregarBiblioteca();
-    }
+    else if (action === "toggle-recursivo") { fecharMenu(); alternarSubpastas(); }
     else if (action === "sobre") { fecharMenu(); showToast("EbookFinder v1.0 — Licença GNU GPLv3."); }
     else if (action === "dev") { fecharMenu(); window.api?.openExternal?.("https://joadsonrocha.github.io/"); }
   });
@@ -751,6 +788,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;
+  window.alternarSubpastas = alternarSubpastas;
 
   carregarBiblioteca();
 });
