@@ -57,10 +57,17 @@ const bundledIaConfigPaths = [
   path.join(__dirname, "app", "ia_config_bundle.json")
 ];
 
+// Modelos disponíveis na Groq (identificadores reais)
+const GROQ_MODEL_TURBO = "llama-3.3-70b-versatile"; // Turbo — padrão, rápido e gratuito
+const GROQ_MODEL_PRO   = "llama-3.1-70b-versatile";  // Pro — maior contexto
+
 function normalizarModeloIA(m) {
-  if (!m || m.includes("llama-3.1") || m === "llama-3.1-8b-instant") return "openai/gpt-oss-20b";
-  if (m.includes("llama-3.3") || m === "llama-3.3-70b-versatile") return "openai/gpt-oss-120b";
-  return m;
+  if (!m) return GROQ_MODEL_TURBO;
+  // Normaliza nomes antigos/fictícios para os identificadores reais da Groq
+  if (m.includes("gpt-oss-20b") || m === "llama-3.1-8b-instant") return GROQ_MODEL_TURBO;
+  if (m.includes("gpt-oss-120b") || m.includes("llama-3.3")) return GROQ_MODEL_TURBO;
+  if (m.includes("llama-3.1-70b")) return GROQ_MODEL_PRO;
+  return m; // Permite modelo customizado salvo pelo usuário
 }
 
 function obterConfigIA() {
@@ -110,7 +117,7 @@ function obterConfigIA() {
     };
   }
 
-  return { apiKey: "", model: "openai/gpt-oss-20b", origem: "nenhuma", isBundled: false };
+  return { apiKey: "", model: GROQ_MODEL_TURBO, origem: "nenhuma", isBundled: false };
 }
 
 function salvarConfigIA(cfg) {
@@ -826,7 +833,7 @@ ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-20b",
+        model: GROQ_MODEL_TURBO,
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 2
       })
@@ -854,7 +861,7 @@ ipcMain.handle("perguntar-groq", async (e, { pergunta, contexto, historico = [],
     };
   }
 
-  const modelToUse = normalizarModeloIA(modelo || cfg.model || "openai/gpt-oss-20b");
+  const modelToUse = normalizarModeloIA(modelo || cfg.model || GROQ_MODEL_TURBO);
 
   const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
 Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
