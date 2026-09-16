@@ -291,8 +291,8 @@
         <div class="form-group">
           <label for="selectModeloIA" class="form-label">Motor do SkillBook:</label>
           <select id="selectModeloIA" class="config-select">
-            <option value="llama-3.1-8b-instant" selected>SkillBook Turbo (Ultra Rápido — Respostas Instantâneas)</option>
-            <option value="llama-3.3-70b-versatile">SkillBook Pro (Raciocínio Avançado & Análise Completa)</option>
+            <option value="openai/gpt-oss-20b" selected>SkillBook Turbo (Ultra Rápido — Respostas Instantâneas)</option>
+            <option value="openai/gpt-oss-120b">SkillBook Pro (Raciocínio Avançado & Análise Completa)</option>
           </select>
         </div>
 
@@ -308,6 +308,165 @@
             💾 Salvar
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL / PÁGINA SOBRE O EBOOKFINDER
+       ============================================================ -->
+  <div id="modalSobre" class="modal-backdrop modal-sobre-backdrop" hidden>
+    <div class="about-dialog">
+      <!-- CABEÇALHO DO SOBRE -->
+      <div class="about-header">
+        <div class="about-header-brand">
+          <img src="logo.png" alt="EbookFinder Logo" class="about-logo-img" />
+          <div class="about-brand-info">
+            <div class="about-title-row">
+              <h2 class="about-title">EbookFinder</h2>
+              <span class="about-badge-version">v1.1.0 Desktop</span>
+              <span class="about-badge-license">GNU GPLv3</span>
+            </div>
+            <p class="about-subtitle">Organizador e Leitor Inteligente de E-books com SkillBook IA & Book-to-Skill</p>
+          </div>
+        </div>
+        <button id="btnFecharSobre" class="btn-close-modal" aria-label="Fechar Sobre">&times;</button>
+      </div>
+
+      <!-- CORPO DO SOBRE (SCROLLÁVEL) -->
+      <div class="about-body">
+        <!-- SEÇÃO HERO: O QUE É O PROJETO -->
+        <section class="about-hero-section">
+          <h3 class="about-section-heading">O que é o EbookFinder?</h3>
+          <p class="about-lead-text">
+            O <strong>EbookFinder</strong> é um ecossistema desktop moderno, de altíssimo desempenho e privacidade absoluta, desenvolvido para 
+            <strong>organizar, ler, estudar e transformar</strong> suas coleções de livros digitais, apostilas, histórias em quadrinhos e 
+            documentos técnicos em conhecimento ativo.
+          </p>
+          <p class="about-text">
+            Mais do que um simples catálogo ou leitor de PDF, o EbookFinder une a praticidade de um organizador de estantes 
+            ao poder da <strong>Inteligência Artificial nativa em tempo real</strong> e da metodologia pioneira <strong>Book-to-Skill</strong>, 
+            permitindo que você leia com suporte de um mentor contextual e destile obras inteiras em habilidades modulares para agentes autônomos de IA.
+          </p>
+        </section>
+
+        <!-- GRID DE PILARES DO PROJETO -->
+        <section class="about-pillars-section">
+          <h3 class="about-section-heading">Principais Recursos & Diferenciais</h3>
+          
+          <div class="about-pillars-grid">
+            <!-- Pilar 1: Estante & Nuvem -->
+            <div class="about-card">
+              <div class="about-card-icon">📚</div>
+              <h4 class="about-card-title">Biblioteca Inteligente & Nuvem</h4>
+              <p class="about-card-desc">
+                Varredura ultrarrápida de pastas locais e detecção automática de discos em nuvem (<strong>Google Drive, Microsoft OneDrive, Dropbox</strong>). 
+                Extração nativa de capas em alta resolução (PDF, EPUB, CBZ) e categorização por estantes: <em>Todos, Favoritos, Lendo Atualmente, Concluídos e Quero Ler</em>.
+              </p>
+            </div>
+
+            <!-- Pilar 2: Leitor Interno Split-View -->
+            <div class="about-card highlight">
+              <div class="about-card-icon">📖</div>
+              <h4 class="about-card-title">Leitor Interno de PDF (Split-View)</h4>
+              <p class="about-card-desc">
+                Leitor integrado de alta definição com renderização nativa em Canvas. Navegue lado a lado com o SkillBook, ajuste zoom com precisão, 
+                salve o progresso de leitura automaticamente por página e ative o <strong>Modo Foco em tela cheia</strong> com o atalho <code>Ctrl + B</code>.
+              </p>
+            </div>
+
+            <!-- Pilar 3: SkillBook AI -->
+            <div class="about-card highlight-gold">
+              <div class="about-card-icon">⚡</div>
+              <h4 class="about-card-title">SkillBook IA (Mentor Nativo)</h4>
+              <p class="about-card-desc">
+                Inteligência contextual que acompanha a página que você está lendo. Explica passagens complexas, gera resumos executivos 
+                e elenca conceitos-chave em segundos através dos motores ultrarrápidos <strong>SkillBook Turbo</strong> e <strong>SkillBook Pro</strong>.
+              </p>
+            </div>
+
+            <!-- Pilar 4: Book-to-Skill -->
+            <div class="about-card">
+              <div class="about-card-icon">🧠</div>
+              <h4 class="about-card-title">Metodologia Book-to-Skill</h4>
+              <p class="about-card-desc">
+                Destile qualquer livro em três arquivos estruturados: <code>SKILL.md</code> (contexto para agentes como Antigravity, Claude Code e Cursor), 
+                <code>cheatsheet.md</code> (regras práticas de ação) e <code>glossary.md</code> (glossário técnico). Exportável para qualquer pasta em 1 clique!
+              </p>
+            </div>
+
+            <!-- Pilar 5: Privacidade Absoluta -->
+            <div class="about-card">
+              <div class="about-card-icon">🔒</div>
+              <h4 class="about-card-title">100% Offline-First & Privado</h4>
+              <p class="about-card-desc">
+                Seus livros, notas e histórico pertencem unicamente a você. Nenhum dado de leitura é coletado ou armazenado em servidores de terceiros. 
+                As consultas ao SkillBook utilizam sua própria chave direta, garantindo total controle e sigilo.
+              </p>
+            </div>
+
+            <!-- Pilar 6: Design Editorial & Temas -->
+            <div class="about-card">
+              <div class="about-card-icon">🎨</div>
+              <h4 class="about-card-title">Ergonomia & Design Editorial</h4>
+              <p class="about-card-desc">
+                Design refinado com suporte ao <strong>Modo Escuro (Bibliophile Dark)</strong> para leituras noturnas e ao <strong>Modo Claro (Luxury Editorial)</strong> 
+                com paleta marfim que previne fadiga ocular, com opções de visualização em Grade, Compacto e Lista.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- FORMATOS SUPORTADOS -->
+        <section class="about-formats-section">
+          <h3 class="about-section-heading">Formatos de Arquivo Suportados</h3>
+          <div class="about-formats-pills">
+            <span class="format-pill">PDF (.pdf)</span>
+            <span class="format-pill">EPUB (.epub)</span>
+            <span class="format-pill">MOBI (.mobi)</span>
+            <span class="format-pill">Kindle (.azw, .azw3)</span>
+            <span class="format-pill">FictionBook (.fb2)</span>
+            <span class="format-pill">Quadrinhos (.cbz, .cbr)</span>
+            <span class="format-pill">Texto Puro (.txt)</span>
+          </div>
+        </section>
+
+        <!-- CRÉDITOS E INFORMAÇÕES DO DESENVOLVEDOR -->
+        <section class="about-credits-section">
+          <div class="about-credits-box">
+            <div class="credits-left">
+              <span class="credits-label">Concepção & Desenvolvimento:</span>
+              <h4 class="credits-name">Joadson Rocha</h4>
+              <p class="credits-bio">Desenvolvedor Full Stack • Especialista em Soluções Desktop & Agentes de IA</p>
+              <p class="credits-thanks">
+                Estrutura de destilação baseada na especificação do projeto 
+                <a href="#" id="linkBookToSkillRepo" class="gold-link">book-to-skill</a> de <strong>Virgílio Santos</strong>.
+              </p>
+            </div>
+            <div class="credits-right">
+              <button id="linkDevSite" class="about-btn-link" title="Acessar portfólio de Joadson Rocha">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <span>Portfólio & GitHub</span>
+              </button>
+              <button id="btnSobreConfigIA" class="about-btn-secondary" title="Configurar chave do SkillBook">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>Configurar IA</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RODAPÉ DO SOBRE COM BOTÃO FECHAR -->
+      <div class="about-footer">
+        <span class="about-footer-license">Licenciado sob GNU General Public License v3.0</span>
+        <button id="btnFecharSobreFooter" class="btn-primary-action">Voltar à Biblioteca</button>
       </div>
     </div>
   </div>
@@ -417,12 +576,20 @@
               <span class="copilot-sparkle">✨</span>
               <span>SkillBook</span>
             </button>
-            <button id="btnAbrirLeitorWindows" class="btn-primary-action">
+            <button id="btnAbrirLeitorInterno" class="btn-primary-action" title="Ler dentro do EbookFinder com o SkillBook ao lado">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
               </svg>
-              Abrir no Leitor do Windows
+              Ler no EbookFinder
+            </button>
+            <button id="btnAbrirLeitorWindows" class="btn-secondary-action" title="Abrir no leitor padrão do Windows">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              Abrir no Windows
             </button>
             <button id="btnRevelarExplorer" class="btn-secondary-action">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -650,6 +817,160 @@
         </p>
       </div>
     </div>
+  </div>
+
+  <!-- ============================================================
+       LEITOR INTERNO DE PDF COM SKILLBOOK LATERAL RETRÁTIL
+       ============================================================ -->
+  <div id="viewLeitorIntegrado" class="leitor-overlay" hidden>
+    <!-- BARRA SUPERIOR DO LEITOR -->
+    <header class="leitor-toolbar">
+      <div class="leitor-toolbar-left">
+        <button id="btnFecharLeitor" class="leitor-btn-back" title="Voltar à Biblioteca (Esc)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Biblioteca</span>
+        </button>
+
+        <div class="leitor-title-group">
+          <h2 id="leitorTituloLivro" class="leitor-book-title" title="Título da Obra">Carregando obra...</h2>
+          <span id="leitorAutorLivro" class="leitor-book-author">Autor</span>
+        </div>
+      </div>
+
+      <!-- CONTROLES DE PÁGINA (STEPPER CENTRAL) -->
+      <div class="leitor-toolbar-center">
+        <div class="leitor-page-stepper">
+          <button id="btnLeitorPagAnterior" class="leitor-btn-tool" title="Página Anterior (Seta Esquerda)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div class="leitor-page-indicator">
+            <span>Pág.</span>
+            <input type="number" id="inputLeitorPagina" min="1" value="1" title="Ir para página (Pressione Enter)" />
+            <span class="leitor-page-total">de <b id="leitorTotalPaginas">1</b></span>
+          </div>
+          <button id="btnLeitorPagProxima" class="leitor-btn-tool" title="Próxima Página (Seta Direita ou Espaço)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- CONTROLES DE ZOOM -->
+        <div class="leitor-zoom-controls">
+          <button id="btnLeitorZoomMenos" class="leitor-btn-tool" title="Diminuir Zoom (Ctrl -)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <span id="lblLeitorZoom" class="leitor-zoom-label" title="Zoom atual">120%</span>
+          <button id="btnLeitorZoomMais" class="leitor-btn-tool" title="Aumentar Zoom (Ctrl +)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button id="btnLeitorAjustarLargura" class="leitor-btn-tool" title="Ajustar à Largura da Tela">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- LADO DIREITO: BOTÃO TOGGLE SKILLBOOK -->
+      <div class="leitor-toolbar-right">
+        <button id="btnToggleSkillSidebar" class="btn-toggle-skill active" title="Alternar Painel Lateral do SkillBook (Ctrl+B)">
+          <span class="skill-sparkle">⚡</span>
+          <span class="skill-toggle-text">SkillBook</span>
+          <span class="shortcut-badge">Ctrl+B</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- LAYOUT PRINCIPAL DIVIDIDO (SPLIT VIEW) -->
+    <main class="reader-split-layout">
+      <!-- ÁREA DE RENDERIZAÇÃO DO PDF -->
+      <section id="readerPdfViewport" class="reader-pdf-viewport" tabindex="0">
+        <div id="readerPdfContainer" class="reader-pdf-container">
+          <canvas id="readerPdfCanvas" class="reader-pdf-canvas"></canvas>
+          <div id="readerPdfLoading" class="reader-loading-overlay" hidden>
+            <div class="reader-spinner"></div>
+            <span>Renderizando página...</span>
+          </div>
+        </div>
+
+        <!-- Botões Flutuantes de Navegação Rápida -->
+        <button id="btnFloatPagAnterior" class="reader-float-nav prev" title="Página Anterior (Seta Esquerda)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button id="btnFloatPagProxima" class="reader-float-nav next" title="Próxima Página (Seta Direita)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </section>
+
+      <!-- BARRA LATERAL SKILLBOOK (RETRÁTIL / COLLAPSIBLE) -->
+      <aside id="readerSkillSidebar" class="reader-skill-sidebar">
+        <div class="reader-sidebar-header">
+          <div class="reader-sidebar-title-wrap">
+            <span class="reader-sidebar-badge">✨ SkillBook</span>
+            <span id="lblReaderModeloIA" class="reader-sidebar-model">Turbo</span>
+          </div>
+          <button id="btnFecharSkillSidebar" class="reader-sidebar-close" title="Ocultar Painel Lateral (Ctrl+B)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- SUGESTÕES RÁPIDAS DE AÇÕES CONTEXTUAIS DA PÁGINA ATIVA -->
+        <div class="reader-quick-actions">
+          <button id="btnQuickExplicarPagina" class="reader-quick-chip" title="Explicar o conteúdo e as lições desta página">
+            🔍 Explicar esta página
+          </button>
+          <button id="btnQuickResumirPagina" class="reader-quick-chip" title="Resumo das lições práticas desta página">
+            📝 Resumir página
+          </button>
+          <button id="btnQuickConceitosChave" class="reader-quick-chip" title="Quais os principais conceitos aqui?">
+            💡 Conceitos-chave
+          </button>
+        </div>
+
+        <!-- MENSAGENS DO CHAT DO LEITOR -->
+        <div id="readerChatFeed" class="reader-chat-feed">
+          <div class="copilot-msg assistente">
+            <div class="copilot-avatar">✨</div>
+            <div class="copilot-msg-content">
+              <p>Olá! Sou o <strong>SkillBook</strong>, sua inteligência nativa nesta leitura.</p>
+              <p>Estou acompanhando sua página em tempo real. Você pode fazer perguntas diretas ou clicar nos atalhos acima para análises instantâneas desta página!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ENTRADA DO CHAT DO LEITOR -->
+        <div class="reader-chat-input-bar">
+          <textarea id="inputReaderChat" class="reader-chat-textarea" rows="2" placeholder="Pergunte ao SkillBook sobre esta página... (Enter envia)"></textarea>
+          <button id="btnEnviarReaderChat" class="reader-btn-send" title="Enviar Mensagem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </aside>
+    </main>
   </div>
 
   <!-- ============================================================

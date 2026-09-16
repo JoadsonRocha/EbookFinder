@@ -3480,3 +3480,956 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
   text-align: center;
   margin-top: 8px;
 }
+
+/* ============================================================
+   LEITOR INTERNO DE PDF COM SKILLBOOK LATERAL (SPLIT-VIEW)
+   ============================================================ */
+#viewLeitorIntegrado.leitor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background: #0c0a14;
+  overflow: hidden;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#viewLeitorIntegrado[hidden] {
+  display: none !important;
+}
+
+/* Barra Superior da Leitura */
+.leitor-toolbar {
+  height: 54px;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(18, 15, 30, 0.96);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 35;
+  gap: 12px;
+}
+
+.leitor-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.leitor-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.leitor-btn-back:hover {
+  background: rgba(229, 169, 59, 0.15);
+  border-color: rgba(229, 169, 59, 0.4);
+  color: var(--amber);
+  transform: translateX(-2px);
+}
+
+.leitor-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.leitor-book-title {
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+.leitor-book-author {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stepper e Zoom Centrais */
+.leitor-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leitor-page-stepper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 2px 4px;
+}
+
+.leitor-btn-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.leitor-btn-tool:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.leitor-page-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.80rem;
+  color: var(--text-secondary);
+  padding: 0 6px;
+}
+
+#inputLeitorPagina {
+  width: 48px;
+  height: 26px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 0.82rem;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+#inputLeitorPagina::-webkit-outer-spin-button,
+#inputLeitorPagina::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#inputLeitorPagina:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 8px rgba(229, 169, 59, 0.3);
+}
+
+.leitor-page-total {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.leitor-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 2px 6px;
+}
+
+.leitor-zoom-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 42px;
+  text-align: center;
+}
+
+/* Botão Toggle SkillBook */
+.leitor-toolbar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.btn-toggle-skill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(229, 169, 59, 0.3);
+  background: rgba(229, 169, 59, 0.08);
+  color: var(--text-secondary);
+}
+
+.btn-toggle-skill:hover {
+  background: rgba(229, 169, 59, 0.18);
+  color: var(--amber);
+}
+
+.btn-toggle-skill.active {
+  background: linear-gradient(135deg, rgba(229, 169, 59, 0.22), rgba(217, 119, 6, 0.28));
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 16px rgba(229, 169, 59, 0.25);
+}
+
+.shortcut-badge {
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+}
+
+/* Layout Dividido (Split Layout) */
+.reader-split-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 54px);
+}
+
+/* Viewport do PDF */
+.reader-pdf-viewport {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 80px 20px;
+  background: #13101d;
+  position: relative;
+  scroll-behavior: smooth;
+  outline: none;
+}
+
+.reader-pdf-container {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  box-shadow: 0 14px 50px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  background: #ffffff;
+  min-height: 250px;
+  transition: transform 0.15s ease;
+}
+
+.reader-pdf-canvas {
+  display: block;
+  border-radius: 4px;
+}
+
+.reader-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 13, 25, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--amber);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.reader-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(229, 169, 59, 0.2);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Botões Flutuantes de Próxima/Anterior Página */
+.reader-float-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(22, 19, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-secondary);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 25;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.reader-float-nav:hover {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #120e03;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 24px rgba(229, 169, 59, 0.4);
+}
+
+.reader-float-nav.prev {
+  left: 18px;
+}
+
+.reader-float-nav.next {
+  right: 406px;
+}
+
+#viewLeitorIntegrado.sidebar-fechada .reader-float-nav.next {
+  right: 22px;
+}
+
+/* Painel Lateral do SkillBook (Retrátil) */
+.reader-skill-sidebar {
+  width: 390px;
+  min-width: 390px;
+  height: 100%;
+  background: #171424;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: margin-right 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
+  position: relative;
+  z-index: 30;
+}
+
+.reader-skill-sidebar.collapsed {
+  margin-right: -390px;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reader-sidebar-header {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.reader-sidebar-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reader-sidebar-badge {
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--amber);
+}
+
+.reader-sidebar-model {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(229, 169, 59, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(229, 169, 59, 0.3);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.reader-sidebar-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s;
+}
+
+.reader-sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Sugestões Rápidas Contextuais da Página */
+.reader-quick-actions {
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.reader-quick-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.reader-quick-chip:hover {
+  background: rgba(229, 169, 59, 0.15);
+  border-color: rgba(229, 169, 59, 0.4);
+  color: var(--amber);
+  transform: translateY(-1px);
+}
+
+/* Feed de Mensagens do Chat Lateral */
+.reader-chat-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Barra de Entrada do Chat Lateral */
+.reader-chat-input-bar {
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(18, 15, 29, 0.96);
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.reader-chat-textarea {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  font-size: 0.80rem;
+  color: var(--text-primary);
+  resize: none;
+  min-height: 44px;
+  max-height: 110px;
+  outline: none;
+  line-height: 1.4;
+  transition: border-color 0.2s;
+}
+
+.reader-chat-textarea:focus {
+  border-color: rgba(229, 169, 59, 0.5);
+  box-shadow: 0 0 10px rgba(229, 169, 59, 0.15);
+}
+
+.reader-btn-send {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--amber);
+  border: none;
+  color: #120e03;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.reader-btn-send:hover {
+  filter: brightness(1.15);
+  transform: scale(1.06);
+}
+
+/* Suporte Nativo ao Tema Claro no Leitor */
+body[data-theme="light"] #viewLeitorIntegrado.leitor-overlay {
+  background: #eceef4;
+}
+
+body[data-theme="light"] .leitor-toolbar {
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme="light"] .leitor-btn-back {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: var(--text-secondary);
+}
+
+body[data-theme="light"] .leitor-page-stepper,
+body[data-theme="light"] .leitor-zoom-controls {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme="light"] #inputLeitorPagina {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: var(--amber-dark);
+}
+
+body[data-theme="light"] .reader-pdf-viewport {
+  background: #dfe3eb;
+}
+
+body[data-theme="light"] .reader-pdf-container {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+body[data-theme="light"] .reader-skill-sidebar {
+  background: #ffffff;
+  border-left-color: rgba(0, 0, 0, 0.08);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.05);
+}
+
+body[data-theme="light"] .reader-sidebar-header {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="light"] .reader-quick-chip {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: var(--text-secondary);
+}
+
+body[data-theme="light"] .reader-chat-input-bar {
+  background: #fdfdfd;
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme="light"] .reader-chat-textarea {
+  background: #f4f5f8;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--text-primary);
+}
+
+body[data-theme="light"] .reader-float-nav {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #333344;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================================
+   MODAL / PÁGINA SOBRE O EBOOKFINDER
+   ============================================================ */
+.modal-sobre-backdrop {
+  z-index: 1500;
+  padding: 20px;
+}
+
+.about-dialog {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 35px rgba(229, 169, 59, 0.18);
+  width: 100%;
+  max-width: 820px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: zoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-header {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(135deg, rgba(229, 169, 59, 0.08), rgba(217, 119, 6, 0.03));
+}
+
+.about-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.about-logo-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(229, 169, 59, 0.3);
+  flex-shrink: 0;
+}
+
+.about-brand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.about-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.about-title {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.about-badge-version {
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(229, 169, 59, 0.2);
+  border: 1px solid rgba(229, 169, 59, 0.4);
+  color: var(--amber);
+}
+
+.about-badge-license {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.about-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.about-body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.about-section-heading {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--amber);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-lead-text {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+}
+
+.about-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.about-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 14px;
+}
+
+.about-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.about-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(229, 169, 59, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.about-card.highlight {
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.about-card.highlight:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.15);
+}
+
+.about-card.highlight-gold {
+  border-color: rgba(229, 169, 59, 0.35);
+  background: rgba(229, 169, 59, 0.05);
+}
+
+.about-card.highlight-gold:hover {
+  border-color: var(--amber);
+  box-shadow: 0 6px 20px rgba(229, 169, 59, 0.2);
+}
+
+.about-card-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.about-card-title {
+  font-family: var(--font-title);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.about-card-desc {
+  font-size: 0.80rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.about-card-desc code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  color: var(--amber);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.about-formats-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.format-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 13px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  transition: all 0.18s;
+}
+
+.format-pill:hover {
+  border-color: rgba(229, 169, 59, 0.4);
+  color: var(--amber);
+  background: rgba(229, 169, 59, 0.1);
+}
+
+.about-credits-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(229, 169, 59, 0.05);
+  border: 1px solid rgba(229, 169, 59, 0.22);
+}
+
+.credits-left {
+  flex: 1;
+  min-width: 260px;
+}
+
+.credits-label {
+  font-size: 0.70rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.credits-name {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--amber);
+  margin: 3px 0 4px 0;
+}
+
+.credits-bio {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+}
+
+.credits-thanks {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.credits-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.about-btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.about-btn-link:hover {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #120e03;
+  transform: translateY(-1px);
+}
+
+.about-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(229, 169, 59, 0.12);
+  border: 1px solid rgba(229, 169, 59, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--amber);
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.about-btn-secondary:hover {
+  background: rgba(229, 169, 59, 0.22);
+  transform: translateY(-1px);
+}
+
+.about-footer {
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.about-footer-license {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Suporte Nativo ao Modo Claro no Sobre */
+body[data-theme="light"] .about-dialog {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.18), 0 0 30px rgba(229, 169, 59, 0.1);
+}
+
+body[data-theme="light"] .about-header {
+  background: linear-gradient(135deg, rgba(229, 169, 59, 0.08), rgba(255, 255, 255, 0.5));
+}
+
+body[data-theme="light"] .about-card {
+  background: #f8f9fc;
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+body[data-theme="light"] .about-card:hover {
+  background: #ffffff;
+  border-color: rgba(229, 169, 59, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme="light"] .about-card.highlight {
+  background: #f0f9ff;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+body[data-theme="light"] .about-card.highlight-gold {
+  background: #fffbeb;
+  border-color: rgba(229, 169, 59, 0.35);
+}
+
+body[data-theme="light"] .format-pill {
+  background: #f1f3f8;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: var(--text-secondary);
+}
+
+body[data-theme="light"] .about-credits-box {
+  background: #fefce8;
+  border-color: rgba(229, 169, 59, 0.3);
+}
+
+body[data-theme="light"] .about-btn-link {
+  background: #f4f5f8;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--text-primary);
+}
+
+body[data-theme="light"] .about-footer {
+  background: #f8f9fb;
+}

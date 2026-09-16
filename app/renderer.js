@@ -32,7 +32,19 @@ const state = {
   tema: localStorage.getItem("ef_theme") || "dark",
   tabModalAtiva: "detalhes",
   skillAtual: null,
-  chatHistorico: []
+  chatHistorico: [],
+  leitor: {
+    ativo: false,
+    livro: null,
+    pdfDoc: null,
+    paginaAtual: 1,
+    totalPaginas: 1,
+    paginaObj: null,
+    escala: 1.2,
+    renderizando: false,
+    currentRenderTask: null,
+    sidebarAberta: true
+  }
 };
 
 // ============================================================================
@@ -682,11 +694,10 @@ function renderizarGrade(lista) {
       criarSkillDiretoDoCard(livro);
     });
 
-    // Ação do Botão Flutuante de Leitura na Capa
+    // Ação do Botão Flutuante de Leitura na Capa (Abre no Leitor Interno)
     card.querySelector(".btn-cover-read")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      window.api?.abrirNoWindows?.(livro.caminho);
-      showToast(`Abrindo "${tituloExibicao}" no Windows...`);
+      abrirLeitorInterno(livro);
     });
 
     // Ação do Botão de Detalhes na Capa
@@ -695,10 +706,9 @@ function renderizarGrade(lista) {
       abrirModalLivro(livro);
     });
 
-    // Duplo clique no Card: Abre diretamente no leitor do Windows
+    // Duplo clique no Card: Abre no Leitor Interno
     card.addEventListener("dblclick", () => {
-      window.api?.abrirNoWindows?.(livro.caminho);
-      showToast(`Abrindo "${tituloExibicao}" no Windows...`);
+      abrirLeitorInterno(livro);
     });
 
     // Clique no Card: Abre o Modal de Detalhes
@@ -837,11 +847,433 @@ function fecharModalLivro() {
   document.removeEventListener("keydown", lidarTeclasModal);
 }
 
+function abrirModalSobre() {
+  const modal = document.getElementById("modalSobre");
+  if (!modal) return;
+  modal.hidden = false;
+  document.addEventListener("keydown", lidarTeclasModal);
+}
+
+function fecharModalSobre() {
+  const modal = document.getElementById("modalSobre");
+  if (modal) modal.hidden = true;
+}
+
 function lidarTeclasModal(e) {
   if (e.key === "Escape") {
     fecharModalLivro();
     fecharModalConfigIA();
     fecharCopilotoIA();
+    fecharModalSobre();
+    fecharLeitorInterno();
+  }
+}
+
+// ============================================================================
+// 5.0 LEITOR INTERNO DE PDF COM SKILLBOOK LATERAL (SPLIT-VIEW)
+// ============================================================================
+
+async function abrirLeitorInterno(livro) {
+  if (!livro || !livro.caminho) return;
+
+  const ext = (livro.extensao || "").toLowerCase();
+  const isPdf = ext === ".pdf" || ext === "pdf" || livro.caminho.toLowerCase().endsWith(".pdf");
+
+  if (!isPdf) {
+    showToast(`O formato ${ext.toUpperCase() || "da obra"} abre no leitor externo do Windows.`);
+    window.api?.abrirNoWindows?.(livro.caminho);
+    return;
+  }
+
+  const overlay = document.getElementById("viewLeitorIntegrado");
+  const loading = document.getElementById("readerPdfLoading");
+  if (!overlay) return;
+
+  fecharModalLivro();
+  fecharCopilotoIA();
+
+  const tituloLimpo = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
+  const tituloEl = document.getElementById("leitorTituloLivro");
+  const autorEl = document.getElementById("leitorAutorLivro");
+  if (tituloEl) {
+    tituloEl.textContent = tituloLimpo;
+    tituloEl.title = tituloLimpo;
+  }
+  if (autorEl) {
+    autorEl.textContent = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
+  }
+
+  overlay.hidden = false;
+  if (loading) loading.hidden = false;
+
+  state.leitor.ativo = true;
+  state.leitor.livro = livro;
+  state.leitor.pdfDoc = null;
+  state.leitor.paginaObj = null;
+  state.leitor.paginaAtual = Math.max(1, livro.progresso?.paginaAtual || 1);
+  state.leitor.totalPaginas = livro.progresso?.totalPaginas || 1;
+  state.leitor.escala = 1.2;
+
+  // Atualiza indicador do modelo na barra lateral do leitor
+  const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
+  const lblModel = document.getElementById("lblReaderModeloIA");
+  if (lblModel) {
+    const isPro = (cfg.model || "").includes("120b") || (cfg.model || "").includes("70b");
+    lblModel.textContent = isPro ? "Pro" : "Turbo";
+  }
+
+  // Carrega histórico de chat desta obra
+  carregarHistoricoChatLeitor(livro.caminho, tituloLimpo);
+
+  try {
+    const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
+    if (!buffer) {
+      showToast("Não foi possível carregar o arquivo PDF.");
+      fecharLeitorInterno();
+      return;
+    }
+
+    const pdfjs = window.pdfjsLib || window["pdfjs-dist/build/pdf"];
+    if (!pdfjs) {
+      showToast("Mecanismo PDF.js indisponível.");
+      fecharLeitorInterno();
+      return;
+    }
+
+    const uint8Array = new Uint8Array(buffer);
+    const loadingTask = pdfjs.getDocument({ data: uint8Array });
+    const pdfDoc = await loadingTask.promise;
+
+    state.leitor.pdfDoc = pdfDoc;
+    state.leitor.totalPaginas = pdfDoc.numPages;
+
+    const totalEl = document.getElementById("leitorTotalPaginas");
+    if (totalEl) totalEl.textContent = pdfDoc.numPages;
+
+    if (state.leitor.paginaAtual > pdfDoc.numPages) {
+      state.leitor.paginaAtual = 1;
+    }
+
+    await renderizarPaginaLeitor(state.leitor.paginaAtual);
+    ajustarLarguraLeitor();
+  } catch (err) {
+    console.error("Erro ao abrir PDF no leitor interno:", err);
+    showToast("Abrindo no leitor do Windows...");
+    fecharLeitorInterno();
+    window.api?.abrirNoWindows?.(livro.caminho);
+  } finally {
+    if (loading) loading.hidden = true;
+  }
+}
+
+function fecharLeitorInterno() {
+  const overlay = document.getElementById("viewLeitorIntegrado");
+  if (overlay) overlay.hidden = true;
+
+  if (state.leitor.currentRenderTask) {
+    try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
+  }
+
+  if (state.leitor.ativo && state.leitor.livro) {
+    salvarProgressoLeitor(state.leitor.livro, state.leitor.paginaAtual, state.leitor.totalPaginas);
+  }
+
+  state.leitor.ativo = false;
+  state.leitor.livro = null;
+  state.leitor.pdfDoc = null;
+  state.leitor.paginaObj = null;
+
+  carregarBiblioteca();
+}
+
+async function renderizarPaginaLeitor(num) {
+  if (!state.leitor.pdfDoc || state.leitor.renderizando) return;
+  state.leitor.renderizando = true;
+
+  const canvas = document.getElementById("readerPdfCanvas");
+  const loading = document.getElementById("readerPdfLoading");
+  if (loading) loading.hidden = false;
+
+  try {
+    const page = await state.leitor.pdfDoc.getPage(num);
+    state.leitor.paginaAtual = num;
+    state.leitor.paginaObj = page;
+
+    const inputPag = document.getElementById("inputLeitorPagina");
+    if (inputPag) inputPag.value = num;
+
+    const dpr = window.devicePixelRatio || 1;
+    const viewport = page.getViewport({ scale: state.leitor.escala });
+
+    canvas.width = Math.floor(viewport.width * dpr);
+    canvas.height = Math.floor(viewport.height * dpr);
+    canvas.style.width = Math.floor(viewport.width) + "px";
+    canvas.style.height = Math.floor(viewport.height) + "px";
+
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const renderContext = {
+      canvasContext: ctx,
+      transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
+      viewport: viewport
+    };
+
+    if (state.leitor.currentRenderTask) {
+      try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
+    }
+    state.leitor.currentRenderTask = page.render(renderContext);
+    await state.leitor.currentRenderTask.promise;
+
+    const lblZoom = document.getElementById("lblLeitorZoom");
+    if (lblZoom) lblZoom.textContent = `${Math.round(state.leitor.escala * 100)}%`;
+
+    salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
+
+    const viewportElem = document.getElementById("readerPdfViewport");
+    if (viewportElem) viewportElem.scrollTop = 0;
+  } catch (err) {
+    if (err?.name !== "RenderingCancelledException") {
+      console.error("Erro ao renderizar página:", err);
+    }
+  } finally {
+    state.leitor.renderizando = false;
+    if (loading) loading.hidden = true;
+  }
+}
+
+function mudarPaginaLeitor(delta) {
+  if (!state.leitor.pdfDoc) return;
+  const nova = state.leitor.paginaAtual + delta;
+  if (nova >= 1 && nova <= state.leitor.totalPaginas) {
+    renderizarPaginaLeitor(nova);
+  }
+}
+
+function irParaPaginaLeitor(num) {
+  if (!state.leitor.pdfDoc) return;
+  const pag = Math.max(1, Math.min(state.leitor.totalPaginas, parseInt(num, 10) || 1));
+  renderizarPaginaLeitor(pag);
+}
+
+function ajustarZoom(delta, definirFixo) {
+  if (definirFixo) {
+    state.leitor.escala = Math.max(0.5, Math.min(3.0, definirFixo));
+  } else {
+    state.leitor.escala = Math.max(0.5, Math.min(3.0, state.leitor.escala + delta));
+  }
+  if (state.leitor.paginaAtual) {
+    renderizarPaginaLeitor(state.leitor.paginaAtual);
+  }
+}
+
+function ajustarLarguraLeitor() {
+  const viewport = document.getElementById("readerPdfViewport");
+  if (!viewport || !state.leitor.paginaObj) return;
+
+  const unscaled = state.leitor.paginaObj.getViewport({ scale: 1 });
+  const larguraDisponivel = viewport.clientWidth - 56;
+  if (larguraDisponivel > 200 && unscaled.width > 0) {
+    const novaEscala = Math.max(0.6, Math.min(2.5, larguraDisponivel / unscaled.width));
+    ajustarZoom(0, novaEscala);
+  }
+}
+
+function toggleSkillSidebar(forcarEstado) {
+  const sidebar = document.getElementById("readerSkillSidebar");
+  const overlay = document.getElementById("viewLeitorIntegrado");
+  const btnToggle = document.getElementById("btnToggleSkillSidebar");
+  if (!sidebar) return;
+
+  const novoEstado = forcarEstado !== undefined ? forcarEstado : !state.leitor.sidebarAberta;
+  state.leitor.sidebarAberta = novoEstado;
+
+  if (novoEstado) {
+    sidebar.classList.remove("collapsed");
+    overlay?.classList.remove("sidebar-fechada");
+    btnToggle?.classList.add("active");
+  } else {
+    sidebar.classList.add("collapsed");
+    overlay?.classList.add("sidebar-fechada");
+    btnToggle?.classList.remove("active");
+  }
+}
+
+async function salvarProgressoLeitor(livro, paginaAtual, totalPaginas) {
+  if (!livro || !livro.caminho) return;
+  const porcentagem = totalPaginas > 0 ? Math.round((paginaAtual / totalPaginas) * 100) : 0;
+  const dados = {
+    paginaAtual,
+    totalPaginas,
+    porcentagem,
+    anotacoes: livro.progresso?.anotacoes || ""
+  };
+  const resultado = await window.api?.salvarProgressoLeitura?.(livro.caminho, dados);
+  if (resultado) {
+    livro.progresso = resultado;
+    const idx = state.todosLivros.findIndex(l => l.caminho === livro.caminho);
+    if (idx !== -1) state.todosLivros[idx].progresso = resultado;
+  }
+}
+
+function carregarHistoricoChatLeitor(caminhoLivro, tituloObra) {
+  const feed = document.getElementById("readerChatFeed");
+  if (!feed) return;
+
+  const historico = carregarHistoricoChatStorage(caminhoLivro);
+  if (historico && historico.length > 0) {
+    feed.innerHTML = "";
+    historico.forEach(msg => {
+      const el = document.createElement("div");
+      el.className = `copilot-msg ${msg.role === "user" ? "usuario" : "assistente"}`;
+      el.innerHTML = `
+        <div class="copilot-avatar">${msg.role === "user" ? "👤" : "✨"}</div>
+        <div class="copilot-msg-content">${formatarMarkdownSimples(msg.content)}</div>
+      `;
+      feed.appendChild(el);
+    });
+    feed.scrollTop = feed.scrollHeight;
+  } else {
+    feed.innerHTML = `
+      <div class="copilot-msg assistente">
+        <div class="copilot-avatar">✨</div>
+        <div class="copilot-msg-content">
+          <p>Olá! Sou o <strong>SkillBook</strong>, acompanhando sua leitura de <em>${tituloObra}</em>.</p>
+          <p>Estou conectado a cada página desta obra. Pergunte qualquer dúvida sobre o que está lendo ou clique nos atalhos acima para análises instantâneas!</p>
+        </div>
+      </div>
+    `;
+  }
+}
+
+async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
+  const input = document.getElementById("inputReaderChat");
+  const feed = document.getElementById("readerChatFeed");
+  const pergunta = (perguntaManual || input?.value || "").trim();
+  if (!pergunta || !state.leitor.livro) return;
+
+  if (input && !perguntaManual) input.value = "";
+
+  if (!state.leitor.sidebarAberta) {
+    toggleSkillSidebar(true);
+  }
+
+  // Extrai o texto da página corrente para contextualizar o SkillBook
+  let contexto = contextoManual;
+  if (!contexto && state.leitor.paginaObj) {
+    try {
+      const textContent = await state.leitor.paginaObj.getTextContent();
+      const txt = textContent.items.map(item => item.str).join(" ").trim();
+      if (txt.length > 20) {
+        contexto = `Página atual do leitor: ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}\nTrecho da página:\n"${txt.slice(0, 3500)}"`;
+      }
+    } catch (e) {
+      console.warn("Falha ao extrair texto da página atual:", e);
+    }
+  }
+
+  // Renderiza pergunta do usuário no feed
+  if (feed) {
+    const userMsg = document.createElement("div");
+    userMsg.className = "copilot-msg usuario";
+    userMsg.innerHTML = `
+      <div class="copilot-avatar">👤</div>
+      <div class="copilot-msg-content">${formatarMarkdownSimples(pergunta)}</div>
+    `;
+    feed.appendChild(userMsg);
+
+    const loadingMsg = document.createElement("div");
+    loadingMsg.className = "copilot-msg assistente loading-msg";
+    loadingMsg.innerHTML = `
+      <div class="copilot-avatar">✨</div>
+      <div class="copilot-msg-content"><span class="copilot-typing">Consultando o SkillBook na pág. ${state.leitor.paginaAtual}...</span></div>
+    `;
+    feed.appendChild(loadingMsg);
+    feed.scrollTop = feed.scrollHeight;
+
+    const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
+    const historicoAtual = carregarHistoricoChatStorage(state.leitor.livro.caminho) || [];
+
+    const res = await window.api?.perguntarGroq?.({
+      pergunta,
+      contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
+      historico: historicoAtual,
+      modelo: cfg.model || "openai/gpt-oss-20b"
+    });
+
+    loadingMsg.remove();
+
+    if (res?.success && res.resposta) {
+      const respMsg = document.createElement("div");
+      respMsg.className = "copilot-msg assistente";
+      respMsg.innerHTML = `
+        <div class="copilot-avatar">✨</div>
+        <div class="copilot-msg-content">${formatarMarkdownSimples(res.resposta)}</div>
+      `;
+      feed.appendChild(respMsg);
+
+      historicoAtual.push({ role: "user", content: pergunta });
+      historicoAtual.push({ role: "assistant", content: res.resposta });
+      salvarHistoricoChatStorage(state.leitor.livro.caminho, historicoAtual);
+    } else {
+      const errMsg = document.createElement("div");
+      errMsg.className = "copilot-msg assistente";
+      errMsg.innerHTML = `
+        <div class="copilot-avatar">⚠️</div>
+        <div class="copilot-msg-content"><p style="color: #fb7185;">${res?.error || "Não foi possível obter resposta do SkillBook."}</p></div>
+      `;
+      feed.appendChild(errMsg);
+    }
+
+    feed.scrollTop = feed.scrollHeight;
+  }
+}
+
+async function explicarPaginaAtual() {
+  if (!state.leitor.paginaObj) return;
+  try {
+    const textContent = await state.leitor.paginaObj.getTextContent();
+    const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
+    const prompt = `Explique de maneira didática, rica e analítica o conteúdo da Página ${state.leitor.paginaAtual} desta obra. Destaque os pontos cruciais e como o leitor deve interpretar este trecho.`;
+    if (textoPagina && textoPagina.length > 20) {
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+    } else {
+      enviarPerguntaChatLeitor(prompt);
+    }
+  } catch (err) {
+    enviarPerguntaChatLeitor(`Explique o que é abordado na página ${state.leitor.paginaAtual} deste livro.`);
+  }
+}
+
+async function resumirPaginaAtual() {
+  if (!state.leitor.paginaObj) return;
+  try {
+    const textContent = await state.leitor.paginaObj.getTextContent();
+    const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
+    const prompt = `Faça um resumo executivo com as melhores lições, regras práticas e ideias essenciais da Página ${state.leitor.paginaAtual}.`;
+    if (textoPagina && textoPagina.length > 20) {
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+    } else {
+      enviarPerguntaChatLeitor(prompt);
+    }
+  } catch (err) {
+    enviarPerguntaChatLeitor(`Faça um resumo dos principais pontos da página ${state.leitor.paginaAtual}.`);
+  }
+}
+
+async function extrairConceitosPaginaAtual() {
+  if (!state.leitor.paginaObj) return;
+  try {
+    const textContent = await state.leitor.paginaObj.getTextContent();
+    const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
+    const prompt = `Quais são os conceitos fundamentais, princípios ou termos técnicos apresentados na Página ${state.leitor.paginaAtual}? Elenque cada um com uma definição direta.`;
+    if (textoPagina && textoPagina.length > 20) {
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+    } else {
+      enviarPerguntaChatLeitor(prompt);
+    }
+  } catch (err) {
+    enviarPerguntaChatLeitor(`Quais são os conceitos centrais da página ${state.leitor.paginaAtual}?`);
   }
 }
 
@@ -866,7 +1298,7 @@ async function abrirModalConfigIA() {
   const modal = document.getElementById("modalConfigIA");
   if (!modal) return;
 
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant", isBundled: false };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b", isBundled: false };
   const inputKey = document.getElementById("inputGroqKey");
   const selectModel = document.getElementById("selectModeloIA");
   const lblStatus = document.getElementById("lblStatusConexao");
@@ -880,7 +1312,7 @@ async function abrirModalConfigIA() {
     }
   }
 
-  if (selectModel) selectModel.value = cfg.model || "llama-3.1-8b-instant";
+  if (selectModel) selectModel.value = cfg.model || "openai/gpt-oss-20b";
 
   if (lblStatus) {
     if (cfg.isBundled) {
@@ -1054,7 +1486,7 @@ description: "Modelos mentais, princípios fundamentais e regras práticas da ob
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptSkill,
       contexto: "Destilação oficial no formato book-to-skill",
-      modelo: cfg.model || "llama-3.1-8b-instant"
+      modelo: cfg.model || "openai/gpt-oss-20b"
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -1319,10 +1751,10 @@ async function abrirCopilotoIA(livro) {
   }
 
   // Identifica o modelo ativo
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant" };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b" };
   if (modelName) {
-    const is70b = (cfg.model || "").includes("70b");
-    modelName.textContent = is70b ? "SkillBook Pro" : "SkillBook Turbo";
+    const isPro = (cfg.model || "").includes("120b") || (cfg.model || "").includes("70b");
+    modelName.textContent = isPro ? "SkillBook Pro" : "SkillBook Turbo";
   }
 
   // Verifica se o livro já possui Skill gerada
@@ -1602,7 +2034,7 @@ ${textoAmostra.slice(0, 8000)}`;
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptDestilacao,
       contexto: "",
-      modelo: cfg.model || "llama-3.1-8b-instant"
+      modelo: cfg.model || "openai/gpt-oss-20b"
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -1959,7 +2391,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (action === "trocar-pasta") { acaoTrocarPasta(); }
     else if (action === "recarregar") { fecharMenu(); carregarBiblioteca(); showToast("Biblioteca recarregada!"); }
     else if (action === "toggle-recursivo") { fecharMenu(); alternarSubpastas(); }
-    else if (action === "sobre") { fecharMenu(); showToast("EbookFinder v1.0 — Licença GNU GPLv3."); }
+    else if (action === "sobre") { fecharMenu(); abrirModalSobre(); }
     else if (action === "dev") { fecharMenu(); window.api?.openExternal?.("https://joadsonrocha.github.io/"); }
   });
 
@@ -2016,6 +2448,14 @@ document.addEventListener("DOMContentLoaded", () => {
         salvarProgressoModal(false);
       }
     });
+  });
+
+  // Abrir no Leitor Interno (com SkillBook)
+  document.getElementById("btnAbrirLeitorInterno")?.addEventListener("click", () => {
+    if (state.livroSelecionado) {
+      const l = state.livroSelecionado;
+      abrirLeitorInterno(l);
+    }
   });
 
   // Abrir no Windows
@@ -2095,7 +2535,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnSalvarConfigIA")?.addEventListener("click", async () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
-    const model = document.getElementById("selectModeloIA")?.value || "llama-3.1-8b-instant";
+    const model = document.getElementById("selectModeloIA")?.value || "openai/gpt-oss-20b";
     const ok = await window.api?.salvarConfigIA?.({ apiKey: key, model });
     if (ok) {
       showToast("Configurações da IA salvas com segurança!");
@@ -2228,6 +2668,106 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnHeroCriarSkill")?.addEventListener("click", executarBookToSkillCopiloto);
   document.getElementById("btnHeroExportarSkill")?.addEventListener("click", exportarSkillAtual);
 
+  // ============================================================
+  // EVENTOS DO LEITOR INTERNO DE PDF COM SKILLBOOK LATERAL
+  // ============================================================
+  document.getElementById("btnFecharLeitor")?.addEventListener("click", fecharLeitorInterno);
+  document.getElementById("btnLeitorPagAnterior")?.addEventListener("click", () => mudarPaginaLeitor(-1));
+  document.getElementById("btnLeitorPagProxima")?.addEventListener("click", () => mudarPaginaLeitor(1));
+  document.getElementById("btnFloatPagAnterior")?.addEventListener("click", () => mudarPaginaLeitor(-1));
+  document.getElementById("btnFloatPagProxima")?.addEventListener("click", () => mudarPaginaLeitor(1));
+
+  document.getElementById("inputLeitorPagina")?.addEventListener("change", (e) => {
+    irParaPaginaLeitor(e.target.value);
+  });
+
+  document.getElementById("inputLeitorPagina")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      irParaPaginaLeitor(e.target.value);
+    }
+  });
+
+  document.getElementById("btnLeitorZoomMenos")?.addEventListener("click", () => ajustarZoom(-0.15));
+  document.getElementById("btnLeitorZoomMais")?.addEventListener("click", () => ajustarZoom(0.15));
+  document.getElementById("btnLeitorAjustarLargura")?.addEventListener("click", ajustarLarguraLeitor);
+
+  document.getElementById("btnToggleSkillSidebar")?.addEventListener("click", () => toggleSkillSidebar());
+  document.getElementById("btnFecharSkillSidebar")?.addEventListener("click", () => toggleSkillSidebar(false));
+
+  document.getElementById("btnQuickExplicarPagina")?.addEventListener("click", explicarPaginaAtual);
+  document.getElementById("btnQuickResumirPagina")?.addEventListener("click", resumirPaginaAtual);
+  document.getElementById("btnQuickConceitosChave")?.addEventListener("click", extrairConceitosPaginaAtual);
+
+  document.getElementById("btnEnviarReaderChat")?.addEventListener("click", () => enviarPerguntaChatLeitor());
+  document.getElementById("inputReaderChat")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      enviarPerguntaChatLeitor();
+    }
+  });
+
+  // Atalhos de teclado no Leitor Interno
+  window.addEventListener("keydown", (e) => {
+    if (!state.leitor.ativo) return;
+
+    // Não intercepta digitação nos campos de texto
+    const tag = document.activeElement?.tagName;
+    if (tag === "TEXTAREA" || (tag === "INPUT" && document.activeElement.id === "inputReaderChat")) {
+      return;
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      fecharLeitorInterno();
+    } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      e.preventDefault();
+      mudarPaginaLeitor(-1);
+    } else if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && tag !== "INPUT")) {
+      e.preventDefault();
+      mudarPaginaLeitor(1);
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+      e.preventDefault();
+      toggleSkillSidebar();
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) {
+      e.preventDefault();
+      ajustarZoom(0.15);
+    } else if ((e.ctrlKey || e.metaKey) && e.key === "-") {
+      e.preventDefault();
+      ajustarZoom(-0.15);
+    } else if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+      e.preventDefault();
+      ajustarZoom(0, 1.2);
+    }
+  });
+
+  // ============================================================
+  // EVENTOS DO MODAL SOBRE O EBOOKFINDER
+  // ============================================================
+  document.getElementById("btnFecharSobre")?.addEventListener("click", fecharModalSobre);
+  document.getElementById("btnFecharSobreFooter")?.addEventListener("click", fecharModalSobre);
+  document.getElementById("modalSobre")?.addEventListener("click", (e) => {
+    if (e.target.id === "modalSobre") fecharModalSobre();
+  });
+
+  document.getElementById("linkDevSite")?.addEventListener("click", () => {
+    window.api?.openExternal?.("https://joadsonrocha.github.io/");
+  });
+
+  document.getElementById("linkBookToSkillRepo")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.api?.openExternal?.("https://github.com/virgiliojr94/book-to-skill");
+  });
+
+  document.getElementById("btnSobreConfigIA")?.addEventListener("click", () => {
+    fecharModalSobre();
+    abrirModalConfigIA();
+  });
+
+  // Abrir Sobre pelo logo do topo e tag de licença do rodapé
+  document.getElementById("logoApp")?.addEventListener("click", abrirModalSobre);
+  document.querySelector(".license-tag")?.addEventListener("click", abrirModalSobre);
+
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;
   window.alternarSubpastas = alternarSubpastas;
@@ -2236,6 +2776,10 @@ document.addEventListener("DOMContentLoaded", () => {
   window.abrirModalConfigIA = abrirModalConfigIA;
   window.abrirCopilotoIA = abrirCopilotoIA;
   window.abrirSkillBook = abrirCopilotoIA;
+  window.abrirLeitorInterno = abrirLeitorInterno;
+  window.fecharLeitorInterno = fecharLeitorInterno;
+  window.abrirModalSobre = abrirModalSobre;
+  window.fecharModalSobre = fecharModalSobre;
   window.criarSkillDiretoDoCard = criarSkillDiretoDoCard;
 
   carregarBiblioteca();
