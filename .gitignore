@@ -10,7 +10,7 @@ out/
 # Dados locais e temporarios
 thumbs/
 pasta.json
-ia_config.json
+*ia_config*
 .env*
 *.env
 *.log

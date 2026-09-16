@@ -46,18 +46,64 @@ if (!fs.existsSync(skillsDir)) {
   fs.mkdirSync(skillsDir, { recursive: true });
 }
 
-// Arquivo de configuração da IA (Groq)
+// Arquivo de configuração da IA (Groq no perfil do usuário)
 const iaConfigFile = path.join(userDataPath, "ia_config.json");
 
+// Possíveis locais onde o instalador MSI / pacote Electron embute a chave de IA
+const bundledIaConfigPaths = [
+  path.join(process.resourcesPath || "", "ia_config_bundle.json"),
+  path.join(__dirname, "ia_config_bundle.json"),
+  path.join(__dirname, "app", "ia_config_bundle.json")
+];
+
 function obterConfigIA() {
+  // 1. Prioridade máxima: Configuração personalizada salva pelo usuário em AppData
   if (fs.existsSync(iaConfigFile)) {
     try {
-      return JSON.parse(fs.readFileSync(iaConfigFile, "utf8")) || { apiKey: "", model: "qwen/qwen3.8-27b" };
+      const userCfg = JSON.parse(fs.readFileSync(iaConfigFile, "utf8"));
+      if (userCfg && userCfg.apiKey && userCfg.apiKey.trim()) {
+        return {
+          apiKey: userCfg.apiKey.trim(),
+          model: userCfg.model || "qwen/qwen3.8-27b",
+          origem: "usuario",
+          isBundled: false
+        };
+      }
     } catch (e) {
-      console.error("❌ Erro ao ler ia_config.json:", e);
+      console.error("❌ Erro ao ler ia_config.json do usuário:", e);
     }
   }
-  return { apiKey: "", model: "qwen/qwen3.8-27b" };
+
+  // 2. Fallback: Configuração embutida exclusivamente no pacote/instalador MSI
+  for (const bundlePath of bundledIaConfigPaths) {
+    if (bundlePath && fs.existsSync(bundlePath)) {
+      try {
+        const bundleCfg = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
+        if (bundleCfg && bundleCfg.apiKey && bundleCfg.apiKey.trim()) {
+          return {
+            apiKey: bundleCfg.apiKey.trim(),
+            model: bundleCfg.model || "qwen/qwen3.8-27b",
+            origem: "msi",
+            isBundled: true
+          };
+        }
+      } catch (e) {
+        console.error("❌ Erro ao ler bundle de IA do instalador:", e);
+      }
+    }
+  }
+
+  // 3. Fallback: Variável de ambiente (para CI/CD ou deploys)
+  if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim()) {
+    return {
+      apiKey: process.env.GROQ_API_KEY.trim(),
+      model: process.env.GROQ_MODEL || "qwen/qwen3.8-27b",
+      origem: "env",
+      isBundled: true
+    };
+  }
+
+  return { apiKey: "", model: "qwen/qwen3.8-27b", origem: "nenhuma", isBundled: false };
 }
 
 function salvarConfigIA(cfg) {

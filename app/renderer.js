@@ -28,7 +28,11 @@ const state = {
   modoVisualizacao: localStorage.getItem("ef_modo_visualizacao") || "normal", // "normal" | "compact" | "list"
   buscaRecursiva: localStorage.getItem("ef_recursivo") !== "false",
   favoritos: new Set(JSON.parse(localStorage.getItem("ef_favoritos") || "[]")),
-  livroSelecionado: null
+  livroSelecionado: null,
+  tema: localStorage.getItem("ef_theme") || "dark",
+  tabModalAtiva: "detalhes",
+  skillAtual: null,
+  chatHistorico: []
 };
 
 // ============================================================================
@@ -781,6 +785,7 @@ function abrirModalLivro(livro) {
   if (lblUltima) lblUltima.textContent = formatarDataLeitura(prog.ultimaLeituraEm);
 
   atualizarProgressoVisual(prog.paginaAtual, prog.totalPaginas);
+  alternarTabModal("detalhes");
 
   modal.hidden = false;
   document.addEventListener("keydown", lidarTeclasModal);
@@ -794,7 +799,316 @@ function fecharModalLivro() {
 }
 
 function lidarTeclasModal(e) {
-  if (e.key === "Escape") fecharModalLivro();
+  if (e.key === "Escape") {
+    fecharModalLivro();
+    fecharModalConfigIA();
+  }
+}
+
+// ============================================================================
+// 5.1 TEMA CLARO / ESCURO & CONFIGURAÇÃO DA IA (GROQ)
+// ============================================================================
+
+function aplicarTema(novoTema) {
+  state.tema = novoTema;
+  localStorage.setItem("ef_theme", novoTema);
+  document.body.setAttribute("data-theme", novoTema);
+
+  const iconLua = document.getElementById("iconLua");
+  const iconSol = document.getElementById("iconSol");
+  if (iconLua && iconSol) {
+    iconLua.hidden = novoTema === "light";
+    iconSol.hidden = novoTema !== "light";
+  }
+}
+
+async function abrirModalConfigIA() {
+  const modal = document.getElementById("modalConfigIA");
+  if (!modal) return;
+
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "qwen/qwen3.8-27b" };
+  const inputKey = document.getElementById("inputGroqKey");
+  const selectModel = document.getElementById("selectModeloIA");
+  const lblStatus = document.getElementById("lblStatusConexao");
+
+  if (inputKey) inputKey.value = cfg.apiKey || "";
+  if (selectModel) selectModel.value = cfg.model || "qwen/qwen3.8-27b";
+  if (lblStatus) {
+    lblStatus.textContent = cfg.apiKey ? "🟢 Chave configurada no sistema" : "⚪ Nenhuma chave salva";
+    lblStatus.className = "status-indicator " + (cfg.apiKey ? "ok" : "");
+  }
+
+  modal.hidden = false;
+}
+
+function fecharModalConfigIA() {
+  const modal = document.getElementById("modalConfigIA");
+  if (modal) modal.hidden = true;
+}
+
+// ============================================================================
+// 5.2 NAVEGAÇÃO POR ABAS NO MODAL E TUTOR IA (BOOK-TO-SKILL)
+// ============================================================================
+
+function alternarTabModal(tab) {
+  state.tabModalAtiva = tab;
+  const tabBtnDetalhes = document.getElementById("tabBtnDetalhes");
+  const tabBtnTutor = document.getElementById("tabBtnTutorIA");
+  const panelDetalhes = document.getElementById("panelDetalhes");
+  const panelTutor = document.getElementById("panelTutorIA");
+
+  if (tab === "tutor") {
+    tabBtnDetalhes?.classList.remove("active");
+    tabBtnTutor?.classList.add("active");
+    if (panelDetalhes) panelDetalhes.hidden = true;
+    if (panelTutor) panelTutor.hidden = false;
+    carregarEstadoTutorIA();
+  } else {
+    tabBtnTutor?.classList.remove("active");
+    tabBtnDetalhes?.classList.add("active");
+    if (panelTutor) panelTutor.hidden = true;
+    if (panelDetalhes) panelDetalhes.hidden = false;
+  }
+}
+
+async function carregarEstadoTutorIA() {
+  if (!state.livroSelecionado) return;
+  state.chatHistorico = [];
+
+  const lblTitulo = document.getElementById("lblSkillTitulo");
+  const lblDesc = document.getElementById("lblSkillDesc");
+  const btnGerar = document.getElementById("btnGerarSkillLivro");
+  const messagesArea = document.getElementById("chatMessages");
+
+  const nomeObra = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
+
+  if (messagesArea) {
+    messagesArea.innerHTML = `
+      <div class="chat-msg tutor">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-content">
+          <p>Olá! Eu sou seu <strong>Tutor de Leitura</strong> da obra <em>${nomeObra}</em> alimentado pela IA da Groq. Pergunte qualquer dúvida sobre os conceitos, regras práticas ou peça resumos desta obra!</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Verifica se o livro já possui Skill gerada
+  const skillInfo = await window.api?.obterSkillLivro?.(state.livroSelecionado.caminho);
+  if (skillInfo?.temSkill) {
+    state.skillAtual = skillInfo;
+    if (lblTitulo) lblTitulo.textContent = "⚡ Skill de IA Ativa (Conhecimento Destilado)";
+    if (lblDesc) lblDesc.textContent = "O conteúdo desta obra está indexado em formato modular para respostas imediatas e precisas.";
+    if (btnGerar) btnGerar.textContent = "🔄 Re-destilar Livro";
+  } else {
+    state.skillAtual = null;
+    if (lblTitulo) lblTitulo.textContent = "⚡ Skill de IA Não Gerada";
+    if (lblDesc) lblDesc.textContent = "Destile os capítulos desta obra em uma Skill modular para respostas instantâneas sem alucinações.";
+    if (btnGerar) btnGerar.textContent = "⚡ Gerar Skill do Livro";
+  }
+}
+
+async function executarBookToSkill() {
+  if (!state.livroSelecionado) return;
+  const cfg = await window.api?.obterConfigIA?.();
+  if (!cfg?.apiKey) {
+    showToast("Configure sua chave da API Groq antes de gerar a skill.");
+    abrirModalConfigIA();
+    return;
+  }
+
+  const btnGerar = document.getElementById("btnGerarSkillLivro");
+  const progressTrack = document.getElementById("skillProgressBarTrack");
+  const progressFill = document.getElementById("skillProgressBarFill");
+  const lblDesc = document.getElementById("lblSkillDesc");
+
+  if (btnGerar) { btnGerar.disabled = true; btnGerar.textContent = "⏳ Extraindo..."; }
+  if (progressTrack) progressTrack.hidden = false;
+  if (progressFill) progressFill.style.width = "20%";
+
+  try {
+    const caminho = state.livroSelecionado.caminho;
+    const titulo = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
+    let textoAmostra = "";
+
+    // Se for PDF, tenta extrair texto das páginas iniciais / índice usando pdfjsLib
+    if (state.livroSelecionado.extensao === ".pdf" && window.pdfjsLib) {
+      if (lblDesc) lblDesc.textContent = "Lendo páginas do PDF para indexação...";
+      const buffer = await window.api?.lerArquivoBuffer?.(caminho);
+      if (buffer) {
+        const loadingTask = window.pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+        const pdf = await loadingTask.promise;
+        const totalPag = Math.min(pdf.numPages, 30);
+        let textos = [];
+        for (let p = 1; p <= totalPag; p++) {
+          const page = await pdf.getPage(p);
+          const content = await page.getTextContent();
+          const strings = content.items.map(it => it.str).join(" ");
+          if (strings.trim().length > 30) {
+            textos.push(`[Pág ${p}] ${strings.slice(0, 1000)}`);
+          }
+          if (progressFill) progressFill.style.width = `${20 + Math.round((p / totalPag) * 40)}%`;
+        }
+        textoAmostra = textos.join("\n\n");
+      }
+    } else {
+      textoAmostra = `Livro: ${titulo}\nAutor: ${state.livroSelecionado.autor}\nFormato: ${state.livroSelecionado.extensao}`;
+    }
+
+    if (lblDesc) lblDesc.textContent = "Sintetizando Skill com modelos mentais via Groq...";
+    if (progressFill) progressFill.style.width = "75%";
+
+    const promptSkill = `Você é um gerador de Agent Skills (padrão SKILL.md).
+Analise os dados e trechos da seguinte obra para gerar a documentação modular:
+Obra: "${titulo}"
+Autor: "${state.livroSelecionado.autor || "Desconhecido"}"
+Trechos da obra:
+${textoAmostra.slice(0, 12000)}
+
+Gere 3 seções estruturadas rigorosamente no formato abaixo:
+
+===SKILL.MD===
+# Skill: ${titulo}
+## Visão Geral e Modelos Mentais
+(Resumo conciso dos principais conceitos, regras de decisão e lições centrais da obra)
+## Tópicos e Capítulos Principais
+(Mapeamento dos tópicos e capítulos)
+
+===CHEATSHEET.MD===
+# Cheatsheet & Regras Práticas: ${titulo}
+- Lista de regras de ação, princípios e boas práticas imediatas para consulta rápida
+
+===GLOSSARY.MD===
+# Glossário de Termos: ${titulo}
+- Principais termos técnicos e seus significados objetivos
+`;
+
+    const resIA = await window.api?.perguntarGroq?.({
+      pergunta: promptSkill,
+      contexto: "Destilação oficial no formato book-to-skill",
+      modelo: cfg.model || "qwen/qwen3.8-27b"
+    });
+
+    if (resIA?.success && resIA.resposta) {
+      if (progressFill) progressFill.style.width = "95%";
+      const resp = resIA.resposta;
+      let skillMd = resp;
+      let cheatsheet = "";
+      let glossary = "";
+
+      if (resp.includes("===CHEATSHEET.MD===")) {
+        const partes = resp.split("===CHEATSHEET.MD===");
+        skillMd = partes[0].replace("===SKILL.MD===", "").trim();
+        const resto = partes[1];
+        if (resto.includes("===GLOSSARY.MD===")) {
+          const sub = resto.split("===GLOSSARY.MD===");
+          cheatsheet = sub[0].trim();
+          glossary = sub[1].trim();
+        } else {
+          cheatsheet = resto.trim();
+        }
+      }
+
+      await window.api?.salvarSkillLivro?.({
+        caminho,
+        titulo,
+        skillMd,
+        cheatsheet,
+        glossary
+      });
+
+      if (progressFill) progressFill.style.width = "100%";
+      showToast("Skill do livro gerada com sucesso!");
+      await carregarEstadoTutorIA();
+    } else {
+      throw new Error(resIA?.error || "Falha ao sintetizar com o Groq.");
+    }
+  } catch (err) {
+    console.error("Erro no book-to-skill:", err);
+    showToast(`Erro na geração: ${err.message}`);
+    if (lblDesc) lblDesc.textContent = "Erro ao destilar livro. Verifique a chave ou tente novamente.";
+  } finally {
+    if (btnGerar) { btnGerar.disabled = false; btnGerar.textContent = "⚡ Gerar Skill do Livro"; }
+    setTimeout(() => { if (progressTrack) progressTrack.hidden = true; }, 1500);
+  }
+}
+
+async function enviarPerguntaChat(textoPergunta = null) {
+  const input = document.getElementById("inputChatPergunta");
+  const pergunta = (textoPergunta || input?.value || "").trim();
+  if (!pergunta) return;
+
+  if (input) input.value = "";
+
+  const cfg = await window.api?.obterConfigIA?.();
+  if (!cfg?.apiKey) {
+    showToast("Configure sua chave da API Groq no botão ⚙️ IA.");
+    abrirModalConfigIA();
+    return;
+  }
+
+  const messagesArea = document.getElementById("chatMessages");
+  if (!messagesArea) return;
+
+  // Adiciona balão do usuário
+  const userMsgEl = document.createElement("div");
+  userMsgEl.className = "chat-msg user";
+  userMsgEl.innerHTML = `
+    <div class="msg-avatar">👤</div>
+    <div class="msg-content"><p>${pergunta.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+  `;
+  messagesArea.appendChild(userMsgEl);
+
+  // Adiciona balão de carregamento do Tutor
+  const tutorMsgEl = document.createElement("div");
+  tutorMsgEl.className = "chat-msg tutor";
+  tutorMsgEl.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="msg-content"><p><em>Pensando...</em></p></div>
+  `;
+  messagesArea.appendChild(tutorMsgEl);
+  messagesArea.scrollTop = messagesArea.scrollHeight;
+
+  state.chatHistorico.push({ role: "user", content: pergunta });
+
+  // Monta o contexto a partir da Skill gerada ou dos metadados do livro
+  let contexto = "";
+  if (state.skillAtual?.skillMd) {
+    contexto = `${state.skillAtual.skillMd}\n\n${state.skillAtual.cheatsheet || ""}`;
+  } else if (state.livroSelecionado) {
+    contexto = `Obra: ${state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo}\nAutor: ${state.livroSelecionado.autor}\nProgresso: Pág. ${state.livroSelecionado.progresso?.paginaAtual || 0}/${state.livroSelecionado.progresso?.totalPaginas || 0}\nAnotações: ${state.livroSelecionado.progresso?.anotacoes || "Nenhuma"}`;
+  }
+
+  const res = await window.api?.perguntarGroq?.({
+    pergunta,
+    contexto,
+    historico: state.chatHistorico
+  });
+
+  if (res?.success && res.resposta) {
+    state.chatHistorico.push({ role: "assistant", content: res.resposta });
+    tutorMsgEl.querySelector(".msg-content").innerHTML = formatarMarkdownSimples(res.resposta);
+  } else {
+    tutorMsgEl.querySelector(".msg-content").innerHTML = `<p style="color:#f43f5e;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>`;
+  }
+
+  messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function formatarMarkdownSimples(md) {
+  if (!md) return "";
+  let html = md
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/^### (.*$)/gim, "<strong>$1</strong>")
+    .replace(/^## (.*$)/gim, "<strong>$1</strong>")
+    .replace(/^# (.*$)/gim, "<strong>$1</strong>")
+    .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/gim, "<em>$1</em>")
+    .replace(/`([^`]+)`/gim, "<code>$1</code>")
+    .replace(/^\s*-\s+(.*$)/gim, "• $1<br/>")
+    .replace(/\n\n/g, "</p><p>")
+    .replace(/\n/g, "<br/>");
+  return `<p>${html}</p>`;
 }
 
 async function atualizarStatusLeitura(status) {
@@ -1119,10 +1433,94 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   aplicarModoVisualizacao(state.modoVisualizacao);
 
+  // ============================================================
+  // EVENTOS DE TEMA (CLARO / ESCURO)
+  // ============================================================
+  aplicarTema(state.tema);
+
+  document.getElementById("btnToggleTema")?.addEventListener("click", () => {
+    const proximoTema = state.tema === "light" ? "dark" : "light";
+    aplicarTema(proximoTema);
+    showToast(proximoTema === "light" ? "Modo Claro ativado ☀️" : "Modo Escuro ativado 🌙");
+  });
+
+  // ============================================================
+  // EVENTOS DO MODAL DE CONFIGURAÇÃO DA IA (GROQ)
+  // ============================================================
+  document.getElementById("btnConfigIA")?.addEventListener("click", abrirModalConfigIA);
+  document.getElementById("btnFecharConfigIA")?.addEventListener("click", fecharModalConfigIA);
+  document.getElementById("modalConfigIA")?.addEventListener("click", (e) => {
+    if (e.target.id === "modalConfigIA") fecharModalConfigIA();
+  });
+
+  document.getElementById("btnToggleShowKey")?.addEventListener("click", () => {
+    const inp = document.getElementById("inputGroqKey");
+    if (!inp) return;
+    inp.type = inp.type === "password" ? "text" : "password";
+  });
+
+  document.getElementById("btnTestarConexaoIA")?.addEventListener("click", async () => {
+    const key = document.getElementById("inputGroqKey")?.value?.trim();
+    const lbl = document.getElementById("lblStatusConexao");
+    if (!key) {
+      if (lbl) { lbl.textContent = "⚠️ Digite uma chave para testar"; lbl.className = "status-indicator erro"; }
+      return;
+    }
+    if (lbl) { lbl.textContent = "⏳ Conectando à Groq API..."; lbl.className = "status-indicator"; }
+    const res = await window.api?.testarConexaoGroq?.(key);
+    if (res?.success) {
+      if (lbl) { lbl.textContent = "🟢 Conexão com Groq validada com sucesso!"; lbl.className = "status-indicator ok"; }
+      showToast("Groq API conectada com sucesso!");
+    } else {
+      if (lbl) { lbl.textContent = `🔴 ${res?.error || "Erro de autenticação"}`; lbl.className = "status-indicator erro"; }
+    }
+  });
+
+  document.getElementById("btnSalvarConfigIA")?.addEventListener("click", async () => {
+    const key = document.getElementById("inputGroqKey")?.value?.trim();
+    const model = document.getElementById("selectModeloIA")?.value || "qwen/qwen3.8-27b";
+    const ok = await window.api?.salvarConfigIA?.({ apiKey: key, model });
+    if (ok) {
+      showToast("Configurações da IA salvas com segurança!");
+      fecharModalConfigIA();
+    } else {
+      showToast("Erro ao gravar configurações.");
+    }
+  });
+
+  document.getElementById("linkObterChaveGroq")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.api?.openExternal?.("https://console.groq.com/keys");
+  });
+
+  // ============================================================
+  // EVENTOS DAS ABAS DO MODAL E TUTOR IA
+  // ============================================================
+  document.getElementById("tabBtnDetalhes")?.addEventListener("click", () => alternarTabModal("detalhes"));
+  document.getElementById("tabBtnTutorIA")?.addEventListener("click", () => alternarTabModal("tutor"));
+
+  document.getElementById("btnGerarSkillLivro")?.addEventListener("click", executarBookToSkill);
+  document.getElementById("btnEnviarPerguntaChat")?.addEventListener("click", () => enviarPerguntaChat());
+
+  document.getElementById("inputChatPergunta")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      enviarPerguntaChat();
+    }
+  });
+
+  document.querySelectorAll(".chat-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      enviarPerguntaChat(chip.dataset.query);
+    });
+  });
+
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;
   window.alternarSubpastas = alternarSubpastas;
   window.aplicarModoVisualizacao = aplicarModoVisualizacao;
+  window.aplicarTema = aplicarTema;
+  window.abrirModalConfigIA = abrirModalConfigIA;
 
   carregarBiblioteca();
 });
