@@ -1626,6 +1626,13 @@ function fecharPopupPasta() {
 // 8. INICIALIZAÇÃO
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // Atalho para recarregar a interface em desenvolvimento
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
+      window.location.reload();
+    }
+  });
+
   const inputBusca = document.getElementById("inputBusca");
   const btnLimparBusca = document.getElementById("btnLimparBusca");
   let timerBusca = null;

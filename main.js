@@ -299,6 +299,12 @@ function createWindow() {
 
   Menu.setApplicationMenu(null);
 
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.key === "F5" || (input.control && input.key.toLowerCase() === "r")) {
+      mainWindow.reload();
+    }
+  });
+
   mainWindow.loadFile(path.join(appPath, "index.html")).catch(err => {
     console.error("❌ Falha ao carregar index.html:", err);
   });
