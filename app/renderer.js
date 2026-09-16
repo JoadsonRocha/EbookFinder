@@ -1,22 +1,22 @@
-﻿/**
+/**
  * ============================================================================
- * EbookFinder - Processo de RenderizaÃ§Ã£o (Frontend / DOM)
+ * EbookFinder - Processo de Renderização (Frontend / DOM)
  * ============================================================================
- * @description Gerencia a estante virtual, exibiÃ§Ã£o de capas de livros em 2:3,
- *              estantes de leitura (Lendo, ConcluÃ­dos, Quero Ler), busca por
- *              tÃ­tulo e autor, modal de leitura e favoritos.
+ * @description Gerencia a estante virtual, exibição de capas de livros em 2:3,
+ *              estantes de leitura (Lendo, Concluídos, Quero Ler), busca por
+ *              título e autor, modal de leitura e favoritos.
  * @author Joadson Rocha <joadson.dev@gmail.com>
  * @license GPL-3.0
  * ============================================================================
  */
 
-// Inicializa o Worker do PDF.js para extraÃ§Ã£o rÃ¡pida de capas da pÃ¡gina 1
+// Inicializa o Worker do PDF.js para extração rápida de capas da página 1
 if (window.pdfjsLib) {
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
 }
 
 // ============================================================================
-// 1. ESTADO GLOBAL DA APLICAÃ‡ÃƒO
+// 1. ESTADO GLOBAL DA APLICAÇÃO
 // ============================================================================
 const state = {
   pastaAtual: null,
@@ -48,7 +48,7 @@ const state = {
 };
 
 // ============================================================================
-// TEMAS DE CAPA DURA & FORMATAÃ‡ÃƒO HUMANIZADA
+// TEMAS DE CAPA DURA & FORMATAÇÃO HUMANIZADA
 // ============================================================================
 const PALETAS_CAPA = [
   { tema: "sapphire", bg: "linear-gradient(145deg, #132238, #0b1524)", borda: "#38bdf8", tag: "#0284c7" },
@@ -67,17 +67,17 @@ function obterPaletaCapa(str) {
 }
 
 /**
- * Converte nomes mecÃ¢nicos de arquivos (ex: hashes de concurso ou sequÃªncias de hÃ­fens)
- * em tÃ­tulos elegantes, limpos e agradÃ¡veis de ler.
+ * Converte nomes mecânicos de arquivos (ex: hashes de concurso ou sequências de hífens)
+ * em títulos elegantes, limpos e agradáveis de ler.
  */
 function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
   let str = (tituloOriginal || nomeArquivo || "").replace(/\.(pdf|epub|mobi|cbr|cbz|txt|azw3?)$/i, "");
 
-  // Remover marcas d'Ã¡gua e sufixos mecÃ¢nicos frequentes
+  // Remover marcas d'água e sufixos mecânicos frequentes
   str = str.replace(/[-_](somente[-_ ]*em[-_ ]*pdf|versao[-_ ]*impressao|sem[-_ ]*marca|completo|simplificado|resumo)\b/gi, "");
   str = str.replace(/[-_][a-f0-9]{4,8}\b/gi, "");
 
-  // Concurso / Cursos com numeraÃ§Ã£o de aula e professor
+  // Concurso / Cursos com numeração de aula e professor
   // Ex: "curso-380456-aula-00-prof-a-paolla-ramos"
   const matchCurso = str.match(/curso[-_](\d+)[-_]aula[-_](\d+)(?:[-_]prof[-_]([a-zA-Z0-9\s-]+))?/i);
   if (matchCurso) {
@@ -86,12 +86,12 @@ function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
     prof = prof.replace(/\b(somente|em|pdf|completo)\b/gi, "").trim();
     if (prof) {
       prof = prof.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-      return `Aula ${numAula} â€¢ Prof. ${prof}`;
+      return `Aula ${numAula} • Prof. ${prof}`;
     }
     return `Aula ${numAula}`;
   }
 
-  // PadrÃ£o genÃ©rico de aula: "aula-01-...", "Aula 02 ..."
+  // Padrão genérico de aula: "aula-01-...", "Aula 02 ..."
   const matchAula = str.match(/aula[-_ ]*(\d+)/i);
   if (matchAula) {
     const matchProf = str.match(/prof[-_ ]*([a-zA-Z\s-]+)/i);
@@ -99,21 +99,21 @@ function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
       let profName = matchProf[1].replace(/[-_]/g, " ").replace(/\b(somente|em|pdf|completo)\b/gi, "").trim();
       if (profName) {
         profName = profName.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-        return `Aula ${matchAula[1]} â€¢ Prof. ${profName}`;
+        return `Aula ${matchAula[1]} • Prof. ${profName}`;
       }
     }
     return `Aula ${matchAula[1]}`;
   }
 
-  // Limpar sequÃªncias pontilhadas artificiais como .B..a..c..k..u..p
+  // Limpar sequências pontilhadas artificiais como .B..a..c..k..u..p
   if (/\.[a-zA-Z]\./.test(str)) {
     str = str.replace(/\.+/g, "");
   }
 
-  // Limpar traÃ§os e underscores
+  // Limpar traços e underscores
   str = str.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
 
-  if (!str) str = tituloOriginal || nomeArquivo || "Documento Sem TÃ­tulo";
+  if (!str) str = tituloOriginal || nomeArquivo || "Documento Sem Título";
 
   if (str === str.toLowerCase()) {
     str = str.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -123,7 +123,7 @@ function formatarTituloHumanizado(tituloOriginal, nomeArquivo) {
 }
 
 // ============================================================================
-// FILA DE EXTRAÃ‡ÃƒO DE CAPAS DE PDF VIA CANVAS
+// FILA DE EXTRAÇÃO DE CAPAS DE PDF VIA CANVAS
 // ============================================================================
 let filaCapasPdf = [];
 let processandoFilaCapas = false;
@@ -168,7 +168,7 @@ async function processarFilaCapas() {
 }
 
 /**
- * LÃª o buffer do PDF via IPC, renderiza a PÃ¡gina 1 no Canvas HTML5 com resoluÃ§Ã£o de alta qualidade
+ * Lê o buffer do PDF via IPC, renderiza a Página 1 no Canvas HTML5 com resolução de alta qualidade
  * e salva o resultado no cache local em disco (thumbs/).
  */
 async function extrairCapaPdf(livro) {
@@ -213,7 +213,7 @@ async function extrairCapaPdf(livro) {
 }
 
 /**
- * Atualiza o elemento no DOM em tempo real com fade-in suave assim que a capa Ã© extraÃ­da.
+ * Atualiza o elemento no DOM em tempo real com fade-in suave assim que a capa é extraída.
  */
 function atualizarCapaNoDom(caminho, thumbUrl, titulo) {
   const card = document.querySelector(`.book-card[data-caminho="${CSS.escape(caminho)}"]`);
@@ -244,7 +244,7 @@ function atualizarCapaNoDom(caminho, thumbUrl, titulo) {
 }
 
 /**
- * Alterna entre modos de visualizaÃ§Ã£o: normal, compacto ou lista.
+ * Alterna entre modos de visualização: normal, compacto ou lista.
  */
 function aplicarModoVisualizacao(modo) {
   state.modoVisualizacao = modo || "normal";
@@ -263,7 +263,7 @@ function aplicarModoVisualizacao(modo) {
 }
 
 // ============================================================================
-// 2. UTILITÃRIOS
+// 2. UTILITÁRIOS
 // ============================================================================
 
 function showToast(msg, duracao = 3000) {
@@ -300,7 +300,7 @@ function formatarDataLeitura(timestamp) {
   if (!timestamp) return "Nenhuma leitura registrada";
   try {
     const data = new Date(timestamp);
-    return `Lido em ${data.toLocaleDateString("pt-BR")} Ã s ${data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+    return `Lido em ${data.toLocaleDateString("pt-BR")} às ${data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
   } catch (e) {
     return "Nenhuma leitura registrada";
   }
@@ -364,7 +364,7 @@ async function salvarProgressoModal(marcarConcluido = false) {
       lblUltima.textContent = formatarDataLeitura(resultado.ultimaLeituraEm);
     }
 
-    // Atualiza tambÃ©m na lista global
+    // Atualiza também na lista global
     const idx = state.todosLivros.findIndex(l => l.caminho === state.livroSelecionado.caminho);
     if (idx !== -1) {
       state.todosLivros[idx].progresso = resultado;
@@ -372,7 +372,7 @@ async function salvarProgressoModal(marcarConcluido = false) {
     }
 
     aplicarFiltrosEOrdenacao();
-    showToast(marcarConcluido ? "ParabÃ©ns! Obra concluÃ­da." : `Progresso salvo: PÃ¡g. ${pag}${tot ? `/${tot}` : ''} (${porcentagem}%)`);
+    showToast(marcarConcluido ? "Parabéns! Obra concluída." : `Progresso salvo: Pág. ${pag}${tot ? `/${tot}` : ''} (${porcentagem}%)`);
   } else {
     showToast("Erro ao salvar progresso.");
   }
@@ -390,7 +390,7 @@ async function carregarBiblioteca() {
   if (grid) {
     grid.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">ðŸ“–</div>
+        <div class="empty-icon">📖</div>
         <h3 class="empty-title">Lendo arquivos da estante...</h3>
         <p class="empty-desc">Processando livros e extraindo capas automaticamente.</p>
       </div>
@@ -417,7 +417,7 @@ async function carregarBiblioteca() {
     aplicarFiltrosEOrdenacao();
     enfileirarExtracaoCapasPdf(state.todosLivros);
   } catch (err) {
-    console.error("âŒ Erro ao carregar biblioteca:", err);
+    console.error("❌ Erro ao carregar biblioteca:", err);
     showToast("Erro ao ler livros da pasta.");
   }
 }
@@ -448,7 +448,7 @@ function alternarSubpastas() {
 }
 
 // ============================================================================
-// 4. FILTROS, ORDENAÃ‡ÃƒO E RENDERIZAÃ‡ÃƒO
+// 4. FILTROS, ORDENAÇÃO E RENDERIZAÇÃO
 // ============================================================================
 
 function aplicarFiltrosEOrdenacao() {
@@ -465,7 +465,7 @@ function aplicarFiltrosEOrdenacao() {
     lista = lista.filter(l => l.status === "quero-ler");
   }
 
-  // 2. Busca por TÃ­tulo, TÃ­tulo Humanizado ou Autor
+  // 2. Busca por Título, Título Humanizado ou Autor
   const termo = state.termoBusca.trim().toLowerCase();
   if (termo) {
     lista = lista.filter(l => 
@@ -476,7 +476,7 @@ function aplicarFiltrosEOrdenacao() {
     );
   }
 
-  // 3. OrdenaÃ§Ã£o
+  // 3. Ordenação
   lista.sort((a, b) => {
     const titA = a.tituloHumanizado || a.titulo || a.nome;
     const titB = b.tituloHumanizado || b.titulo || b.nome;
@@ -524,7 +524,7 @@ function atualizarContadores() {
   if (resultsCount) {
     const totalBytes = state.livrosFiltrados.reduce((acc, l) => acc + (l.tamanho || 0), 0);
     const label = state.livrosFiltrados.length === 1 ? "obra encontrada" : "obras encontradas";
-    resultsCount.textContent = `${state.livrosFiltrados.length} ${label} â€¢ ${formatarTamanho(totalBytes)}`;
+    resultsCount.textContent = `${state.livrosFiltrados.length} ${label} • ${formatarTamanho(totalBytes)}`;
   }
 }
 
@@ -535,7 +535,7 @@ function renderizarGrade(lista) {
 
   if (!lista || lista.length === 0) {
     let tituloVazio = "Nenhum livro encontrado";
-    let descVazio = "NÃ£o hÃ¡ livros que correspondam ao filtro atual.";
+    let descVazio = "Não há livros que correspondam ao filtro atual.";
     let botaoAcao = `<button class="btn-empty-action" onclick="alternarAba('todos')">Ver Todos os Livros</button>`;
 
     if (state.abaAtiva === "favoritos") {
@@ -545,26 +545,26 @@ function renderizarGrade(lista) {
       tituloVazio = "Nenhuma leitura em andamento";
       descVazio = "Abra um livro e marque seu status como 'Lendo' para acompanhar seu progresso.";
     } else if (state.abaAtiva === "concluidos") {
-      tituloVazio = "Nenhum livro concluÃ­do";
-      descVazio = "Marque seus livros como concluÃ­dos conforme terminar de lÃª-los.";
+      tituloVazio = "Nenhum livro concluído";
+      descVazio = "Marque seus livros como concluídos conforme terminar de lê-los.";
     } else if (state.abaAtiva === "quero-ler") {
       tituloVazio = "Lista de desejos vazia";
-      descVazio = "Adicione livros em 'Quero Ler' para organizar suas prÃ³ximas leituras.";
+      descVazio = "Adicione livros em 'Quero Ler' para organizar suas próximas leituras.";
     } else if (state.todosLivros.length === 0) {
       if (!state.buscaRecursiva) {
         tituloVazio = "Nenhum e-book na raiz da pasta";
-        descVazio = `NÃ£o encontramos e-books diretamente na pasta selecionada. Seus arquivos podem estar dentro de subpastas!`;
-        botaoAcao = `<button class="btn-empty-action" id="btnAtivarSubpastasVazio">ðŸ“‚ Ativar Busca em Subpastas</button>`;
+        descVazio = `Não encontramos e-books diretamente na pasta selecionada. Seus arquivos podem estar dentro de subpastas!`;
+        botaoAcao = `<button class="btn-empty-action" id="btnAtivarSubpastasVazio">📂 Ativar Busca em Subpastas</button>`;
       } else {
         tituloVazio = "Nenhum e-book encontrado";
-        descVazio = `Nenhum arquivo compatÃ­vel (.epub, .pdf, .mobi, .cbr, .cbz, .txt) foi encontrado em "${truncarCaminho(state.pastaAtual)}".`;
-        botaoAcao = `<button class="btn-empty-action" onclick="abrirPopupPasta()">ðŸ“ Escolher Outra Pasta</button>`;
+        descVazio = `Nenhum arquivo compatível (.epub, .pdf, .mobi, .cbr, .cbz, .txt) foi encontrado em "${truncarCaminho(state.pastaAtual)}".`;
+        botaoAcao = `<button class="btn-empty-action" onclick="abrirPopupPasta()">📁 Escolher Outra Pasta</button>`;
       }
     }
 
     grid.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">ðŸ“š</div>
+        <div class="empty-icon">📚</div>
         <h3 class="empty-title">${tituloVazio}</h3>
         <p class="empty-desc">${descVazio}</p>
         ${botaoAcao}
@@ -589,14 +589,14 @@ function renderizarGrade(lista) {
     // Label do status de leitura
     let statusBadge = "";
     if (livro.status === "lendo") {
-      statusBadge = `<span class="badge-reading-status lendo">ðŸ“– Lendo</span>`;
+      statusBadge = `<span class="badge-reading-status lendo">📖 Lendo</span>`;
     } else if (livro.status === "concluidos") {
-      statusBadge = `<span class="badge-reading-status concluidos">âœ… ConcluÃ­do</span>`;
+      statusBadge = `<span class="badge-reading-status concluidos">✅ Concluído</span>`;
     } else if (livro.status === "quero-ler") {
-      statusBadge = `<span class="badge-reading-status quero-ler">ðŸ“Œ Quero Ler</span>`;
+      statusBadge = `<span class="badge-reading-status quero-ler">📌 Quero Ler</span>`;
     }
 
-    // Capa ExtraÃ­da ou Fallback Estilo Capa Dura ClÃ¡ssica
+    // Capa Extraída ou Fallback Estilo Capa Dura Clássica
     const capaConteudo = livro.thumbnail
       ? `<img class="book-cover-image" src="${livro.thumbnail}" alt="${tituloExibicao}" loading="lazy" />`
       : `
@@ -607,7 +607,7 @@ function renderizarGrade(lista) {
         </div>
       `;
 
-    // Progresso de Leitura no Card (apenas para obras que jÃ¡ foram iniciadas)
+    // Progresso de Leitura no Card (apenas para obras que já foram iniciadas)
     const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0 };
     const paginaAtual = prog.paginaAtual || 0;
     const totalPaginas = prog.totalPaginas || 0;
@@ -619,7 +619,7 @@ function renderizarGrade(lista) {
     if (paginaAtual > 0) {
       const isConcluido = porcentagem >= 100;
       progressHtml = `
-        <div class="card-reading-progress" title="PÃ¡gina ${paginaAtual}${totalPaginas ? ` de ${totalPaginas}` : ''} (${porcentagem}%)">
+        <div class="card-reading-progress" title="Página ${paginaAtual}${totalPaginas ? ` de ${totalPaginas}` : ''} (${porcentagem}%)">
           <div class="card-progress-bar-bg">
             <div class="card-progress-bar-fill ${isConcluido ? 'concluido' : ''}" style="width: ${porcentagem}%"></div>
           </div>
@@ -634,7 +634,7 @@ function renderizarGrade(lista) {
         ${statusBadge}
 
         <button class="card-copilot-badge" title="Conversar com o SkillBook deste livro">
-          <span class="copilot-sparkle-icon">âœ¨</span>
+          <span class="copilot-sparkle-icon">✨</span>
           <span class="copilot-badge-text">SkillBook</span>
         </button>
 
@@ -657,11 +657,11 @@ function renderizarGrade(lista) {
             <span>Ler</span>
           </button>
           <button class="btn-cover-copilot" title="Conversar com o SkillBook deste livro">
-            <span>âœ¨</span>
+            <span>✨</span>
             <span>SkillBook</span>
           </button>
           <button class="btn-cover-skill" title="Criar Skill deste livro (Book-to-Skill)">
-            <span>âš¡</span>
+            <span>⚡</span>
             <span>Criar Skill</span>
           </button>
         </div>
@@ -677,7 +677,7 @@ function renderizarGrade(lista) {
       </div>
     `;
 
-    // AÃ§Ã£o do BotÃ£o SkillBook no Card (Badge Direto e Hover)
+    // Ação do Botão SkillBook no Card (Badge Direto e Hover)
     card.querySelector(".card-copilot-badge")?.addEventListener("click", (e) => {
       e.stopPropagation();
       abrirCopilotoIA(livro);
@@ -688,19 +688,19 @@ function renderizarGrade(lista) {
       abrirCopilotoIA(livro);
     });
 
-    // AÃ§Ã£o Criar Skill Diretamente do Card (Book-to-Skill)
+    // Ação Criar Skill Diretamente do Card (Book-to-Skill)
     card.querySelector(".btn-cover-skill")?.addEventListener("click", (e) => {
       e.stopPropagation();
       criarSkillDiretoDoCard(livro);
     });
 
-    // AÃ§Ã£o do BotÃ£o Flutuante de Leitura na Capa (Abre no Leitor Interno)
+    // Ação do Botão Flutuante de Leitura na Capa (Abre no Leitor Interno)
     card.querySelector(".btn-cover-read")?.addEventListener("click", (e) => {
       e.stopPropagation();
       abrirLeitorInterno(livro);
     });
 
-    // AÃ§Ã£o do BotÃ£o de Detalhes na Capa
+    // Ação do Botão de Detalhes na Capa
     card.querySelector(".btn-cover-info")?.addEventListener("click", (e) => {
       e.stopPropagation();
       abrirModalLivro(livro);
@@ -717,7 +717,7 @@ function renderizarGrade(lista) {
       abrirModalLivro(livro);
     });
 
-    // BotÃ£o Favoritar
+    // Botão Favoritar
     const btnFav = card.querySelector(".fav-btn");
     btnFav?.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -733,7 +733,7 @@ async function criarSkillDiretoDoCard(livro) {
   state.livroSelecionado = livro;
   await abrirCopilotoIA(livro);
   if (state.skillAtual?.temSkill) {
-    showToast(`O livro "${livro.tituloHumanizado || livro.titulo}" jÃ¡ possui Skill modular criada!`);
+    showToast(`O livro "${livro.tituloHumanizado || livro.titulo}" já possui Skill modular criada!`);
   } else {
     showToast(`Iniciando Book-to-Skill para "${livro.tituloHumanizado || livro.titulo}"...`);
     executarBookToSkillCopiloto();
@@ -747,12 +747,12 @@ function renderizarEstadoSemPasta() {
   if (!grid) return;
   grid.innerHTML = `
     <div class="empty-state">
-      <div class="empty-icon">ðŸ“</div>
+      <div class="empty-icon">📁</div>
       <h3 class="empty-title">Nenhuma pasta selecionada</h3>
-      <p class="empty-desc">Escolha a pasta do seu computador onde seus e-books (.pdf, .epub, etc.) estÃ£o localizados ou selecione arquivos diretamente.</p>
+      <p class="empty-desc">Escolha a pasta do seu computador onde seus e-books (.pdf, .epub, etc.) estão localizados ou selecione arquivos diretamente.</p>
       <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px;">
-        <button class="btn-empty-action" onclick="abrirPopupPasta()">ðŸ“ Selecionar Pasta</button>
-        <button class="btn-empty-action" id="btnEscolherArquivosVazio" style="background: rgba(229, 169, 59, 0.15); border: 1px solid rgba(229, 169, 59, 0.4); color: #e5a93b;">ðŸ“„ Selecionar Arquivos PDF</button>
+        <button class="btn-empty-action" onclick="abrirPopupPasta()">📁 Selecionar Pasta</button>
+        <button class="btn-empty-action" id="btnEscolherArquivosVazio" style="background: rgba(229, 169, 59, 0.15); border: 1px solid rgba(229, 169, 59, 0.4); color: #e5a93b;">📄 Selecionar Arquivos PDF</button>
       </div>
     </div>
   `;
@@ -781,7 +781,7 @@ function abrirModalLivro(livro) {
   const paleta = obterPaletaCapa(livro.titulo || livro.nome);
 
   document.getElementById("modalTitulo").textContent = tituloLimpo;
-  document.getElementById("modalAutor").textContent = livro.autor !== "Desconhecido" ? livro.autor : "Autor NÃ£o Informado";
+  document.getElementById("modalAutor").textContent = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
   document.getElementById("modalBadgeFormato").textContent = formato;
 
   const specs = document.getElementById("modalSpecs");
@@ -791,9 +791,9 @@ function abrirModalLivro(livro) {
       <div class="modal-specs-pills">
         <span class="spec-pill">${formato}</span>
         <span class="spec-pill">${formatarTamanho(livro.tamanho)}</span>
-        ${totPaginas ? `<span class="spec-pill">${totPaginas} pÃ¡gs</span>` : ""}
+        ${totPaginas ? `<span class="spec-pill">${totPaginas} págs</span>` : ""}
       </div>
-      <div class="modal-filepath" title="${livro.caminho}">ðŸ“ ${livro.nome}</div>
+      <div class="modal-filepath" title="${livro.caminho}">📁 ${livro.nome}</div>
     `;
   }
 
@@ -810,13 +810,13 @@ function abrirModalLivro(livro) {
           </div>
           <h4 class="fallback-book-title">${tituloLimpo}</h4>
           <p class="fallback-book-author" style="color:${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca Digital"}</p>
-          <div class="fallback-book-footer">ðŸ“–</div>
+          <div class="fallback-book-footer">📖</div>
         </div>
       `;
     }
   }
 
-  // Atualiza botÃµes de status de leitura ativos
+  // Atualiza botões de status de leitura ativos
   document.querySelectorAll(".btn-status").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.status === (livro.status || "nenhum"));
   });
@@ -870,41 +870,6 @@ function lidarTeclasModal(e) {
 }
 
 // ============================================================================
-// HISTÃ“RICO PERSISTENTE DO CHAT (COMPARTILHADO ENTRE WORKBENCH E LEITOR)
-// ============================================================================
-
-function obterHistoricoChatStorage(caminho) {
-  try {
-    if (!caminho) return [];
-    const raw = localStorage.getItem("ef_chat_" + caminho);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function carregarHistoricoChatStorage(caminho) {
-  return obterHistoricoChatStorage(caminho);
-}
-
-function salvarHistoricoChatStorage(caminho, historico) {
-  try {
-    if (!caminho) return;
-    const fatiado = (historico || []).slice(-40);
-    localStorage.setItem("ef_chat_" + caminho, JSON.stringify(fatiado));
-  } catch (e) {
-    console.warn("Erro ao salvar histÃ³rico do chat:", e);
-  }
-}
-
-function limparHistoricoChatStorage(caminho) {
-  try {
-    if (!caminho) return;
-    localStorage.removeItem("ef_chat_" + caminho);
-  } catch (e) {}
-}
-
-// ============================================================================
 // 5.0 LEITOR INTERNO DE PDF COM SKILLBOOK LATERAL (SPLIT-VIEW)
 // ============================================================================
 
@@ -926,7 +891,6 @@ async function abrirLeitorInterno(livro) {
 
   fecharModalLivro();
   fecharCopilotoIA();
-  fecharModalSobre();
 
   const tituloLimpo = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
   const tituloEl = document.getElementById("leitorTituloLivro");
@@ -936,7 +900,7 @@ async function abrirLeitorInterno(livro) {
     tituloEl.title = tituloLimpo;
   }
   if (autorEl) {
-    autorEl.textContent = livro.autor !== "Desconhecido" ? livro.autor : "Autor NÃ£o Informado";
+    autorEl.textContent = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
   }
 
   overlay.hidden = false;
@@ -951,50 +915,32 @@ async function abrirLeitorInterno(livro) {
   state.leitor.escala = 1.2;
 
   // Atualiza indicador do modelo na barra lateral do leitor
-  const cfg = await window.api?.obterConfigIA?.() || { model: "llama-3.3-70b-versatile" };
+  const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
   const lblModel = document.getElementById("lblReaderModeloIA");
   if (lblModel) {
     const isPro = (cfg.model || "").includes("120b") || (cfg.model || "").includes("70b");
     lblModel.textContent = isPro ? "Pro" : "Turbo";
   }
 
-  // Carrega histÃ³rico de chat desta obra sem bloquear a renderizaÃ§Ã£o
-  try {
-    carregarHistoricoChatLeitor(livro.caminho, tituloLimpo);
-  } catch (errChat) {
-    console.warn("Erro ao ler histÃ³rico de chat do leitor:", errChat);
-  }
+  // Carrega histórico de chat desta obra
+  carregarHistoricoChatLeitor(livro.caminho, tituloLimpo);
 
   try {
     const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
     if (!buffer) {
-      showToast("NÃ£o foi possÃ­vel carregar o arquivo PDF.");
+      showToast("Não foi possível carregar o arquivo PDF.");
       fecharLeitorInterno();
       return;
     }
 
     const pdfjs = window.pdfjsLib || window["pdfjs-dist/build/pdf"];
     if (!pdfjs) {
-      showToast("Mecanismo PDF.js indisponÃ­vel.");
+      showToast("Mecanismo PDF.js indisponível.");
       fecharLeitorInterno();
       return;
     }
 
-    if (pdfjs.GlobalWorkerOptions && !pdfjs.GlobalWorkerOptions.workerSrc) {
-      pdfjs.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
-    }
-
-    let uint8Array;
-    if (buffer instanceof Uint8Array) {
-      uint8Array = buffer;
-    } else if (buffer && buffer.data && Array.isArray(buffer.data)) {
-      uint8Array = new Uint8Array(buffer.data);
-    } else if (buffer && buffer.buffer) {
-      uint8Array = new Uint8Array(buffer.buffer);
-    } else {
-      uint8Array = new Uint8Array(buffer);
-    }
-
+    const uint8Array = new Uint8Array(buffer);
     const loadingTask = pdfjs.getDocument({ data: uint8Array });
     const pdfDoc = await loadingTask.promise;
 
@@ -1008,23 +954,11 @@ async function abrirLeitorInterno(livro) {
       state.leitor.paginaAtual = 1;
     }
 
-    // Calcula largura inicial adequada antes do primeiro render
-    const viewportEl = document.getElementById("readerPdfViewport");
-    if (viewportEl) {
-      try {
-        const firstPage = await pdfDoc.getPage(state.leitor.paginaAtual);
-        const unscaled = firstPage.getViewport({ scale: 1 });
-        const larguraDisponivel = viewportEl.clientWidth - 56;
-        if (larguraDisponivel > 200 && unscaled.width > 0) {
-          state.leitor.escala = Math.max(0.6, Math.min(2.2, larguraDisponivel / unscaled.width));
-        }
-      } catch (e) {}
-    }
-
     await renderizarPaginaLeitor(state.leitor.paginaAtual);
+    ajustarLarguraLeitor();
   } catch (err) {
     console.error("Erro ao abrir PDF no leitor interno:", err);
-    showToast("Erro na visualizaÃ§Ã£o do PDF. Abrindo no leitor do Windows...");
+    showToast("Abrindo no leitor do Windows...");
     fecharLeitorInterno();
     window.api?.abrirNoWindows?.(livro.caminho);
   } finally {
@@ -1053,20 +987,11 @@ function fecharLeitorInterno() {
 }
 
 async function renderizarPaginaLeitor(num) {
-  if (!state.leitor.pdfDoc) return;
-
-  if (state.leitor.currentRenderTask) {
-    try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
-  }
-
+  if (!state.leitor.pdfDoc || state.leitor.renderizando) return;
   state.leitor.renderizando = true;
 
   const canvas = document.getElementById("readerPdfCanvas");
   const loading = document.getElementById("readerPdfLoading");
-  if (!canvas) {
-    state.leitor.renderizando = false;
-    return;
-  }
   if (loading) loading.hidden = false;
 
   try {
@@ -1094,6 +1019,9 @@ async function renderizarPaginaLeitor(num) {
       viewport: viewport
     };
 
+    if (state.leitor.currentRenderTask) {
+      try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
+    }
     state.leitor.currentRenderTask = page.render(renderContext);
     await state.leitor.currentRenderTask.promise;
 
@@ -1106,7 +1034,7 @@ async function renderizarPaginaLeitor(num) {
     if (viewportElem) viewportElem.scrollTop = 0;
   } catch (err) {
     if (err?.name !== "RenderingCancelledException") {
-      console.error("Erro ao renderizar pÃ¡gina:", err);
+      console.error("Erro ao renderizar página:", err);
     }
   } finally {
     state.leitor.renderizando = false;
@@ -1199,7 +1127,7 @@ function carregarHistoricoChatLeitor(caminhoLivro, tituloObra) {
       const el = document.createElement("div");
       el.className = `copilot-msg ${msg.role === "user" ? "usuario" : "assistente"}`;
       el.innerHTML = `
-        <div class="copilot-avatar">${msg.role === "user" ? "ðŸ‘¤" : "âœ¨"}</div>
+        <div class="copilot-avatar">${msg.role === "user" ? "👤" : "✨"}</div>
         <div class="copilot-msg-content">${formatarMarkdownSimples(msg.content)}</div>
       `;
       feed.appendChild(el);
@@ -1208,10 +1136,10 @@ function carregarHistoricoChatLeitor(caminhoLivro, tituloObra) {
   } else {
     feed.innerHTML = `
       <div class="copilot-msg assistente">
-        <div class="copilot-avatar">âœ¨</div>
+        <div class="copilot-avatar">✨</div>
         <div class="copilot-msg-content">
-          <p>OlÃ¡! Sou o <strong>SkillBook</strong>, acompanhando sua leitura de <em>${tituloObra}</em>.</p>
-          <p>Estou conectado a cada pÃ¡gina desta obra. Pergunte qualquer dÃºvida sobre o que estÃ¡ lendo ou clique nos atalhos acima para anÃ¡lises instantÃ¢neas!</p>
+          <p>Olá! Sou o <strong>SkillBook</strong>, acompanhando sua leitura de <em>${tituloObra}</em>.</p>
+          <p>Estou conectado a cada página desta obra. Pergunte qualquer dúvida sobre o que está lendo ou clique nos atalhos acima para análises instantâneas!</p>
         </div>
       </div>
     `;
@@ -1230,26 +1158,26 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
     toggleSkillSidebar(true);
   }
 
-  // Extrai o texto da pÃ¡gina corrente para contextualizar o SkillBook
+  // Extrai o texto da página corrente para contextualizar o SkillBook
   let contexto = contextoManual;
   if (!contexto && state.leitor.paginaObj) {
     try {
       const textContent = await state.leitor.paginaObj.getTextContent();
       const txt = textContent.items.map(item => item.str).join(" ").trim();
       if (txt.length > 20) {
-        contexto = `PÃ¡gina atual do leitor: ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}\nTrecho da pÃ¡gina:\n"${txt.slice(0, 3500)}"`;
+        contexto = `Página atual do leitor: ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}\nTrecho da página:\n"${txt.slice(0, 3500)}"`;
       }
     } catch (e) {
-      console.warn("Falha ao extrair texto da pÃ¡gina atual:", e);
+      console.warn("Falha ao extrair texto da página atual:", e);
     }
   }
 
-  // Renderiza pergunta do usuÃ¡rio no feed
+  // Renderiza pergunta do usuário no feed
   if (feed) {
     const userMsg = document.createElement("div");
     userMsg.className = "copilot-msg usuario";
     userMsg.innerHTML = `
-      <div class="copilot-avatar">ðŸ‘¤</div>
+      <div class="copilot-avatar">👤</div>
       <div class="copilot-msg-content">${formatarMarkdownSimples(pergunta)}</div>
     `;
     feed.appendChild(userMsg);
@@ -1257,20 +1185,20 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
     const loadingMsg = document.createElement("div");
     loadingMsg.className = "copilot-msg assistente loading-msg";
     loadingMsg.innerHTML = `
-      <div class="copilot-avatar">âœ¨</div>
-      <div class="copilot-msg-content"><span class="copilot-typing">Consultando o SkillBook na pÃ¡g. ${state.leitor.paginaAtual}...</span></div>
+      <div class="copilot-avatar">✨</div>
+      <div class="copilot-msg-content"><span class="copilot-typing">Consultando o SkillBook na pág. ${state.leitor.paginaAtual}...</span></div>
     `;
     feed.appendChild(loadingMsg);
     feed.scrollTop = feed.scrollHeight;
 
-    const cfg = await window.api?.obterConfigIA?.() || { model: "llama-3.3-70b-versatile" };
+    const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
     const historicoAtual = carregarHistoricoChatStorage(state.leitor.livro.caminho) || [];
 
     const res = await window.api?.perguntarGroq?.({
       pergunta,
-      contexto: contexto || `Leitura em andamento: PÃ¡gina ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
+      contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
       historico: historicoAtual,
-      modelo: cfg.model || "llama-3.3-70b-versatile"
+      modelo: cfg.model || "openai/gpt-oss-20b"
     });
 
     loadingMsg.remove();
@@ -1279,7 +1207,7 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
       const respMsg = document.createElement("div");
       respMsg.className = "copilot-msg assistente";
       respMsg.innerHTML = `
-        <div class="copilot-avatar">âœ¨</div>
+        <div class="copilot-avatar">✨</div>
         <div class="copilot-msg-content">${formatarMarkdownSimples(res.resposta)}</div>
       `;
       feed.appendChild(respMsg);
@@ -1291,8 +1219,8 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
       const errMsg = document.createElement("div");
       errMsg.className = "copilot-msg assistente";
       errMsg.innerHTML = `
-        <div class="copilot-avatar">âš ï¸</div>
-        <div class="copilot-msg-content"><p style="color: #fb7185;">${res?.error || "NÃ£o foi possÃ­vel obter resposta do SkillBook."}</p></div>
+        <div class="copilot-avatar">⚠️</div>
+        <div class="copilot-msg-content"><p style="color: #fb7185;">${res?.error || "Não foi possível obter resposta do SkillBook."}</p></div>
       `;
       feed.appendChild(errMsg);
     }
@@ -1306,14 +1234,14 @@ async function explicarPaginaAtual() {
   try {
     const textContent = await state.leitor.paginaObj.getTextContent();
     const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
-    const prompt = `Explique de maneira didÃ¡tica, rica e analÃ­tica o conteÃºdo da PÃ¡gina ${state.leitor.paginaAtual} desta obra. Destaque os pontos cruciais e como o leitor deve interpretar este trecho.`;
+    const prompt = `Explique de maneira didática, rica e analítica o conteúdo da Página ${state.leitor.paginaAtual} desta obra. Destaque os pontos cruciais e como o leitor deve interpretar este trecho.`;
     if (textoPagina && textoPagina.length > 20) {
-      enviarPerguntaChatLeitor(prompt, `CONTEÃšDO DA PÃGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
     } else {
       enviarPerguntaChatLeitor(prompt);
     }
   } catch (err) {
-    enviarPerguntaChatLeitor(`Explique o que Ã© abordado na pÃ¡gina ${state.leitor.paginaAtual} deste livro.`);
+    enviarPerguntaChatLeitor(`Explique o que é abordado na página ${state.leitor.paginaAtual} deste livro.`);
   }
 }
 
@@ -1322,14 +1250,14 @@ async function resumirPaginaAtual() {
   try {
     const textContent = await state.leitor.paginaObj.getTextContent();
     const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
-    const prompt = `FaÃ§a um resumo executivo com as melhores liÃ§Ãµes, regras prÃ¡ticas e ideias essenciais da PÃ¡gina ${state.leitor.paginaAtual}.`;
+    const prompt = `Faça um resumo executivo com as melhores lições, regras práticas e ideias essenciais da Página ${state.leitor.paginaAtual}.`;
     if (textoPagina && textoPagina.length > 20) {
-      enviarPerguntaChatLeitor(prompt, `CONTEÃšDO DA PÃGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
     } else {
       enviarPerguntaChatLeitor(prompt);
     }
   } catch (err) {
-    enviarPerguntaChatLeitor(`FaÃ§a um resumo dos principais pontos da pÃ¡gina ${state.leitor.paginaAtual}.`);
+    enviarPerguntaChatLeitor(`Faça um resumo dos principais pontos da página ${state.leitor.paginaAtual}.`);
   }
 }
 
@@ -1338,19 +1266,19 @@ async function extrairConceitosPaginaAtual() {
   try {
     const textContent = await state.leitor.paginaObj.getTextContent();
     const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
-    const prompt = `Quais sÃ£o os conceitos fundamentais, princÃ­pios ou termos tÃ©cnicos apresentados na PÃ¡gina ${state.leitor.paginaAtual}? Elenque cada um com uma definiÃ§Ã£o direta.`;
+    const prompt = `Quais são os conceitos fundamentais, princípios ou termos técnicos apresentados na Página ${state.leitor.paginaAtual}? Elenque cada um com uma definição direta.`;
     if (textoPagina && textoPagina.length > 20) {
-      enviarPerguntaChatLeitor(prompt, `CONTEÃšDO DA PÃGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
     } else {
       enviarPerguntaChatLeitor(prompt);
     }
   } catch (err) {
-    enviarPerguntaChatLeitor(`Quais sÃ£o os conceitos centrais da pÃ¡gina ${state.leitor.paginaAtual}?`);
+    enviarPerguntaChatLeitor(`Quais são os conceitos centrais da página ${state.leitor.paginaAtual}?`);
   }
 }
 
 // ============================================================================
-// 5.1 TEMA CLARO / ESCURO & CONFIGURAÃ‡ÃƒO DA IA (GROQ)
+// 5.1 TEMA CLARO / ESCURO & CONFIGURAÇÃO DA IA (GROQ)
 // ============================================================================
 
 function aplicarTema(novoTema) {
@@ -1370,7 +1298,7 @@ async function abrirModalConfigIA() {
   const modal = document.getElementById("modalConfigIA");
   if (!modal) return;
 
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.3-70b-versatile", isBundled: false };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b", isBundled: false };
   const inputKey = document.getElementById("inputGroqKey");
   const selectModel = document.getElementById("selectModeloIA");
   const lblStatus = document.getElementById("lblStatusConexao");
@@ -1384,17 +1312,17 @@ async function abrirModalConfigIA() {
     }
   }
 
-  if (selectModel) selectModel.value = cfg.model || "llama-3.3-70b-versatile";
+  if (selectModel) selectModel.value = cfg.model || "openai/gpt-oss-20b";
 
   if (lblStatus) {
     if (cfg.isBundled) {
-      lblStatus.textContent = "ðŸŸ¢ Chave de IA ativa via Instalador MSI";
+      lblStatus.textContent = "🟢 Chave de IA ativa via Instalador MSI";
       lblStatus.className = "status-indicator ok";
     } else if (cfg.apiKey) {
-      lblStatus.textContent = "ðŸŸ¢ Chave configurada no perfil do usuÃ¡rio";
+      lblStatus.textContent = "🟢 Chave configurada no perfil do usuário";
       lblStatus.className = "status-indicator ok";
     } else {
-      lblStatus.textContent = "âšª Nenhuma chave configurada";
+      lblStatus.textContent = "⚪ Nenhuma chave configurada";
       lblStatus.className = "status-indicator";
     }
   }
@@ -1408,7 +1336,7 @@ function fecharModalConfigIA() {
 }
 
 // ============================================================================
-// 5.2 NAVEGAÃ‡ÃƒO POR ABAS NO MODAL E TUTOR IA (BOOK-TO-SKILL)
+// 5.2 NAVEGAÇÃO POR ABAS NO MODAL E TUTOR IA (BOOK-TO-SKILL)
 // ============================================================================
 
 function alternarTabModal(tab) {
@@ -1446,31 +1374,31 @@ async function carregarEstadoTutorIA() {
   if (messagesArea) {
     messagesArea.innerHTML = `
       <div class="chat-msg tutor">
-        <div class="msg-avatar">ðŸ¤–</div>
+        <div class="msg-avatar">🤖</div>
         <div class="msg-content">
-          <p>OlÃ¡! Eu sou seu <strong>Tutor de Leitura</strong> da obra <em>${nomeObra}</em> alimentado pelo SkillBook. Pergunte qualquer dÃºvida sobre os conceitos, regras prÃ¡ticas ou peÃ§a resumos desta obra!</p>
+          <p>Olá! Eu sou seu <strong>Tutor de Leitura</strong> da obra <em>${nomeObra}</em> alimentado pelo SkillBook. Pergunte qualquer dúvida sobre os conceitos, regras práticas ou peça resumos desta obra!</p>
         </div>
       </div>
     `;
   }
 
-  // Verifica se o livro jÃ¡ possui Skill gerada
+  // Verifica se o livro já possui Skill gerada
   const skillInfo = await window.api?.obterSkillLivro?.(state.livroSelecionado.caminho);
   const btnExportar = document.getElementById("btnExportarSkillDetalhes");
   const btnAbrirPasta = document.getElementById("btnAbrirPastaSkill");
 
   if (skillInfo?.temSkill) {
     state.skillAtual = skillInfo;
-    if (lblTitulo) lblTitulo.textContent = "âš¡ Skill de IA Ativa (Conhecimento Destilado)";
-    if (lblDesc) lblDesc.textContent = "O conteÃºdo desta obra estÃ¡ indexado em formato modular para respostas imediatas e precisas.";
-    if (btnGerar) btnGerar.textContent = "ðŸ”„ Re-destilar Livro";
+    if (lblTitulo) lblTitulo.textContent = "⚡ Skill de IA Ativa (Conhecimento Destilado)";
+    if (lblDesc) lblDesc.textContent = "O conteúdo desta obra está indexado em formato modular para respostas imediatas e precisas.";
+    if (btnGerar) btnGerar.textContent = "🔄 Re-destilar Livro";
     if (btnExportar) btnExportar.hidden = false;
     if (btnAbrirPasta) btnAbrirPasta.hidden = false;
   } else {
     state.skillAtual = null;
-    if (lblTitulo) lblTitulo.textContent = "âš¡ Skill de IA NÃ£o Gerada";
-    if (lblDesc) lblDesc.textContent = "Destile os capÃ­tulos desta obra em uma Skill modular para respostas instantÃ¢neas sem alucinaÃ§Ãµes.";
-    if (btnGerar) btnGerar.textContent = "âš¡ Gerar Skill do Livro";
+    if (lblTitulo) lblTitulo.textContent = "⚡ Skill de IA Não Gerada";
+    if (lblDesc) lblDesc.textContent = "Destile os capítulos desta obra em uma Skill modular para respostas instantâneas sem alucinações.";
+    if (btnGerar) btnGerar.textContent = "⚡ Gerar Skill do Livro";
     if (btnExportar) btnExportar.hidden = true;
     if (btnAbrirPasta) btnAbrirPasta.hidden = true;
   }
@@ -1480,7 +1408,7 @@ async function executarBookToSkill() {
   if (!state.livroSelecionado) return;
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave de API no botÃ£o âš¡ SkillBook antes de gerar a skill.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook antes de gerar a skill.");
     abrirModalConfigIA();
     return;
   }
@@ -1490,7 +1418,7 @@ async function executarBookToSkill() {
   const progressFill = document.getElementById("skillProgressBarFill");
   const lblDesc = document.getElementById("lblSkillDesc");
 
-  if (btnGerar) { btnGerar.disabled = true; btnGerar.textContent = "â³ Extraindo..."; }
+  if (btnGerar) { btnGerar.disabled = true; btnGerar.textContent = "⏳ Extraindo..."; }
   if (progressTrack) progressTrack.hidden = false;
   if (progressFill) progressFill.style.width = "20%";
 
@@ -1499,9 +1427,9 @@ async function executarBookToSkill() {
     const titulo = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
     let textoAmostra = "";
 
-    // Se for PDF, tenta extrair texto das pÃ¡ginas iniciais / Ã­ndice usando pdfjsLib
+    // Se for PDF, tenta extrair texto das páginas iniciais / índice usando pdfjsLib
     if (state.livroSelecionado.extensao === ".pdf" && window.pdfjsLib) {
-      if (lblDesc) lblDesc.textContent = "Lendo pÃ¡ginas do PDF para indexaÃ§Ã£o...";
+      if (lblDesc) lblDesc.textContent = "Lendo páginas do PDF para indexação...";
       const buffer = await window.api?.lerArquivoBuffer?.(caminho);
       if (buffer) {
         const loadingTask = window.pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
@@ -1513,7 +1441,7 @@ async function executarBookToSkill() {
           const content = await page.getTextContent();
           const strings = content.items.map(it => it.str).join(" ");
           if (strings.trim().length > 30) {
-            textos.push(`[PÃ¡g ${p}] ${strings.slice(0, 1000)}`);
+            textos.push(`[Pág ${p}] ${strings.slice(0, 1000)}`);
           }
           if (progressFill) progressFill.style.width = `${20 + Math.round((p / totalPag) * 40)}%`;
         }
@@ -1526,39 +1454,39 @@ async function executarBookToSkill() {
     if (lblDesc) lblDesc.textContent = "Sintetizando Skill com modelos mentais via SkillBook...";
     if (progressFill) progressFill.style.width = "75%";
 
-    const promptSkill = `VocÃª Ã© um gerador de Agent Skills (padrÃ£o SKILL.md).
-Analise os dados e trechos da seguinte obra para gerar a documentaÃ§Ã£o modular:
+    const promptSkill = `Você é um gerador de Agent Skills (padrão SKILL.md).
+Analise os dados e trechos da seguinte obra para gerar a documentação modular:
 Obra: "${titulo}"
 Autor: "${state.livroSelecionado.autor || "Desconhecido"}"
 Trechos da obra:
 ${textoAmostra.slice(0, 12000)}
 
-Gere 3 seÃ§Ãµes estruturadas rigorosamente no formato abaixo:
+Gere 3 seções estruturadas rigorosamente no formato abaixo:
 
 ===SKILL.MD===
 ---
 name: "${titulo}"
-description: "Modelos mentais, princÃ­pios fundamentais e regras prÃ¡ticas da obra ${titulo}."
+description: "Modelos mentais, princípios fundamentais e regras práticas da obra ${titulo}."
 ---
 # Skill: ${titulo}
-## VisÃ£o Geral e Modelos Mentais
-(Resumo conciso dos principais conceitos, regras de decisÃ£o e liÃ§Ãµes centrais da obra)
-## TÃ³picos e CapÃ­tulos Principais
-(Mapeamento dos tÃ³picos e capÃ­tulos)
+## Visão Geral e Modelos Mentais
+(Resumo conciso dos principais conceitos, regras de decisão e lições centrais da obra)
+## Tópicos e Capítulos Principais
+(Mapeamento dos tópicos e capítulos)
 
 ===CHEATSHEET.MD===
-# Cheatsheet & Regras PrÃ¡ticas: ${titulo}
-- Lista de regras de aÃ§Ã£o, princÃ­pios e boas prÃ¡ticas imediatas para consulta rÃ¡pida
+# Cheatsheet & Regras Práticas: ${titulo}
+- Lista de regras de ação, princípios e boas práticas imediatas para consulta rápida
 
 ===GLOSSARY.MD===
-# GlossÃ¡rio de Termos: ${titulo}
-- Principais termos tÃ©cnicos e seus significados objetivos
+# Glossário de Termos: ${titulo}
+- Principais termos técnicos e seus significados objetivos
 `;
 
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptSkill,
-      contexto: "DestilaÃ§Ã£o oficial no formato book-to-skill",
-      modelo: cfg.model || "llama-3.3-70b-versatile"
+      contexto: "Destilação oficial no formato book-to-skill",
+      modelo: cfg.model || "openai/gpt-oss-20b"
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -1597,10 +1525,10 @@ description: "Modelos mentais, princÃ­pios fundamentais e regras prÃ¡ticas d
     }
   } catch (err) {
     console.error("Erro no book-to-skill:", err);
-    showToast(`Erro na geraÃ§Ã£o: ${err.message}`);
+    showToast(`Erro na geração: ${err.message}`);
     if (lblDesc) lblDesc.textContent = "Erro ao destilar livro. Verifique a chave ou tente novamente.";
   } finally {
-    if (btnGerar) { btnGerar.disabled = false; btnGerar.textContent = "âš¡ Gerar Skill do Livro"; }
+    if (btnGerar) { btnGerar.disabled = false; btnGerar.textContent = "⚡ Gerar Skill do Livro"; }
     setTimeout(() => { if (progressTrack) progressTrack.hidden = true; }, 1500);
   }
 }
@@ -1614,7 +1542,7 @@ async function enviarPerguntaChat(textoPergunta = null) {
 
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave de API no botÃ£o âš¡ SkillBook.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook.");
     abrirModalConfigIA();
     return;
   }
@@ -1622,20 +1550,20 @@ async function enviarPerguntaChat(textoPergunta = null) {
   const messagesArea = document.getElementById("chatMessages");
   if (!messagesArea) return;
 
-  // Adiciona balÃ£o do usuÃ¡rio
+  // Adiciona balão do usuário
   const userMsgEl = document.createElement("div");
   userMsgEl.className = "chat-msg user";
   userMsgEl.innerHTML = `
-    <div class="msg-avatar">ðŸ‘¤</div>
+    <div class="msg-avatar">👤</div>
     <div class="msg-content"><p>${pergunta.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
   `;
   messagesArea.appendChild(userMsgEl);
 
-  // Adiciona balÃ£o de carregamento do Tutor
+  // Adiciona balão de carregamento do Tutor
   const tutorMsgEl = document.createElement("div");
   tutorMsgEl.className = "chat-msg tutor";
   tutorMsgEl.innerHTML = `
-    <div class="msg-avatar">ðŸ¤–</div>
+    <div class="msg-avatar">🤖</div>
     <div class="msg-content"><p><em>Pensando...</em></p></div>
   `;
   messagesArea.appendChild(tutorMsgEl);
@@ -1648,7 +1576,7 @@ async function enviarPerguntaChat(textoPergunta = null) {
   if (state.skillAtual?.skillMd) {
     contexto = `${state.skillAtual.skillMd}\n\n${state.skillAtual.cheatsheet || ""}`;
   } else if (state.livroSelecionado) {
-    contexto = `Obra: ${state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo}\nAutor: ${state.livroSelecionado.autor}\nProgresso: PÃ¡g. ${state.livroSelecionado.progresso?.paginaAtual || 0}/${state.livroSelecionado.progresso?.totalPaginas || 0}\nAnotaÃ§Ãµes: ${state.livroSelecionado.progresso?.anotacoes || "Nenhuma"}`;
+    contexto = `Obra: ${state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo}\nAutor: ${state.livroSelecionado.autor}\nProgresso: Pág. ${state.livroSelecionado.progresso?.paginaAtual || 0}/${state.livroSelecionado.progresso?.totalPaginas || 0}\nAnotações: ${state.livroSelecionado.progresso?.anotacoes || "Nenhuma"}`;
   }
 
   const res = await window.api?.perguntarGroq?.({
@@ -1661,7 +1589,7 @@ async function enviarPerguntaChat(textoPergunta = null) {
     state.chatHistorico.push({ role: "assistant", content: res.resposta });
     tutorMsgEl.querySelector(".msg-content").innerHTML = formatarMarkdownSimples(res.resposta);
   } else {
-    tutorMsgEl.querySelector(".msg-content").innerHTML = `<p style="color:#f43f5e;">âš ï¸ ${res?.error || "NÃ£o foi possÃ­vel obter resposta da IA."}</p>`;
+    tutorMsgEl.querySelector(".msg-content").innerHTML = `<p style="color:#f43f5e;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>`;
   }
 
   messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -1670,10 +1598,10 @@ async function enviarPerguntaChat(textoPergunta = null) {
 function formatarMarkdownSimples(md) {
   if (!md) return "";
 
-  // 1. Escapar HTML base para seguranÃ§a
+  // 1. Escapar HTML base para segurança
   let text = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  // 2. Blocos de CÃ³digo (``` ... ```)
+  // 2. Blocos de Código (``` ... ```)
   text = text.replace(/```([\s\S]*?)```/g, (match, code) => {
     return `\n<pre><code>${code.trim()}</code></pre>\n`;
   });
@@ -1703,13 +1631,13 @@ function formatarMarkdownSimples(md) {
     return `\n<div class="table-container"><table>${headerHtml}<tbody>${bodyRows}</tbody></table></div>\n`;
   });
 
-  // 4. Blockquotes / CitaÃ§Ãµes (> texto)
+  // 4. Blockquotes / Citações (> texto)
   text = text.replace(/(?:^|\n)&gt;\s*([^\n]+(?:\n&gt;\s*[^\n]+)*)/g, (match, quoteContent) => {
     const cleaned = quoteContent.replace(/\n&gt;\s*/g, " ");
     return `\n<blockquote>${cleaned}</blockquote>\n`;
   });
 
-  // 5. CabeÃ§alhos (#, ##, ###)
+  // 5. Cabeçalhos (#, ##, ###)
   text = text.replace(/^### (.*$)/gim, "<h3>$1</h3>");
   text = text.replace(/^## (.*$)/gim, "<h3>$1</h3>");
   text = text.replace(/^# (.*$)/gim, "<h3>$1</h3>");
@@ -1717,10 +1645,10 @@ function formatarMarkdownSimples(md) {
   // 6. Linhas Horizontais (--- ou ***)
   text = text.replace(/^(?:---|\*\*\*|___)$/gim, "<hr/>");
 
-  // 7. Listas nÃ£o ordenadas (- ou * ou â€¢)
-  text = text.replace(/(?:^|\n)((?:[\t ]*[-*â€¢]\s+[^\n]+\r?\n?)+)/g, (match, listBlock) => {
+  // 7. Listas não ordenadas (- ou * ou •)
+  text = text.replace(/(?:^|\n)((?:[\t ]*[-*•]\s+[^\n]+\r?\n?)+)/g, (match, listBlock) => {
     const items = listBlock.trim().split(/\r?\n/).map(it => {
-      return `<li>${it.replace(/^[\t ]*[-*â€¢]\s+/, "")}</li>`;
+      return `<li>${it.replace(/^[\t ]*[-*•]\s+/, "")}</li>`;
     }).join("");
     return `\n<ul>${items}</ul>\n`;
   });
@@ -1733,12 +1661,12 @@ function formatarMarkdownSimples(md) {
     return `\n<ol>${items}</ol>\n`;
   });
 
-  // 9. Estilos inline (negrito, itÃ¡lico, cÃ³digo)
+  // 9. Estilos inline (negrito, itálico, código)
   text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
   text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
 
-  // 10. ParÃ¡grafos e quebras
+  // 10. Parágrafos e quebras
   const blocks = text.split(/\n\s*\n/);
   const formattedBlocks = blocks.map(block => {
     const trimmed = block.trim();
@@ -1772,7 +1700,7 @@ function salvarHistoricoChatStorage(caminho, historico) {
     const fatiado = (historico || []).slice(-40);
     localStorage.setItem("ef_chat_" + caminho, JSON.stringify(fatiado));
   } catch (e) {
-    console.warn("Erro ao salvar histÃ³rico do chat:", e);
+    console.warn("Erro ao salvar histórico do chat:", e);
   }
 }
 
@@ -1791,10 +1719,10 @@ async function abrirCopilotoIA(livro) {
   if (!modal) return;
 
   const tituloLimpo = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
-  const autorLimpo = livro.autor !== "Desconhecido" ? livro.autor : "Autor NÃ£o Informado";
+  const autorLimpo = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
   const paleta = obterPaletaCapa(livro.titulo || livro.nome);
 
-  // Preenche metadados do livro no cabeÃ§alho
+  // Preenche metadados do livro no cabeçalho
   const lblTitulo = document.getElementById("copilotModalTitulo");
   const lblAutor = document.getElementById("copilotModalAutor");
   const thumbContainer = document.getElementById("copilotHeaderThumb");
@@ -1816,20 +1744,20 @@ async function abrirCopilotoIA(livro) {
     } else {
       thumbContainer.innerHTML = `
         <div class="theme-${paleta.tema}" style="width:100%;height:100%;background:${paleta.bg};border-left:2px solid ${paleta.borda};display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#fff;">
-          ðŸ“–
+          📖
         </div>
       `;
     }
   }
 
   // Identifica o modelo ativo
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.3-70b-versatile" };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b" };
   if (modelName) {
     const isPro = (cfg.model || "").includes("120b") || (cfg.model || "").includes("70b");
     modelName.textContent = isPro ? "SkillBook Pro" : "SkillBook Turbo";
   }
 
-  // Verifica se o livro jÃ¡ possui Skill gerada
+  // Verifica se o livro já possui Skill gerada
   const skillInfo = await window.api?.obterSkillLivro?.(livro.caminho);
   const btnExportarCopilot = document.getElementById("btnCopilotExportarSkill");
   const heroIndexBanner = document.getElementById("copilotHeroIndexBanner");
@@ -1837,7 +1765,7 @@ async function abrirCopilotoIA(livro) {
 
   if (skillInfo?.temSkill) {
     state.skillAtual = skillInfo;
-    if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 pÃ¡gs)`;
+    if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
     if (btnIndexar) btnIndexar.textContent = "Reindexar";
     if (btnExportarCopilot) btnExportarCopilot.hidden = false;
     if (heroIndexBanner) heroIndexBanner.hidden = true;
@@ -1851,7 +1779,7 @@ async function abrirCopilotoIA(livro) {
     if (heroExportBanner) heroExportBanner.hidden = true;
   }
 
-  // Carrega histÃ³rico salvo desta obra
+  // Carrega histórico salvo desta obra
   const historicoSalvo = obterHistoricoChatStorage(livro.caminho);
   state.chatHistorico = historicoSalvo;
 
@@ -1874,7 +1802,7 @@ async function abrirCopilotoIA(livro) {
             <div class="copilot-msg-bubble">
               <p>${(msg.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
             </div>
-            <div class="copilot-msg-avatar">ðŸ‘¤</div>
+            <div class="copilot-msg-avatar">👤</div>
           `;
           messagesList.appendChild(userRow);
         } else {
@@ -1882,19 +1810,19 @@ async function abrirCopilotoIA(livro) {
           assistantRow.className = "copilot-msg-row assistant";
           const formattedHtml = formatarMarkdownSimples(msg.content || "");
           assistantRow.innerHTML = `
-            <div class="copilot-msg-avatar">âœ¨</div>
+            <div class="copilot-msg-avatar">✨</div>
             <div class="copilot-msg-bubble">
               <div class="copilot-msg-content">${formattedHtml}</div>
               <div class="copilot-msg-actions">
                 <button type="button" class="btn-msg-copy" title="Copiar resposta">
-                  <span>ðŸ“‹</span> <span>Copiar</span>
+                  <span>📋</span> <span>Copiar</span>
                 </button>
               </div>
             </div>
           `;
           assistantRow.querySelector(".btn-msg-copy")?.addEventListener("click", () => {
             navigator.clipboard.writeText(msg.content || "");
-            showToast("Resposta copiada para a Ã¡rea de transferÃªncia!");
+            showToast("Resposta copiada para a área de transferência!");
           });
           messagesList.appendChild(assistantRow);
         }
@@ -1940,7 +1868,7 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
 
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave de API no botÃ£o âš¡ SkillBook.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook.");
     abrirModalConfigIA();
     return;
   }
@@ -1954,28 +1882,28 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
   if (messagesList) messagesList.hidden = false;
   if (quickChips) quickChips.hidden = false;
 
-  // 1. BalÃ£o do UsuÃ¡rio
+  // 1. Balão do Usuário
   const userRow = document.createElement("div");
   userRow.className = "copilot-msg-row user";
   userRow.innerHTML = `
     <div class="copilot-msg-bubble">
       <p>${pergunta.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
     </div>
-    <div class="copilot-msg-avatar">ðŸ‘¤</div>
+    <div class="copilot-msg-avatar">👤</div>
   `;
   messagesList.appendChild(userRow);
 
-  // 2. BalÃ£o de Pensando do Copiloto IA
+  // 2. Balão de Pensando do Copiloto IA
   const assistantRow = document.createElement("div");
   assistantRow.className = "copilot-msg-row assistant";
   assistantRow.innerHTML = `
-    <div class="copilot-msg-avatar">âœ¨</div>
+    <div class="copilot-msg-avatar">✨</div>
     <div class="copilot-msg-bubble">
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="copilot-thinking-dots">
           <span></span><span></span><span></span>
         </div>
-        <span style="font-size:0.78rem; color:var(--text-secondary);">Consultando o conteÃºdo da obra...</span>
+        <span style="font-size:0.78rem; color:var(--text-secondary);">Consultando o conteúdo da obra...</span>
       </div>
     </div>
   `;
@@ -1991,7 +1919,7 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
   } else if (state.livroSelecionado) {
     const tit = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
     const aut = state.livroSelecionado.autor !== "Desconhecido" ? state.livroSelecionado.autor : "Autor consagrado da obra";
-    contexto = `Obra: ${tit}\nAutor: ${aut}\nFormato: ${state.livroSelecionado.extensao}\nInstruÃ§Ã£o: Entregue uma sÃ­ntese executiva rica, tÃ©cnica e completa sobre esta obra consagrada, explicando seus princÃ­pios fundamentais, mÃ©todos e aplicaÃ§Ãµes prÃ¡ticas.`;
+    contexto = `Obra: ${tit}\nAutor: ${aut}\nFormato: ${state.livroSelecionado.extensao}\nInstrução: Entregue uma síntese executiva rica, técnica e completa sobre esta obra consagrada, explicando seus princípios fundamentais, métodos e aplicações práticas.`;
   }
 
   const res = await window.api?.perguntarGroq?.({
@@ -2008,19 +1936,19 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
       <div class="copilot-msg-content">${formattedHtml}</div>
       <div class="copilot-msg-actions">
         <button type="button" class="btn-msg-copy" title="Copiar resposta">
-          <span>ðŸ“‹</span> <span>Copiar</span>
+          <span>📋</span> <span>Copiar</span>
         </button>
       </div>
     `;
 
-    // AÃ§Ã£o do BotÃ£o Copiar
+    // Ação do Botão Copiar
     assistantRow.querySelector(".btn-msg-copy")?.addEventListener("click", () => {
       navigator.clipboard.writeText(res.resposta);
-      showToast("Resposta copiada para a Ã¡rea de transferÃªncia!");
+      showToast("Resposta copiada para a área de transferência!");
     });
   } else {
     assistantRow.querySelector(".copilot-msg-bubble").innerHTML = `
-      <p style="color:#f43f5e; font-weight:600;">âš ï¸ ${res?.error || "NÃ£o foi possÃ­vel obter resposta da IA."}</p>
+      <p style="color:#f43f5e; font-weight:600;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>
     `;
   }
 
@@ -2031,7 +1959,7 @@ async function executarBookToSkillCopiloto() {
   if (!state.livroSelecionado) return;
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave de API no botÃ£o âš¡ SkillBook antes de indexar.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook antes de indexar.");
     abrirModalConfigIA();
     return;
   }
@@ -2045,7 +1973,7 @@ async function executarBookToSkillCopiloto() {
   if (btnIndexar) btnIndexar.textContent = "Extraindo...";
   if (progressTrack) progressTrack.hidden = false;
   if (progressFill) progressFill.style.width = "20%";
-  if (progressText) progressText.textContent = "Lendo pÃ¡ginas da obra para indexaÃ§Ã£o...";
+  if (progressText) progressText.textContent = "Lendo páginas da obra para indexação...";
 
   try {
     const caminho = state.livroSelecionado.caminho;
@@ -2064,7 +1992,7 @@ async function executarBookToSkillCopiloto() {
           const content = await page.getTextContent();
           const strings = content.items.map(it => it.str).join(" ");
           if (strings.trim().length > 30) {
-            textos.push(`[PÃ¡g ${p}] ${strings.slice(0, 1000)}`);
+            textos.push(`[Pág ${p}] ${strings.slice(0, 1000)}`);
           }
           if (progressFill) progressFill.style.width = `${20 + Math.round((p / totalPag) * 45)}%`;
         }
@@ -2074,39 +2002,39 @@ async function executarBookToSkillCopiloto() {
 
     if (!textoAmostra) {
       const nomeBase = (caminho || "").split(/[\\/]/).pop();
-      textoAmostra = `Obra: ${titulo}. Autor: ${state.livroSelecionado.autor || "NÃ£o informado"}. Tamanho: ${state.livroSelecionado.tamanho} bytes. Arquivo: ${nomeBase}.`;
+      textoAmostra = `Obra: ${titulo}. Autor: ${state.livroSelecionado.autor || "Não informado"}. Tamanho: ${state.livroSelecionado.tamanho} bytes. Arquivo: ${nomeBase}.`;
     }
 
     if (progressFill) progressFill.style.width = "75%";
     if (progressText) progressText.textContent = "Destilando conhecimento modular com o SkillBook...";
 
-    const promptDestilacao = `VocÃª Ã© o compilador da arquitetura book-to-skill para a obra "${titulo}".
-Gere uma destilaÃ§Ã£o modular tÃ©cnica e profunda nos 3 blocos abaixo rigorosamente separados:
+    const promptDestilacao = `Você é o compilador da arquitetura book-to-skill para a obra "${titulo}".
+Gere uma destilação modular técnica e profunda nos 3 blocos abaixo rigorosamente separados:
 
 ===SKILL.MD===
 ---
 name: "${titulo}"
-description: "Modelos mentais, princÃ­pios fundamentais e regras prÃ¡ticas da obra ${titulo}."
+description: "Modelos mentais, princípios fundamentais e regras práticas da obra ${titulo}."
 ---
 # Livro: ${titulo}
-## VisÃ£o Geral e TÃ³picos Fundamentais
-(Escreva os 5 princÃ­pios mais importantes da obra)
+## Visão Geral e Tópicos Fundamentais
+(Escreva os 5 princípios mais importantes da obra)
 
 ===CHEATSHEET.MD===
-# Cola RÃ¡pida e Regras PrÃ¡ticas
-(TÃ³picos prÃ¡ticos, comandos ou regras do livro)
+# Cola Rápida e Regras Práticas
+(Tópicos práticos, comandos ou regras do livro)
 
 ===GLOSSARY.MD===
-# GlossÃ¡rio de Termos e Conceitos
-(DefiniÃ§Ãµes dos termos-chave)
+# Glossário de Termos e Conceitos
+(Definições dos termos-chave)
 
-TEXTO DA OBRA EXTRAÃDO:
+TEXTO DA OBRA EXTRAÍDO:
 ${textoAmostra.slice(0, 8000)}`;
 
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptDestilacao,
       contexto: "",
-      modelo: cfg.model || "llama-3.3-70b-versatile"
+      modelo: cfg.model || "openai/gpt-oss-20b"
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -2138,7 +2066,7 @@ ${textoAmostra.slice(0, 8000)}`;
       if (progressFill) progressFill.style.width = "100%";
       showToast("Skill criada com sucesso pelo SkillBook!");
       state.skillAtual = { temSkill: true, skillMd, cheatsheet, glossary };
-      if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 pÃ¡gs)`;
+      if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
       if (btnIndexar) btnIndexar.textContent = "Reindexar";
       const btnExp = document.getElementById("btnCopilotExportarSkill");
       if (btnExp) btnExp.hidden = false;
@@ -2153,15 +2081,15 @@ ${textoAmostra.slice(0, 8000)}`;
         const exportPromptRow = document.createElement("div");
         exportPromptRow.className = "copilot-msg-row assistant";
         exportPromptRow.innerHTML = `
-          <div class="copilot-msg-avatar">ðŸ“¦</div>
+          <div class="copilot-msg-avatar">📦</div>
           <div class="copilot-msg-bubble" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
               <div>
-                <strong style="color: #10b981; font-size: 0.86rem; display: block;">ðŸŽ‰ Skill destilada com sucesso!</strong>
+                <strong style="color: #10b981; font-size: 0.86rem; display: block;">🎉 Skill destilada com sucesso!</strong>
                 <span style="font-size: 0.74rem; color: var(--text-secondary);">SKILL.md, cheatsheet.md e glossary.md gerados no formato oficial.</span>
               </div>
               <button type="button" class="btn-hero-action export btn-msg-export-now" style="font-size: 0.74rem; padding: 6px 14px;">
-                <span>ðŸ“¦ Exportar Agora</span>
+                <span>📦 Exportar Agora</span>
               </button>
             </div>
           </div>
@@ -2176,7 +2104,7 @@ ${textoAmostra.slice(0, 8000)}`;
     }
   } catch (err) {
     console.error("Erro no book-to-skill:", err);
-    showToast(`Erro na indexaÃ§Ã£o: ${err.message}`);
+    showToast(`Erro na indexação: ${err.message}`);
   } finally {
     if (btnIndexar && btnIndexar.textContent === "Extraindo...") {
       btnIndexar.textContent = state.skillAtual?.temSkill ? "Reindexar" : "Indexar Livro";
@@ -2191,7 +2119,7 @@ async function atualizarStatusLeitura(status) {
   state.livroSelecionado.status = status;
   await window.api?.salvarStatusLeitura?.(state.livroSelecionado.caminho, status);
 
-  // Se marcar como concluÃ­do diretamente e houver total de pÃ¡ginas, completa o progresso
+  // Se marcar como concluído diretamente e houver total de páginas, completa o progresso
   if (status === "concluidos" && state.livroSelecionado.progresso?.totalPaginas > 0) {
     const tot = state.livroSelecionado.progresso.totalPaginas;
     const inputPagina = document.getElementById("inputPaginaAtual");
@@ -2207,7 +2135,7 @@ async function atualizarStatusLeitura(status) {
     state.livroSelecionado.progresso.porcentagem = 100;
   }
 
-  // Atualiza botÃµes na interface do modal
+  // Atualiza botões na interface do modal
   document.querySelectorAll(".btn-status").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.status === status);
   });
@@ -2305,7 +2233,7 @@ async function abrirPopupPasta() {
           chip.type = "button";
           chip.title = loc.caminho;
           chip.innerHTML = `
-            <span class="chip-icon">${loc.icone || "â˜ï¸"}</span>
+            <span class="chip-icon">${loc.icone || "☁️"}</span>
             <span class="chip-name">${loc.nome}</span>
           `;
           chip.addEventListener("click", async () => {
@@ -2337,7 +2265,7 @@ function fecharPopupPasta() {
 }
 
 // ============================================================
-// 8. INICIALIZAÃ‡ÃƒO
+// 8. INICIALIZAÇÃO
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
   // Atalho para recarregar a interface em desenvolvimento
@@ -2369,13 +2297,13 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => alternarAba(btn.dataset.tab));
   });
 
-  // OrdenaÃ§Ã£o
+  // Ordenação
   document.getElementById("selectOrdenacao")?.addEventListener("change", (e) => {
     state.ordenacaoAtual = e.target.value;
     aplicarFiltrosEOrdenacao();
   });
 
-  // Troca de Pasta e SeleÃ§Ã£o de Arquivos
+  // Troca de Pasta e Seleção de Arquivos
   const acaoTrocarPasta = async () => {
     fecharMenu();
     fecharPopupPasta();
@@ -2473,12 +2401,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.id === "modalLivro") fecharModalLivro();
   });
 
-  // BotÃµes de Status no Modal
+  // Botões de Status no Modal
   document.querySelectorAll(".btn-status").forEach(btn => {
     btn.addEventListener("click", () => atualizarStatusLeitura(btn.dataset.status));
   });
 
-  // AÃ§Ãµes de Progresso de Leitura no Modal
+  // Ações de Progresso de Leitura no Modal
   const inputPaginaAtual = document.getElementById("inputPaginaAtual");
   const inputTotalPaginas = document.getElementById("inputTotalPaginas");
   const inputAnotacoes = document.getElementById("inputAnotacoes");
@@ -2489,7 +2417,7 @@ document.addEventListener("DOMContentLoaded", () => {
   inputPaginaAtual?.addEventListener("input", onPageInputChange);
   inputTotalPaginas?.addEventListener("input", onPageInputChange);
 
-  // BotÃµes de Passo RÃ¡pido (-1, +1, +5, +10)
+  // Botões de Passo Rápido (-1, +1, +5, +10)
   document.querySelectorAll(".btn-step").forEach(btn => {
     btn.addEventListener("click", () => {
       const step = parseInt(btn.dataset.step, 10) || 0;
@@ -2535,7 +2463,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (state.livroSelecionado?.caminho) {
       window.api?.abrirNoWindows?.(state.livroSelecionado.caminho);
       showToast("Abrindo no leitor do Windows... Boas leituras!");
-      // Registra timestamp de Ãºltima leitura
+      // Registra timestamp de última leitura
       salvarProgressoModal(false);
     }
   });
@@ -2554,7 +2482,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.api?.openExternal?.("https://joadsonrocha.github.io/");
   });
 
-  // Alternadores de Modo de VisualizaÃ§Ã£o (Normal, Compacto, Lista)
+  // Alternadores de Modo de Visualização (Normal, Compacto, Lista)
   document.querySelectorAll(".btn-view-mode").forEach(btn => {
     btn.addEventListener("click", () => {
       aplicarModoVisualizacao(btn.dataset.mode);
@@ -2570,11 +2498,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnToggleTema")?.addEventListener("click", () => {
     const proximoTema = state.tema === "light" ? "dark" : "light";
     aplicarTema(proximoTema);
-    showToast(proximoTema === "light" ? "Modo Claro ativado â˜€ï¸" : "Modo Escuro ativado ðŸŒ™");
+    showToast(proximoTema === "light" ? "Modo Claro ativado ☀️" : "Modo Escuro ativado 🌙");
   });
 
   // ============================================================
-  // EVENTOS DO MODAL DE CONFIGURAÃ‡ÃƒO DA IA (GROQ)
+  // EVENTOS DO MODAL DE CONFIGURAÇÃO DA IA (GROQ)
   // ============================================================
   document.getElementById("btnConfigIA")?.addEventListener("click", abrirModalConfigIA);
   document.getElementById("btnFecharConfigIA")?.addEventListener("click", fecharModalConfigIA);
@@ -2592,28 +2520,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
     const lbl = document.getElementById("lblStatusConexao");
     if (!key) {
-      if (lbl) { lbl.textContent = "âš ï¸ Digite uma chave para testar"; lbl.className = "status-indicator erro"; }
+      if (lbl) { lbl.textContent = "⚠️ Digite uma chave para testar"; lbl.className = "status-indicator erro"; }
       return;
     }
-    if (lbl) { lbl.textContent = "â³ Conectando Ã  API do SkillBook..."; lbl.className = "status-indicator"; }
+    if (lbl) { lbl.textContent = "⏳ Conectando à API do SkillBook..."; lbl.className = "status-indicator"; }
     const res = await window.api?.testarConexaoGroq?.(key);
     if (res?.success) {
-      if (lbl) { lbl.textContent = "ðŸŸ¢ ConexÃ£o com SkillBook validada com sucesso!"; lbl.className = "status-indicator ok"; }
+      if (lbl) { lbl.textContent = "🟢 Conexão com SkillBook validada com sucesso!"; lbl.className = "status-indicator ok"; }
       showToast("SkillBook conectado com sucesso!");
     } else {
-      if (lbl) { lbl.textContent = `ðŸ”´ ${res?.error || "Erro de autenticaÃ§Ã£o"}`; lbl.className = "status-indicator erro"; }
+      if (lbl) { lbl.textContent = `🔴 ${res?.error || "Erro de autenticação"}`; lbl.className = "status-indicator erro"; }
     }
   });
 
   document.getElementById("btnSalvarConfigIA")?.addEventListener("click", async () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
-    const model = document.getElementById("selectModeloIA")?.value || "llama-3.3-70b-versatile";
+    const model = document.getElementById("selectModeloIA")?.value || "openai/gpt-oss-20b";
     const ok = await window.api?.salvarConfigIA?.({ apiKey: key, model });
     if (ok) {
-      showToast("ConfiguraÃ§Ãµes da IA salvas com seguranÃ§a!");
+      showToast("Configurações da IA salvas com segurança!");
       fecharModalConfigIA();
     } else {
-      showToast("Erro ao gravar configuraÃ§Ãµes.");
+      showToast("Erro ao gravar configurações.");
     }
   });
 
@@ -2707,7 +2635,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnCopilotIndexarObra")?.addEventListener("click", executarBookToSkillCopiloto);
   document.getElementById("btnCopilotConfigPill")?.addEventListener("click", abrirModalConfigIA);
 
-  // AÃ§Ãµes de ExportaÃ§Ã£o FÃ¡cil da Skill
+  // Ações de Exportação Fácil da Skill
   const exportarSkillAtual = async () => {
     if (!state.livroSelecionado) {
       showToast("Selecione uma obra primeiro.");
@@ -2730,7 +2658,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!state.livroSelecionado) return;
     const ok = await window.api?.abrirPastaSkill?.(state.livroSelecionado.caminho);
     if (!ok) {
-      showToast("A pasta da Skill ainda nÃ£o foi criada.");
+      showToast("A pasta da Skill ainda não foi criada.");
     }
   };
 
@@ -2783,7 +2711,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("keydown", (e) => {
     if (!state.leitor.ativo) return;
 
-    // NÃ£o intercepta digitaÃ§Ã£o nos campos de texto
+    // Não intercepta digitação nos campos de texto
     const tag = document.activeElement?.tagName;
     if (tag === "TEXTAREA" || (tag === "INPUT" && document.activeElement.id === "inputReaderChat")) {
       return;
@@ -2836,7 +2764,7 @@ document.addEventListener("DOMContentLoaded", () => {
     abrirModalConfigIA();
   });
 
-  // Abrir Sobre pelo logo do topo e tag de licenÃ§a do rodapÃ©
+  // Abrir Sobre pelo logo do topo e tag de licença do rodapé
   document.getElementById("logoApp")?.addEventListener("click", abrirModalSobre);
   document.querySelector(".license-tag")?.addEventListener("click", abrirModalSobre);
 
