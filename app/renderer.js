@@ -425,15 +425,6 @@ function atualizarIndicadorPasta() {
 function atualizarIndicadorSubpastas() {
   const lblMenu = document.getElementById("lblRecursivo");
   if (lblMenu) lblMenu.textContent = state.buscaRecursiva ? "Ativado" : "Desativado";
-
-  const btnBar = document.getElementById("btnToggleSubpastas");
-  const lblBar = document.getElementById("lblSubpastasBar");
-  if (btnBar) {
-    btnBar.classList.toggle("active", state.buscaRecursiva);
-  }
-  if (lblBar) {
-    lblBar.textContent = `Subpastas: ${state.buscaRecursiva ? "Ativado" : "Desativado"}`;
-  }
 }
 
 function alternarSubpastas() {
