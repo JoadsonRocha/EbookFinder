@@ -4437,21 +4437,312 @@ body[data-theme="light"] .about-footer {
 /* ============================================================
    RESPONSIVIDADE MOBILE & CAPACITOR (Telas <= 768px)
    ============================================================ */
+/* ============================================================
+   RESPONSIVIDADE MOBILE & CAPACITOR (Telas <= 768px)
+   ============================================================ */
 @media (max-width: 768px) {
-  /* Layout principal do Leitor */
+  /* 1. CABEÇALHO PRINCIPAL NO CELULAR */
+  header#appHeader {
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+  }
+
+  .logo {
+    gap: 8px !important;
+  }
+
+  .logo-img {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+  }
+
+  .logo-text {
+    font-size: 1.15rem !important;
+  }
+
+  .logo-badge {
+    display: none !important;
+  }
+
+  .header-actions {
+    gap: 6px !important;
+    margin-left: auto !important;
+  }
+
+  .btn-header {
+    padding: 7px 10px !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+  }
+
+  .btn-header .btn-label {
+    display: none !important; /* Mostra apenas o ícone no celular */
+  }
+
+  .btn-header svg,
+  .menu-toggle svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .menu-toggle {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+  }
+
+  .search-group {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    order: 3 !important;
+    padding: 7px 14px !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+  }
+
+  .search-group input {
+    font-size: 16px !important; /* Evita zoom automático no iOS/Android */
+  }
+
+  /* 2. BARRA DE ESTANTES E FILTROS */
+  .control-bar {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  .control-row-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .tabs-group {
+    display: flex !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    padding: 4px !important;
+    gap: 6px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .tabs-group::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .tab-btn {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+    border-radius: 8px !important;
+  }
+
+  .current-path-info {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 0.78rem !important;
+    padding: 6px 12px !important;
+    justify-content: space-between !important;
+  }
+
+  .control-row-bottom {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .results-header {
+    font-size: 0.76rem !important;
+    padding: 3px 10px !important;
+  }
+
+  .controls-right {
+    gap: 6px !important;
+  }
+
+  .sort-label {
+    display: none !important;
+  }
+
+  .sort-select {
+    font-size: 0.78rem !important;
+    padding: 4px 8px !important;
+  }
+
+  .view-mode-group {
+    display: none !important; /* No celular, o grid duplo padrão é o ideal */
+  }
+
+  /* 3. ESTANTE DE LIVROS (2 COLUNAS NO CELULAR) */
+  .book-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    padding: 12px 10px !important;
+  }
+
+  .book-card {
+    border-radius: 10px !important;
+  }
+
+  .book-cover-wrapper {
+    aspect-ratio: 2 / 3 !important;
+  }
+
+  .book-title {
+    font-size: 0.82rem !important;
+    line-height: 1.25 !important;
+    max-height: 2.5em !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  .book-meta {
+    font-size: 0.72rem !important;
+  }
+
+  .fav-btn {
+    opacity: 1 !important;
+    transform: none !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .cover-hover-overlay {
+    display: none !important; /* Celulares não usam hover */
+  }
+
+  /* 4. MODAIS EM FORMATO BOTTOM-SHEET */
+  .modal-backdrop,
+  .modal-sobre-backdrop {
+    padding: 0 !important;
+    align-items: flex-end !important; /* Desliza de baixo para cima */
+  }
+
+  .book-dialog,
+  .config-dialog,
+  .about-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 90vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7) !important;
+    border-bottom: none !important;
+  }
+
+  .book-dialog-body {
+    padding: 14px !important;
+    gap: 12px !important;
+  }
+
+  .book-dialog-top {
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+
+  .book-dialog-cover {
+    width: 80px !important;
+    height: 115px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .book-dialog-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .book-dialog-actions button {
+    width: 100% !important;
+    height: 44px !important;
+    font-size: 0.92rem !important;
+    justify-content: center !important;
+  }
+
+  .config-dialog {
+    padding: 16px !important;
+  }
+
+  .config-dialog input,
+  .config-dialog select {
+    font-size: 16px !important; /* Evita zoom automático */
+  }
+
+  .about-pillars-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .about-header {
+    padding: 14px !important;
+  }
+
+  .about-body {
+    padding: 14px !important;
+    gap: 16px !important;
+  }
+
+  /* 5. LEITOR INTERNO COM SKILLBOOK INFERIOR RETRÁTIL */
   .reader-split-layout {
     flex-direction: column !important;
-    position: relative;
-    overflow: hidden;
+    position: relative !important;
+    overflow: hidden !important;
+    height: calc(100vh - 50px) !important;
   }
 
   .reader-pdf-viewport {
     width: 100% !important;
     height: 100% !important;
-    padding: 10px 4px 60px 4px !important;
+    padding: 8px 4px 55px 4px !important;
   }
 
-  /* SkillBook como Bottom Sheet (Gaveta Inferior) */
+  .reader-float-nav {
+    width: 44px !important;
+    height: 44px !important;
+    bottom: 60px !important;
+    z-index: 90 !important;
+  }
+
+  .leitor-toolbar {
+    padding: 0 10px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    gap: 6px !important;
+  }
+
+  .leitor-btn-back span,
+  .leitor-zoom-controls,
+  .skill-toggle-text,
+  .shortcut-badge,
+  .leitor-book-author {
+    display: none !important;
+  }
+
+  .leitor-book-title {
+    max-width: 110px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .leitor-page-stepper {
+    gap: 4px !important;
+  }
+
+  #inputLeitorPagina {
+    width: 38px !important;
+    font-size: 0.82rem !important;
+  }
+
   #readerSkillSidebar {
     position: absolute !important;
     bottom: 0 !important;
@@ -4460,12 +4751,12 @@ body[data-theme="light"] .about-footer {
     width: 100% !important;
     max-width: 100% !important;
     height: 75vh !important;
-    z-index: 100 !important;
+    z-index: 150 !important;
     border-top: 2px solid var(--accent-gold) !important;
     border-left: none !important;
     border-top-left-radius: 20px !important;
     border-top-right-radius: 20px !important;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 -12px 35px rgba(0, 0, 0, 0.75) !important;
     transform: translateY(0);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
     background: #110d22 !important;
@@ -4473,7 +4764,7 @@ body[data-theme="light"] .about-footer {
 
   #readerSkillSidebar.collapsed {
     transform: translateY(calc(100% - 46px)) !important;
-    display: flex !important; /* Mantém a barra visível para puxar */
+    display: flex !important;
   }
 
   .reader-sidebar-header {
@@ -4491,41 +4782,30 @@ body[data-theme="light"] .about-footer {
     transform: translateX(-50%);
     width: 38px;
     height: 4px;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.35);
     border-radius: 2px;
   }
 
-  /* Toolbar do leitor mais compacta */
-  .leitor-toolbar {
-    padding: 0 8px !important;
+  .reader-quick-actions {
+    display: flex !important;
+    overflow-x: auto !important;
     gap: 6px !important;
+    padding: 8px 12px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
   }
 
-  .leitor-btn-back span,
-  .leitor-zoom-controls,
-  .skill-toggle-text,
-  .shortcut-badge {
+  .reader-quick-actions::-webkit-scrollbar {
     display: none !important;
   }
 
-  .leitor-book-author {
-    display: none !important;
+  .btn-quick-chip {
+    flex-shrink: 0 !important;
+    font-size: 0.78rem !important;
+    padding: 5px 10px !important;
   }
 
-  .leitor-book-title {
-    max-width: 120px !important;
-    font-size: 0.85rem !important;
-  }
-
-  /* Grid da Estante no Celular */
-  .book-grid {
-    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)) !important;
-    gap: 12px !important;
-    padding: 12px 8px !important;
-  }
-
-  .main-header {
-    padding: 10px !important;
-    flex-wrap: wrap !important;
+  .reader-chat-input-row input {
+    font-size: 16px !important; /* Evita zoom no teclado do celular */
   }
 }
