@@ -209,13 +209,6 @@
     </div>
 
     <div class="control-row-bottom">
-      <div class="subpastas-wrapper">
-        <button id="btnToggleSubpastas" class="btn-subpastas-toggle active" title="Alternar busca em subpastas">
-          <span class="subpastas-icon">📂</span>
-          <span class="subpastas-text" id="lblSubpastasBar">Subpastas: Ativado</span>
-        </button>
-      </div>
-
       <div class="results-header" id="resultsHeader">
         <span id="resultsCount">Carregando estante...</span>
       </div>
@@ -634,9 +627,16 @@
       <h2>Biblioteca de E-books</h2>
       <p>Escolha como deseja carregar seus livros e documentos digitais:</p>
 
+      <div class="cloud-drive-section" id="cloudDriveSection" hidden>
+        <span class="cloud-drive-label">Pastas e Unidades de Nuvem Detectadas:</span>
+        <div class="cloud-drive-chips" id="cloudDriveChips">
+          <!-- Injetado dinamicamente via JS (Google Drive, OneDrive, etc.) -->
+        </div>
+      </div>
+
       <div class="popup-buttons" style="flex-direction: column; gap: 10px; width: 100%;">
         <button id="popupSelecionar" class="popup-btn primary" style="width: 100%;">
-          📁 Selecionar Pasta de Livros (com Subpastas)
+          📁 Selecionar Qualquer Pasta Local ou Drive Virtual
         </button>
         <button id="popupSelecionarArquivos" class="popup-btn secondary" style="width: 100%; border-color: rgba(229, 169, 59, 0.4); color: #e5a93b;">
           📄 Selecionar Arquivos PDF / E-books Diretamente

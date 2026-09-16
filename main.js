@@ -545,6 +545,99 @@ ipcMain.handle("escolher-arquivos", async () => {
   return pastaEbooks;
 });
 
+ipcMain.handle("definir-pasta-direta", (e, novaPasta) => {
+  if (novaPasta && fs.existsSync(novaPasta)) {
+    salvarPasta(novaPasta);
+    return pastaEbooks;
+  }
+  return null;
+});
+
+ipcMain.handle("detectar-locais-drive", () => {
+  const locais = [];
+  const home = os.homedir();
+
+  // 1. Google Drive (Drive virtual G:\ ou pastas sincronizadas locais)
+  const possiveisGoogleDrive = [
+    "G:\\Meu Drive",
+    "G:\\My Drive",
+    "G:\\",
+    path.join(home, "Google Drive"),
+    path.join(home, "GoogleDrive"),
+    path.join(home, "Meu Drive")
+  ];
+  for (const p of possiveisGoogleDrive) {
+    if (fs.existsSync(p)) {
+      locais.push({
+        id: "google-drive",
+        tipo: "google-drive",
+        nome: "Google Drive",
+        caminho: p,
+        icone: "☁️"
+      });
+      break;
+    }
+  }
+
+  // 2. Microsoft OneDrive
+  const possiveisOneDrive = [
+    process.env.OneDrive,
+    process.env.OneDriveConsumer,
+    process.env.OneDriveCommercial,
+    path.join(home, "OneDrive")
+  ].filter(Boolean);
+  for (const p of possiveisOneDrive) {
+    if (fs.existsSync(p)) {
+      locais.push({
+        id: "onedrive",
+        tipo: "onedrive",
+        nome: "OneDrive",
+        caminho: p,
+        icone: "☁️"
+      });
+      break;
+    }
+  }
+
+  // 3. Pastas de Documentos e Downloads
+  const docs = app.getPath("documents");
+  if (fs.existsSync(docs)) {
+    locais.push({
+      id: "documentos",
+      tipo: "documentos",
+      nome: "Documentos",
+      caminho: docs,
+      icone: "📁"
+    });
+  }
+
+  const downloads = app.getPath("downloads");
+  if (fs.existsSync(downloads)) {
+    locais.push({
+      id: "downloads",
+      tipo: "downloads",
+      nome: "Downloads",
+      caminho: downloads,
+      icone: "📥"
+    });
+  }
+
+  // 4. Outras unidades de disco (D:, E:, F:)
+  ["D:\\", "E:\\", "F:\\", "G:\\"].forEach(drive => {
+    if (fs.existsSync(drive) && !locais.some(l => l.caminho.startsWith(drive))) {
+      locais.push({
+        id: `drive-${drive[0]}`,
+        tipo: "disco",
+        nome: `Disco (${drive[0]}:)`,
+        caminho: drive,
+        icone: "💾"
+      });
+    }
+  });
+
+  return locais;
+});
+
 ipcMain.handle("ler-arquivo-buffer", async (e, caminho) => {
   if (!caminho || !fs.existsSync(caminho)) return null;
   try {

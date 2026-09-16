@@ -117,5 +117,15 @@ contextBridge.exposeInMainWorld("api", {
   /**
    * Salva a Skill gerada (SKILL.md, cheatsheet.md, glossary.md).
    */
-  salvarSkillLivro: (dados) => safeInvoke("salvar-skill-livro", dados)
+  salvarSkillLivro: (dados) => safeInvoke("salvar-skill-livro", dados),
+
+  /**
+   * Detecta locais de nuvem (Google Drive, OneDrive, etc.) disponíveis no sistema.
+   */
+  detectarLocaisDrive: () => safeInvoke("detectar-locais-drive"),
+
+  /**
+   * Define diretamente a pasta da biblioteca sem abrir seletor.
+   */
+  definirPastaDireta: (caminho) => safeInvoke("definir-pasta-direta", caminho)
 });
