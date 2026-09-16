@@ -860,7 +860,7 @@ async function abrirModalConfigIA() {
   const modal = document.getElementById("modalConfigIA");
   if (!modal) return;
 
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "qwen/qwen3.8-27b", isBundled: false };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant", isBundled: false };
   const inputKey = document.getElementById("inputGroqKey");
   const selectModel = document.getElementById("selectModeloIA");
   const lblStatus = document.getElementById("lblStatusConexao");
@@ -874,7 +874,7 @@ async function abrirModalConfigIA() {
     }
   }
 
-  if (selectModel) selectModel.value = cfg.model || "qwen/qwen3.8-27b";
+  if (selectModel) selectModel.value = cfg.model || "llama-3.1-8b-instant";
 
   if (lblStatus) {
     if (cfg.isBundled) {
@@ -946,16 +946,23 @@ async function carregarEstadoTutorIA() {
 
   // Verifica se o livro já possui Skill gerada
   const skillInfo = await window.api?.obterSkillLivro?.(state.livroSelecionado.caminho);
+  const btnExportar = document.getElementById("btnExportarSkillDetalhes");
+  const btnAbrirPasta = document.getElementById("btnAbrirPastaSkill");
+
   if (skillInfo?.temSkill) {
     state.skillAtual = skillInfo;
     if (lblTitulo) lblTitulo.textContent = "⚡ Skill de IA Ativa (Conhecimento Destilado)";
     if (lblDesc) lblDesc.textContent = "O conteúdo desta obra está indexado em formato modular para respostas imediatas e precisas.";
     if (btnGerar) btnGerar.textContent = "🔄 Re-destilar Livro";
+    if (btnExportar) btnExportar.hidden = false;
+    if (btnAbrirPasta) btnAbrirPasta.hidden = false;
   } else {
     state.skillAtual = null;
     if (lblTitulo) lblTitulo.textContent = "⚡ Skill de IA Não Gerada";
     if (lblDesc) lblDesc.textContent = "Destile os capítulos desta obra em uma Skill modular para respostas instantâneas sem alucinações.";
     if (btnGerar) btnGerar.textContent = "⚡ Gerar Skill do Livro";
+    if (btnExportar) btnExportar.hidden = true;
+    if (btnAbrirPasta) btnAbrirPasta.hidden = true;
   }
 }
 
@@ -1037,7 +1044,7 @@ Gere 3 seções estruturadas rigorosamente no formato abaixo:
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptSkill,
       contexto: "Destilação oficial no formato book-to-skill",
-      modelo: cfg.model || "qwen/qwen3.8-27b"
+      modelo: cfg.model || "llama-3.1-8b-instant"
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -1207,22 +1214,26 @@ async function abrirCopilotoIA(livro) {
   }
 
   // Identifica o modelo ativo
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "qwen/qwen3.8-27b" };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant" };
   if (modelName) {
-    const isQwen = (cfg.model || "").includes("qwen");
-    modelName.textContent = isQwen ? "Qwen 2.5 27B" : "Compound Mini";
+    const is70b = (cfg.model || "").includes("70b");
+    modelName.textContent = is70b ? "LLaMA 3.3 70B" : "LLaMA 3.1 8B Mini";
   }
 
   // Verifica se o livro já possui Skill gerada
   const skillInfo = await window.api?.obterSkillLivro?.(livro.caminho);
+  const btnExportarCopilot = document.getElementById("btnCopilotExportarSkill");
+
   if (skillInfo?.temSkill) {
     state.skillAtual = skillInfo;
     if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
     if (btnIndexar) btnIndexar.textContent = "Reindexar";
+    if (btnExportarCopilot) btnExportarCopilot.hidden = false;
   } else {
     state.skillAtual = null;
     if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot" style="background:#e5a93b;box-shadow:0 0 6px #e5a93b;"></span> Obra Conectada`;
-    if (btnIndexar) btnIndexar.textContent = "Indexar Livro";
+    if (btnIndexar) btnIndexar.textContent = "Criar Skill";
+    if (btnExportarCopilot) btnExportarCopilot.hidden = true;
   }
 
   // Limpa feed e reseta para o estado Hero inicial
@@ -1423,7 +1434,7 @@ ${textoAmostra.slice(0, 8000)}`;
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptDestilacao,
       contexto: "",
-      modelo: cfg.model || "qwen/qwen3.8-27b"
+      modelo: cfg.model || "llama-3.1-8b-instant"
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -1457,6 +1468,8 @@ ${textoAmostra.slice(0, 8000)}`;
       state.skillAtual = { temSkill: true, skillMd, cheatsheet, glossary };
       if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
       if (btnIndexar) btnIndexar.textContent = "Reindexar";
+      const btnExp = document.getElementById("btnCopilotExportarSkill");
+      if (btnExp) btnExp.hidden = false;
     } else {
       throw new Error(resIA?.error || "Falha ao sintetizar com o Groq.");
     }
@@ -1885,7 +1898,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnSalvarConfigIA")?.addEventListener("click", async () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
-    const model = document.getElementById("selectModeloIA")?.value || "qwen/qwen3.8-27b";
+    const model = document.getElementById("selectModeloIA")?.value || "llama-3.1-8b-instant";
     const ok = await window.api?.salvarConfigIA?.({ apiKey: key, model });
     if (ok) {
       showToast("Configurações da IA salvas com segurança!");
@@ -1983,6 +1996,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnCopilotIndexarObra")?.addEventListener("click", executarBookToSkillCopiloto);
   document.getElementById("btnCopilotConfigPill")?.addEventListener("click", abrirModalConfigIA);
+
+  // Ações de Exportação Fácil da Skill
+  const exportarSkillAtual = async () => {
+    if (!state.livroSelecionado) {
+      showToast("Selecione uma obra primeiro.");
+      return;
+    }
+    const titulo = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
+    showToast(`Escolha a pasta de destino para a Skill...`);
+    const res = await window.api?.exportarSkillLivro?.({
+      caminho: state.livroSelecionado.caminho,
+      titulo
+    });
+    if (res?.success) {
+      showToast("Skill exportada com sucesso! Pasta aberta no Explorer.");
+    } else if (!res?.canceled) {
+      showToast(res?.error || "Erro ao exportar Skill.");
+    }
+  };
+
+  const abrirPastaSkillAtual = async () => {
+    if (!state.livroSelecionado) return;
+    const ok = await window.api?.abrirPastaSkill?.(state.livroSelecionado.caminho);
+    if (!ok) {
+      showToast("A pasta da Skill ainda não foi criada.");
+    }
+  };
+
+  document.getElementById("btnCopilotExportarSkill")?.addEventListener("click", exportarSkillAtual);
+  document.getElementById("btnExportarSkillDetalhes")?.addEventListener("click", exportarSkillAtual);
+  document.getElementById("btnAbrirPastaSkill")?.addEventListener("click", abrirPastaSkillAtual);
 
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;

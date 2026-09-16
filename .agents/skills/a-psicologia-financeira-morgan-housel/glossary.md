@@ -1,21 +1,22 @@
 **  
 # Glossário de Termos e Conceitos  
 
-| Termo | Definição (em português) | Exemplo prático |
-|-------|--------------------------|-----------------|
-| **Comportamento Financeiro** | Conjunto de atitudes, emoções e decisões que uma pessoa adota em relação ao dinheiro, influenciado por sua história de vida. | Gastar impulsivamente após receber bônus porque “é dinheiro extra”. |
-| **Sorte** | Evento aleatório que gera ganhos ou perdas sem que o agente tenha controle direto. | Receber uma ação de empresa que, meses depois, dispara de preço. |
-| **Risco** | Probabilidade de que um resultado esperado (ganho) não ocorra, podendo gerar perdas. | Investir 100 % do portfólio em uma única startup. |
-| **Juros Compostos (Compounding)** | Crescimento exponencial de um capital quando os juros ganhos são reinvestidos e também geram juros. | R$ 1.000 investidos a 7 % ao ano por 30 anos → ~R$ 7.600. |
-| **Margem de Segurança** | Diferença percentual entre o preço de compra de um ativo e seu valor intrínseco estimado, usada para proteger contra erros de avaliação. | Comprar uma ação avaliada em R$ 100 por R$ 70 (30 % de margem). |
-| **Fortuna Invisível** | Riqueza que não é percebida no dia a dia porque está alocada em investimentos de longo prazo ou em juros compostos. | Saldo de um plano de previdência que cresce silenciosamente. |
-| **Liberdade Financeira** | Estado em que a renda passiva cobre as despesas de vida, permitindo escolher como gastar o tempo. | Receber R$ 10 mil mensais de dividendos e ter despesas de R$ 8 mil. |
-| **Razoável > Racional** | Princípio que prioriza soluções que são factíveis emocionalmente sobre aquelas que são teoricamente ótimas, mas impraticáveis. | Optar por um fundo de baixo risco que você aceita manter, ao invés de um fundo de alta volatilidade que lhe causa ansiedade. |
-| **Suficiência** | Nível de riqueza que satisfaz as necessidades e desejos sem gerar insatisfação crônica. | Determinar que R$ 500 mil investidos são suficientes para viver confortavelmente. |
-| **Buffer de Emergência** | Reserva de liquidez destinada a cobrir imprevistos financeiros sem precisar vender investimentos. | 6 meses de despesas guardados em conta corrente. |
-| **Retirada Segura (4 % Rule)** | Estratégia que sugere retirar 4 % do patrimônio total ao ano, ajustado pela inflação, para preservar o capital ao longo de ~30 anos. | Patrimônio de R$ 2 milhões → retirada inicial de R$ 80 mil/ano. |
-| **Paradoxo do Carro** | Tendência de gastar mais em bens de consumo de status (ex.: carro) que, ao longo do tempo, reduzem a capacidade de gerar riqueza. | Comprar um carro de luxo que deprecia 20 % ao ano, comprometendo fluxo de caixa. |
+| Termo | Definição | Exemplo prático |
+|-------|-----------|-----------------|
+| **Comportamento Financeiro** | Conjunto de atitudes, hábitos e decisões que uma pessoa tem com dinheiro. | Pagar contas sempre no vencimento vs. atrasar e pagar juros. |
+| **Sorte** | Evento aleatório que pode gerar ganhos ou perdas inesperadas. | Receber uma herança inesperada ou ser vítima de fraude. |
+| **Risco** | Possibilidade de um resultado financeiro ser diferente do esperado (geralmente pior). | Investir 100 % em uma única ação de startup. |
+| **Juros Compostos** | Crescimento exponencial onde os juros geram novos juros. | R$ 1.000 investidos a 7 % ao ano por 30 anos → ~R$ 7.6 mi. |
+| **Margem de Segurança** | Diferença entre o preço pago e o valor intrínseco percebido de um ativo. | Comprar uma ação avaliada em R$ 100 por R$ 70. |
+| **Fundo de Emergência** | Reserva de liquidez para cobrir despesas inesperadas sem comprometer investimentos. | R$ 30 mil guardados para desemprego ou reparos urgentes. |
+| **Liberdade Financeira** | Estado em que a renda passiva cobre todas as despesas, permitindo escolher como usar o tempo. | Viver de dividendos e aluguéis, sem precisar trabalhar. |
+| **Diversificação** | Estratégia de espalhar recursos entre diferentes ativos para reduzir risco total. | 40 % ações, 40 % títulos, 20 % imóveis. |
+| **Rebalanceamento** | Ajuste periódico da carteira para manter a alocação alvo. | Vender parte das ações que subiram 30 % e comprar mais títulos. |
+| **Razoável > Racional** | Priorizar decisões que funcionam na prática (razoáveis) ao invés de teorias perfeitas (racionais). | Escolher um fundo com taxa baixa e boa reputação ao invés de um modelo matemático complexo. |
+| **Pessimismo Sedutor** | Tendência a acreditar que o futuro será pior, levando a decisões conservadoras excessivas. | Evitar investir por medo de crise, mesmo com oportunidades claras. |
+| **Compounding Confusion** | Dificuldade de entender como pequenos retornos se acumulam ao longo do tempo. | Subestimar o efeito de 5 % ao ano durante 40 anos. |
+| **Paradoxo do Dono do Carro** | Gastar dinheiro em bens de consumo que depreciam, enquanto a riqueza real está nos ativos que apreciam. | Comprar um carro novo caro ao invés de investir a diferença. |
 
 ---  
 
-*Esta estrutura modular permite que você consulte rapidamente os princípios essenciais, aplique regras práticas no cotidiano e compreenda o vocabulário central da obra.*
+*Esta estrutura modular permite que você consulte rapidamente os princípios centrais (SKILL), aplique regras práticas no dia a dia (CHEATSHEET) e esclareça termos essenciais (GLOSSARY) ao estudar *A Psicologia Financeira* de Morgan Housel.*
