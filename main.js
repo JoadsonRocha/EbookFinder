@@ -13,6 +13,7 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const crypto = require("crypto");
 
 // Tenta importar adm-zip de forma segura com fallback caso ainda não esteja instalado
