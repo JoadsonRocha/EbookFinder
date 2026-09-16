@@ -619,3 +619,150 @@ ipcMain.handle("open-external", (e, url) => {
   }
   return false;
 });
+
+// ============================================================================
+// CANAIS IPC DE INTELIGÊNCIA ARTIFICIAL (GROQ API & BOOK-TO-SKILL)
+// ============================================================================
+
+ipcMain.handle("obter-config-ia", () => {
+  return obterConfigIA();
+});
+
+ipcMain.handle("salvar-config-ia", (e, cfg) => {
+  if (cfg && typeof cfg === "object") {
+    return salvarConfigIA(cfg);
+  }
+  return false;
+});
+
+ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
+  const key = (apiKey || obterConfigIA().apiKey || "").trim();
+  if (!key) return { success: false, error: "Chave de API não informada." };
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: 2
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const msg = errBody.error?.message || `Erro HTTP ${res.status}: ${res.statusText}`;
+      return { success: false, error: msg };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message || "Falha de rede ao conectar com api.groq.com" };
+  }
+});
+
+ipcMain.handle("perguntar-groq", async (e, { pergunta, contexto, historico = [], modelo = null }) => {
+  const cfg = obterConfigIA();
+  const key = (cfg.apiKey || "").trim();
+  if (!key) {
+    return {
+      success: false,
+      error: "Chave da API Groq não configurada. Clique no botão ⚙️ IA no topo para inserir sua chave gratuita."
+    };
+  }
+
+  const modelToUse = modelo || cfg.model || "llama-3.3-70b-versatile";
+
+  const systemPrompt = `Você é o Tutor e Mentor de Leitura Especialista integrado ao leitor EbookFinder.
+Seu papel é responder com máxima clareza, empatia e profundidade pedagógica sobre a obra que o usuário está lendo.
+Responda sempre em Português do Brasil com excelente formatação Markdown (tópicos com marcadores, negrito em conceitos-chave e listas quando apropriado).
+
+${contexto ? `--- DADOS E CONTEÚDO EXTRAÍDO DA OBRA ---\n${contexto}\n---------------------------------------\nBaseie-se rigorosamente nos dados acima sempre que citar definições, capítulos e conceitos.` : "Responda de forma didática com base no seu vasto conhecimento."}`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...historico.slice(-6).map(h => ({ role: h.role, content: h.content })),
+    { role: "user", content: pergunta }
+  ];
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: modelToUse,
+        messages,
+        temperature: 0.35,
+        max_tokens: 1800
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const msg = errBody.error?.message || `Erro HTTP ${res.status}`;
+      return { success: false, error: msg };
+    }
+
+    const data = await res.json();
+    const resposta = data.choices?.[0]?.message?.content || "Sem resposta da IA.";
+    return { success: true, resposta };
+  } catch (err) {
+    return { success: false, error: err.message || "Erro ao consultar a API do Groq." };
+  }
+});
+
+ipcMain.handle("obter-skill-livro", (e, caminho) => {
+  if (!caminho) return null;
+  const hash = gerarHashCaminho(caminho);
+  const skillPath = path.join(skillsDir, hash);
+
+  if (fs.existsSync(path.join(skillPath, "SKILL.md"))) {
+    try {
+      const skillMd = fs.readFileSync(path.join(skillPath, "SKILL.md"), "utf8");
+      const cheatsheet = fs.existsSync(path.join(skillPath, "cheatsheet.md"))
+        ? fs.readFileSync(path.join(skillPath, "cheatsheet.md"), "utf8")
+        : "";
+      const glossary = fs.existsSync(path.join(skillPath, "glossary.md"))
+        ? fs.readFileSync(path.join(skillPath, "glossary.md"), "utf8")
+        : "";
+      return { temSkill: true, skillMd, cheatsheet, glossary, hash };
+    } catch (err) {
+      return { temSkill: false };
+    }
+  }
+
+  return { temSkill: false };
+});
+
+ipcMain.handle("salvar-skill-livro", (e, { caminho, titulo, slug, skillMd, cheatsheet, glossary }) => {
+  if (!caminho || !skillMd) return false;
+  const hash = gerarHashCaminho(caminho);
+  const skillPath = path.join(skillsDir, hash);
+
+  try {
+    if (!fs.existsSync(skillPath)) fs.mkdirSync(skillPath, { recursive: true });
+    fs.writeFileSync(path.join(skillPath, "SKILL.md"), skillMd, "utf8");
+    if (cheatsheet) fs.writeFileSync(path.join(skillPath, "cheatsheet.md"), cheatsheet, "utf8");
+    if (glossary) fs.writeFileSync(path.join(skillPath, "glossary.md"), glossary, "utf8");
+
+    // Salva também na pasta do workspace .agents/skills/<slug>/ se estiver em dev
+    const safeSlug = slug || path.basename(caminho, path.extname(caminho)).toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 40);
+    const workspaceSkillDir = path.join(__dirname, ".agents", "skills", safeSlug);
+    if (!fs.existsSync(workspaceSkillDir)) fs.mkdirSync(workspaceSkillDir, { recursive: true });
+    fs.writeFileSync(path.join(workspaceSkillDir, "SKILL.md"), skillMd, "utf8");
+    if (cheatsheet) fs.writeFileSync(path.join(workspaceSkillDir, "cheatsheet.md"), cheatsheet, "utf8");
+    if (glossary) fs.writeFileSync(path.join(workspaceSkillDir, "glossary.md"), glossary, "utf8");
+
+    return true;
+  } catch (err) {
+    console.error("❌ Falha ao salvar Skill do livro:", err);
+    return false;
+  }
+});

@@ -87,5 +87,35 @@ contextBridge.exposeInMainWorld("api", {
   /**
    * Abre um link externo com segurança no navegador padrão do usuário.
    */
-  openExternal: (url) => safeInvoke("open-external", url)
+  openExternal: (url) => safeInvoke("open-external", url),
+
+  /**
+   * Obtém a configuração da IA persistida (Groq API Key e modelo).
+   */
+  obterConfigIA: () => safeInvoke("obter-config-ia"),
+
+  /**
+   * Salva as configurações da IA persistida.
+   */
+  salvarConfigIA: (config) => safeInvoke("salvar-config-ia", config),
+
+  /**
+   * Testa a conexão com a API do Groq com a chave informada.
+   */
+  testarConexaoGroq: (apiKey) => safeInvoke("testar-conexao-groq", apiKey),
+
+  /**
+   * Envia uma pergunta ao Tutor IA com o contexto do livro.
+   */
+  perguntarGroq: (dados) => safeInvoke("perguntar-groq", dados),
+
+  /**
+   * Obtém a Skill gerada para o livro, se existir.
+   */
+  obterSkillLivro: (caminho) => safeInvoke("obter-skill-livro", caminho),
+
+  /**
+   * Salva a Skill gerada (SKILL.md, cheatsheet.md, glossary.md).
+   */
+  salvarSkillLivro: (dados) => safeInvoke("salvar-skill-livro", dados)
 });
