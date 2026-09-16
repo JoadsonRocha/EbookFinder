@@ -29,6 +29,7 @@
     ],
     "win": {
       "icon": "app/ebookFinder.ico",
+      "publisherName": "Joadson Rocha",
       "target": [
         "nsis",
         "msi",
@@ -38,7 +39,8 @@
     "msi": {
       "oneClick": false,
       "perMachine": false,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "upgradeCode": "d4e2d31c-3b95-46f8-9a25-e593439b1a20"
     }
   },
   "dependencies": {
