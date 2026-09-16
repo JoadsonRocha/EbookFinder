@@ -626,14 +626,20 @@ function renderizarGrade(lista) {
           <span class="copilot-badge-text">SkillBook</span>
         </button>
 
-        <button class="fav-btn ${isFav ? "active" : ""}" title="Favoritar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="${isFav ? "#e5a93b" : "rgba(255,255,255,0.7)"}">
+        <button class="fav-btn ${isFav ? "active" : ""}" title="${isFav ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}">
+          <svg width="14" height="14" viewBox="0 0 24 24">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
         </button>
 
         <div class="cover-hover-overlay">
-          <button class="btn-cover-info" title="Ver detalhes da obra">ℹ️</button>
+          <button class="btn-cover-info" title="Ver detalhes da obra">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </button>
           <button class="btn-cover-read" title="Abrir e ler no Windows">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>Ler</span>
@@ -938,7 +944,7 @@ async function carregarEstadoTutorIA() {
       <div class="chat-msg tutor">
         <div class="msg-avatar">🤖</div>
         <div class="msg-content">
-          <p>Olá! Eu sou seu <strong>Tutor de Leitura</strong> da obra <em>${nomeObra}</em> alimentado pela IA da Groq. Pergunte qualquer dúvida sobre os conceitos, regras práticas ou peça resumos desta obra!</p>
+          <p>Olá! Eu sou seu <strong>Tutor de Leitura</strong> da obra <em>${nomeObra}</em> alimentado pelo SkillBook. Pergunte qualquer dúvida sobre os conceitos, regras práticas ou peça resumos desta obra!</p>
         </div>
       </div>
     `;
@@ -970,7 +976,7 @@ async function executarBookToSkill() {
   if (!state.livroSelecionado) return;
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave da API Groq antes de gerar a skill.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook antes de gerar a skill.");
     abrirModalConfigIA();
     return;
   }
@@ -1013,7 +1019,7 @@ async function executarBookToSkill() {
       textoAmostra = `Livro: ${titulo}\nAutor: ${state.livroSelecionado.autor}\nFormato: ${state.livroSelecionado.extensao}`;
     }
 
-    if (lblDesc) lblDesc.textContent = "Sintetizando Skill com modelos mentais via Groq...";
+    if (lblDesc) lblDesc.textContent = "Sintetizando Skill com modelos mentais via SkillBook...";
     if (progressFill) progressFill.style.width = "75%";
 
     const promptSkill = `Você é um gerador de Agent Skills (padrão SKILL.md).
@@ -1026,6 +1032,10 @@ ${textoAmostra.slice(0, 12000)}
 Gere 3 seções estruturadas rigorosamente no formato abaixo:
 
 ===SKILL.MD===
+---
+name: "${titulo}"
+description: "Modelos mentais, princípios fundamentais e regras práticas da obra ${titulo}."
+---
 # Skill: ${titulo}
 ## Visão Geral e Modelos Mentais
 (Resumo conciso dos principais conceitos, regras de decisão e lições centrais da obra)
@@ -1079,7 +1089,7 @@ Gere 3 seções estruturadas rigorosamente no formato abaixo:
       showToast("Skill do livro gerada com sucesso!");
       await carregarEstadoTutorIA();
     } else {
-      throw new Error(resIA?.error || "Falha ao sintetizar com o Groq.");
+      throw new Error(resIA?.error || "Falha ao sintetizar com o SkillBook.");
     }
   } catch (err) {
     console.error("Erro no book-to-skill:", err);
@@ -1100,7 +1110,7 @@ async function enviarPerguntaChat(textoPergunta = null) {
 
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave da API Groq no botão ⚙️ IA.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook.");
     abrirModalConfigIA();
     return;
   }
@@ -1173,10 +1183,36 @@ function formatarMarkdownSimples(md) {
 // 5.3 WORKSPACE DEDICADO DO COPILOTO IA (ESTILO CHATGPT / CLAUDE)
 // ============================================================================
 
+function obterHistoricoChatStorage(caminho) {
+  try {
+    if (!caminho) return [];
+    const raw = localStorage.getItem("ef_chat_" + caminho);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function salvarHistoricoChatStorage(caminho, historico) {
+  try {
+    if (!caminho) return;
+    const fatiado = (historico || []).slice(-40);
+    localStorage.setItem("ef_chat_" + caminho, JSON.stringify(fatiado));
+  } catch (e) {
+    console.warn("Erro ao salvar histórico do chat:", e);
+  }
+}
+
+function limparHistoricoChatStorage(caminho) {
+  try {
+    if (!caminho) return;
+    localStorage.removeItem("ef_chat_" + caminho);
+  } catch (e) {}
+}
+
 async function abrirCopilotoIA(livro) {
   if (!livro) return;
   state.livroSelecionado = livro;
-  state.chatHistorico = [];
 
   const modal = document.getElementById("modalCopilotoIA");
   if (!modal) return;
@@ -1217,37 +1253,93 @@ async function abrirCopilotoIA(livro) {
   const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant" };
   if (modelName) {
     const is70b = (cfg.model || "").includes("70b");
-    modelName.textContent = is70b ? "LLaMA 3.3 70B" : "LLaMA 3.1 8B Mini";
+    modelName.textContent = is70b ? "SkillBook Pro" : "SkillBook Turbo";
   }
 
   // Verifica se o livro já possui Skill gerada
   const skillInfo = await window.api?.obterSkillLivro?.(livro.caminho);
   const btnExportarCopilot = document.getElementById("btnCopilotExportarSkill");
+  const heroIndexBanner = document.getElementById("copilotHeroIndexBanner");
+  const heroExportBanner = document.getElementById("copilotHeroExportBanner");
 
   if (skillInfo?.temSkill) {
     state.skillAtual = skillInfo;
     if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
     if (btnIndexar) btnIndexar.textContent = "Reindexar";
     if (btnExportarCopilot) btnExportarCopilot.hidden = false;
+    if (heroIndexBanner) heroIndexBanner.hidden = true;
+    if (heroExportBanner) heroExportBanner.hidden = false;
   } else {
     state.skillAtual = null;
     if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot" style="background:#e5a93b;box-shadow:0 0 6px #e5a93b;"></span> Obra Conectada`;
     if (btnIndexar) btnIndexar.textContent = "Criar Skill";
     if (btnExportarCopilot) btnExportarCopilot.hidden = true;
+    if (heroIndexBanner) heroIndexBanner.hidden = false;
+    if (heroExportBanner) heroExportBanner.hidden = true;
   }
 
-  // Limpa feed e reseta para o estado Hero inicial
+  // Carrega histórico salvo desta obra
+  const historicoSalvo = obterHistoricoChatStorage(livro.caminho);
+  state.chatHistorico = historicoSalvo;
+
   const heroState = document.getElementById("copilotHeroState");
   const messagesList = document.getElementById("copilotMessagesList");
   const quickChips = document.getElementById("copilotQuickChipsBar");
   const input = document.getElementById("copilotChatInput");
+  const chatFeed = document.getElementById("copilotChatFeed");
 
-  if (heroState) heroState.hidden = false;
-  if (messagesList) {
-    messagesList.hidden = true;
-    messagesList.innerHTML = "";
+  if (historicoSalvo && historicoSalvo.length > 0) {
+    if (heroState) heroState.hidden = true;
+    if (messagesList) {
+      messagesList.hidden = false;
+      messagesList.innerHTML = "";
+      historicoSalvo.forEach(msg => {
+        if (msg.role === "user") {
+          const userRow = document.createElement("div");
+          userRow.className = "copilot-msg-row user";
+          userRow.innerHTML = `
+            <div class="copilot-msg-bubble">
+              <p>${(msg.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+            </div>
+            <div class="copilot-msg-avatar">👤</div>
+          `;
+          messagesList.appendChild(userRow);
+        } else {
+          const assistantRow = document.createElement("div");
+          assistantRow.className = "copilot-msg-row assistant";
+          const formattedHtml = formatarMarkdownSimples(msg.content || "");
+          assistantRow.innerHTML = `
+            <div class="copilot-msg-avatar">✨</div>
+            <div class="copilot-msg-bubble">
+              <div class="copilot-msg-content">${formattedHtml}</div>
+              <div class="copilot-msg-actions">
+                <button type="button" class="btn-msg-copy" title="Copiar resposta">
+                  <span>📋</span> <span>Copiar</span>
+                </button>
+              </div>
+            </div>
+          `;
+          assistantRow.querySelector(".btn-msg-copy")?.addEventListener("click", () => {
+            navigator.clipboard.writeText(msg.content || "");
+            showToast("Resposta copiada para a área de transferência!");
+          });
+          messagesList.appendChild(assistantRow);
+        }
+      });
+    }
+    if (quickChips) quickChips.hidden = false;
+    setTimeout(() => {
+      if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+    }, 60);
+  } else {
+    if (heroState) heroState.hidden = false;
+    if (messagesList) {
+      messagesList.hidden = true;
+      messagesList.innerHTML = "";
+    }
+    if (quickChips) quickChips.hidden = true;
   }
-  if (quickChips) quickChips.hidden = true;
+
   if (input) {
     input.value = "";
     input.style.height = "auto";
@@ -1275,7 +1367,7 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
 
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave da API Groq no botão ⚡ SkillBook.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook.");
     abrirModalConfigIA();
     return;
   }
@@ -1335,6 +1427,7 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
 
   if (res?.success && res.resposta) {
     state.chatHistorico.push({ role: "assistant", content: res.resposta });
+    salvarHistoricoChatStorage(state.livroSelecionado?.caminho, state.chatHistorico);
     const formattedHtml = formatarMarkdownSimples(res.resposta);
     assistantRow.querySelector(".copilot-msg-bubble").innerHTML = `
       <div class="copilot-msg-content">${formattedHtml}</div>
@@ -1363,7 +1456,7 @@ async function executarBookToSkillCopiloto() {
   if (!state.livroSelecionado) return;
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave da API Groq antes de indexar.");
+    showToast("Configure sua chave de API no botão ⚡ SkillBook antes de indexar.");
     abrirModalConfigIA();
     return;
   }
@@ -1410,12 +1503,16 @@ async function executarBookToSkillCopiloto() {
     }
 
     if (progressFill) progressFill.style.width = "75%";
-    if (progressText) progressText.textContent = "Destilando conhecimento modular com a Groq...";
+    if (progressText) progressText.textContent = "Destilando conhecimento modular com o SkillBook...";
 
     const promptDestilacao = `Você é o compilador da arquitetura book-to-skill para a obra "${titulo}".
 Gere uma destilação modular técnica e profunda nos 3 blocos abaixo rigorosamente separados:
 
 ===SKILL.MD===
+---
+name: "${titulo}"
+description: "Modelos mentais, princípios fundamentais e regras práticas da obra ${titulo}."
+---
 # Livro: ${titulo}
 ## Visão Geral e Tópicos Fundamentais
 (Escreva os 5 princípios mais importantes da obra)
@@ -1470,8 +1567,37 @@ ${textoAmostra.slice(0, 8000)}`;
       if (btnIndexar) btnIndexar.textContent = "Reindexar";
       const btnExp = document.getElementById("btnCopilotExportarSkill");
       if (btnExp) btnExp.hidden = false;
+
+      const heroIndexBanner = document.getElementById("copilotHeroIndexBanner");
+      const heroExportBanner = document.getElementById("copilotHeroExportBanner");
+      if (heroIndexBanner) heroIndexBanner.hidden = true;
+      if (heroExportBanner) heroExportBanner.hidden = false;
+
+      const messagesList = document.getElementById("copilotMessagesList");
+      if (messagesList && !messagesList.hidden) {
+        const exportPromptRow = document.createElement("div");
+        exportPromptRow.className = "copilot-msg-row assistant";
+        exportPromptRow.innerHTML = `
+          <div class="copilot-msg-avatar">📦</div>
+          <div class="copilot-msg-bubble" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+              <div>
+                <strong style="color: #10b981; font-size: 0.86rem; display: block;">🎉 Skill destilada com sucesso!</strong>
+                <span style="font-size: 0.74rem; color: var(--text-secondary);">SKILL.md, cheatsheet.md e glossary.md gerados no formato oficial.</span>
+              </div>
+              <button type="button" class="btn-hero-action export btn-msg-export-now" style="font-size: 0.74rem; padding: 6px 14px;">
+                <span>📦 Exportar Agora</span>
+              </button>
+            </div>
+          </div>
+        `;
+        exportPromptRow.querySelector(".btn-msg-export-now")?.addEventListener("click", exportarSkillAtual);
+        messagesList.appendChild(exportPromptRow);
+        const chatFeed = document.getElementById("copilotChatFeed");
+        if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+      }
     } else {
-      throw new Error(resIA?.error || "Falha ao sintetizar com o Groq.");
+      throw new Error(resIA?.error || "Falha ao sintetizar com o SkillBook.");
     }
   } catch (err) {
     console.error("Erro no book-to-skill:", err);
@@ -1523,12 +1649,12 @@ function alternarFavorito(caminho, btn) {
   if (state.favoritos.has(caminho)) {
     state.favoritos.delete(caminho);
     btn?.classList.remove("active");
-    if (btn) btn.querySelector("svg").setAttribute("fill", "rgba(255,255,255,0.7)");
+    btn?.setAttribute("title", "Adicionar aos Favoritos");
     showToast("Removido dos Favoritos.");
   } else {
     state.favoritos.add(caminho);
     btn?.classList.add("active");
-    if (btn) btn.querySelector("svg").setAttribute("fill", "#e5a93b");
+    btn?.setAttribute("title", "Remover dos Favoritos");
     showToast("Adicionado aos Favoritos!");
   }
 
@@ -1886,11 +2012,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (lbl) { lbl.textContent = "⚠️ Digite uma chave para testar"; lbl.className = "status-indicator erro"; }
       return;
     }
-    if (lbl) { lbl.textContent = "⏳ Conectando à Groq API..."; lbl.className = "status-indicator"; }
+    if (lbl) { lbl.textContent = "⏳ Conectando à API do SkillBook..."; lbl.className = "status-indicator"; }
     const res = await window.api?.testarConexaoGroq?.(key);
     if (res?.success) {
-      if (lbl) { lbl.textContent = "🟢 Conexão com Groq validada com sucesso!"; lbl.className = "status-indicator ok"; }
-      showToast("Groq API conectada com sucesso!");
+      if (lbl) { lbl.textContent = "🟢 Conexão com SkillBook validada com sucesso!"; lbl.className = "status-indicator ok"; }
+      showToast("SkillBook conectado com sucesso!");
     } else {
       if (lbl) { lbl.textContent = `🔴 ${res?.error || "Erro de autenticação"}`; lbl.className = "status-indicator erro"; }
     }
@@ -1985,6 +2111,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnCopilotLimparChat")?.addEventListener("click", () => {
     state.chatHistorico = [];
+    limparHistoricoChatStorage(state.livroSelecionado?.caminho);
     const heroState = document.getElementById("copilotHeroState");
     const messagesList = document.getElementById("copilotMessagesList");
     const quickChips = document.getElementById("copilotQuickChipsBar");
@@ -2027,6 +2154,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnCopilotExportarSkill")?.addEventListener("click", exportarSkillAtual);
   document.getElementById("btnExportarSkillDetalhes")?.addEventListener("click", exportarSkillAtual);
   document.getElementById("btnAbrirPastaSkill")?.addEventListener("click", abrirPastaSkillAtual);
+  document.getElementById("btnHeroCriarSkill")?.addEventListener("click", executarBookToSkillCopiloto);
+  document.getElementById("btnHeroExportarSkill")?.addEventListener("click", exportarSkillAtual);
 
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;

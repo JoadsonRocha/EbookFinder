@@ -1,22 +1,20 @@
 **  
 # Glossário de Termos e Conceitos  
 
-| Termo | Definição | Exemplo prático |
-|-------|-----------|-----------------|
-| **Comportamento Financeiro** | Conjunto de atitudes, hábitos e decisões que uma pessoa tem com dinheiro. | Pagar contas sempre no vencimento vs. atrasar e pagar juros. |
-| **Sorte** | Evento aleatório que pode gerar ganhos ou perdas inesperadas. | Receber uma herança inesperada ou ser vítima de fraude. |
-| **Risco** | Possibilidade de um resultado financeiro ser diferente do esperado (geralmente pior). | Investir 100 % em uma única ação de startup. |
-| **Juros Compostos** | Crescimento exponencial onde os juros geram novos juros. | R$ 1.000 investidos a 7 % ao ano por 30 anos → ~R$ 7.6 mi. |
-| **Margem de Segurança** | Diferença entre o preço pago e o valor intrínseco percebido de um ativo. | Comprar uma ação avaliada em R$ 100 por R$ 70. |
-| **Fundo de Emergência** | Reserva de liquidez para cobrir despesas inesperadas sem comprometer investimentos. | R$ 30 mil guardados para desemprego ou reparos urgentes. |
-| **Liberdade Financeira** | Estado em que a renda passiva cobre todas as despesas, permitindo escolher como usar o tempo. | Viver de dividendos e aluguéis, sem precisar trabalhar. |
-| **Diversificação** | Estratégia de espalhar recursos entre diferentes ativos para reduzir risco total. | 40 % ações, 40 % títulos, 20 % imóveis. |
-| **Rebalanceamento** | Ajuste periódico da carteira para manter a alocação alvo. | Vender parte das ações que subiram 30 % e comprar mais títulos. |
-| **Razoável > Racional** | Priorizar decisões que funcionam na prática (razoáveis) ao invés de teorias perfeitas (racionais). | Escolher um fundo com taxa baixa e boa reputação ao invés de um modelo matemático complexo. |
-| **Pessimismo Sedutor** | Tendência a acreditar que o futuro será pior, levando a decisões conservadoras excessivas. | Evitar investir por medo de crise, mesmo com oportunidades claras. |
-| **Compounding Confusion** | Dificuldade de entender como pequenos retornos se acumulam ao longo do tempo. | Subestimar o efeito de 5 % ao ano durante 40 anos. |
-| **Paradoxo do Dono do Carro** | Gastar dinheiro em bens de consumo que depreciam, enquanto a riqueza real está nos ativos que apreciam. | Comprar um carro novo caro ao invés de investir a diferença. |
+| Termo | Definição (em português) | Exemplo prático |
+|-------|---------------------------|-----------------|
+| **Comportamento Financeiro** | Conjunto de atitudes, hábitos e decisões que uma pessoa adota ao lidar com dinheiro. | Escolher guardar 10 % da renda todo mês, mesmo quando o mercado está volátil. |
+| **Sorte** | Fatores aleatórios e imprevisíveis que influenciam resultados financeiros, independentemente de esforço ou habilidade. | Receber uma herança inesperada que permite iniciar um investimento. |
+| **Risco** | Possibilidade de perda ou de resultado diferente do esperado; pode ser medido em termos de volatilidade ou de probabilidade de falha. | Investir 100 % do capital em uma única ação de alta volatilidade. |
+| **Juros Compostos** | Crescimento de um capital onde os juros ganhos são reinvestidos e passam a gerar novos juros. | Um fundo que rende 7 % ao ano e reinveste todo o rendimento. |
+| **Ponto de Satisfação** | Nível de patrimônio ou renda que, ao ser atingido, gera sensação de “basta” e permite reduzir a busca por mais dinheiro. | Ter um fundo que cobre 7 anos de despesas mensais. |
+| **Liberdade Financeira** | Estado em que a pessoa tem recursos suficientes para escolher como usar seu tempo, sem depender de um salário obrigatório. | Viver de rendimentos de investimentos e escolher trabalhar apenas por paixão. |
+| **Margem de Segurança** | Reserva financeira que protege contra imprevistos e volatilidade de mercado. | Manter 12 meses de despesas em uma conta de alta liquidez. |
+| **Razoável > Racional** | Ideia de que decisões “suficientemente boas” e sustentáveis são preferíveis a soluções teoricamente ótimas, porém difíceis de manter. | Optar por um fundo de baixo custo e performance estável ao invés de um fundo “exótico” com alta taxa e retorno incerto. |
+| **Paradoxo do Carro** | Conceito que demonstra como bens de consumo ostentatórios podem reduzir a liberdade financeira ao gerar custos de manutenção e depreciação. | Comprar um carro de luxo que exige seguro caro e alta depreciação, comprometendo a poupança. |
+| **Colchão de Segurança** | Quantia de dinheiro guardada para emergências, geralmente equivalente a 6‑12 meses de despesas. | Ter R$ 30 000 em uma conta de alta liquidez para cobrir desemprego ou despesas médicas inesperadas. |
+| **Diversificação** | Estratégia de espalhar investimentos em diferentes ativos ou setores para reduzir o risco total da carteira. | Possuir ações, títulos, imóveis e fundos de índice ao invés de concentrar tudo em uma única ação. |
 
 ---  
 
-*Esta estrutura modular permite que você consulte rapidamente os princípios centrais (SKILL), aplique regras práticas no dia a dia (CHEATSHEET) e esclareça termos essenciais (GLOSSARY) ao estudar *A Psicologia Financeira* de Morgan Housel.*
+*Esses três documentos – **SKILL.MD**, **CHEATSHEET.MD** e **GLOSSARY.MD** – formam a base da arquitetura *book‑to‑skill* para “A Psicologia Financeira”. Use‑os como guia de estudo, referência rápida e dicionário de termos enquanto avança na leitura.*

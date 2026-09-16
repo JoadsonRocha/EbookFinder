@@ -136,7 +136,7 @@
         <li>
           <button data-action="config-ia" class="menu-item" id="menuItemConfigIA">
             <span class="item-icon">⚡</span>
-            <span class="item-text">Configurações do SkillBook (Groq)</span>
+            <span class="item-text">Configurações do SkillBook</span>
           </button>
         </li>
         <li>
@@ -260,18 +260,18 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e5a93b" stroke-width="2">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
           </svg>
-          <h3>Configurações do SkillBook (Groq)</h3>
+          <h3>Configurações do SkillBook</h3>
         </div>
         <button id="btnFecharConfigIA" class="btn-close-modal" aria-label="Fechar configurações">&times;</button>
       </div>
 
       <div class="config-dialog-body">
         <p class="config-desc">
-          O EbookFinder utiliza a <strong>API da Groq</strong> para respostas ultrarrápidas (&lt; 1s) utilizando modelos de ponta.
+          O EbookFinder utiliza o motor inteligente do <strong>SkillBook</strong> para respostas ultrarrápidas (&lt; 1s) utilizando modelos de ponta.
         </p>
 
         <div class="form-group">
-          <label for="inputGroqKey" class="form-label">Sua Chave de API Groq:</label>
+          <label for="inputGroqKey" class="form-label">Sua Chave de API do SkillBook:</label>
           <div class="input-password-wrap">
             <input 
               type="password" 
@@ -289,10 +289,10 @@
         </div>
 
         <div class="form-group">
-          <label for="selectModeloIA" class="form-label">Modelo de IA:</label>
+          <label for="selectModeloIA" class="form-label">Motor do SkillBook:</label>
           <select id="selectModeloIA" class="config-select">
-            <option value="llama-3.1-8b-instant" selected>LLaMA 3.1 8B Instant (Padrão Mini — Ultra Rápido e Estável)</option>
-            <option value="llama-3.3-70b-versatile">LLaMA 3.3 70B Versatile (Raciocínio Avançado)</option>
+            <option value="llama-3.1-8b-instant" selected>SkillBook Turbo (Ultra Rápido — Respostas Instantâneas)</option>
+            <option value="llama-3.3-70b-versatile">SkillBook Pro (Raciocínio Avançado & Análise Completa)</option>
           </select>
         </div>
 
@@ -520,9 +520,9 @@
         </div>
 
         <div class="copilot-header-actions">
-          <div class="copilot-model-pill" id="btnCopilotConfigPill" title="Configurações do modelo e chave Groq">
+          <div class="copilot-model-pill" id="btnCopilotConfigPill" title="Configurações do SkillBook">
             <span class="model-sparkle">⚡</span>
-            <span id="copilotModelName">LLaMA 3.1 8B Mini</span>
+            <span id="copilotModelName">SkillBook Turbo</span>
           </div>
           <button id="btnCopilotLimparChat" class="btn-copilot-header-tool" title="Limpar conversa e iniciar novo chat">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -545,7 +545,7 @@
       <!-- Barra de Progresso da Indexação (Book-to-Skill) -->
       <div id="copilotIndexProgressTrack" class="copilot-index-progress-track" hidden>
         <div id="copilotIndexProgressFill" class="copilot-index-progress-fill" style="width: 0%;"></div>
-        <span id="copilotIndexProgressText" class="copilot-index-progress-text">Lendo páginas e indexando com a Groq...</span>
+        <span id="copilotIndexProgressText" class="copilot-index-progress-text">Lendo páginas e indexando com o SkillBook...</span>
       </div>
 
       <!-- Feed Principal de Conversa -->
@@ -557,6 +557,30 @@
           </div>
           <h2 class="copilot-hero-title" id="copilotHeroGreeting">Como posso te ajudar com este livro hoje?</h2>
           <p class="copilot-hero-subtitle">Pergunte qualquer conceito, peça sínteses estruturadas ou tire dúvidas com base no conteúdo real desta obra.</p>
+
+          <!-- Card de Ação Rápida: Criar Skill (se ainda não indexada) -->
+          <div id="copilotHeroIndexBanner" class="copilot-hero-action-card create" hidden>
+            <div class="action-card-text">
+              <span class="action-card-tag">⚡ Book-to-Skill</span>
+              <h4>Esta obra ainda não foi indexada</h4>
+              <p>Destile os princípios fundamentais, guia prático e glossário deste livro em uma Skill modular.</p>
+            </div>
+            <button id="btnHeroCriarSkill" class="btn-hero-action create" type="button">
+              <span>⚡ Indexar Obra com 1 Clique</span>
+            </button>
+          </div>
+
+          <!-- Card de Ação Rápida: Exportar Skill (se já indexada) -->
+          <div id="copilotHeroExportBanner" class="copilot-hero-action-card export" hidden>
+            <div class="action-card-text">
+              <span class="action-card-tag done">✅ Obra Indexada</span>
+              <h4>Base de conhecimento pronta</h4>
+              <p>SKILL.md, cheatsheet.md e glossary.md já foram destilados e estão disponíveis.</p>
+            </div>
+            <button id="btnHeroExportarSkill" class="btn-hero-action export" type="button">
+              <span>📦 Exportar Skill para o Computador</span>
+            </button>
+          </div>
 
           <!-- Grade de Prompts Iniciais / Sugestões -->
           <div class="copilot-prompt-grid">
@@ -622,7 +646,7 @@
           </button>
         </div>
         <p class="copilot-disclaimer">
-          O SkillBook responde com base no texto, índice e conhecimento desta obra • Alimentado pela Groq LPU
+          O SkillBook responde com base no texto, índice e conhecimento desta obra • Tecnologia SkillBook
         </p>
       </div>
     </div>
