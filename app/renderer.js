@@ -1165,18 +1165,87 @@ async function enviarPerguntaChat(textoPergunta = null) {
 
 function formatarMarkdownSimples(md) {
   if (!md) return "";
-  let html = md
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/^### (.*$)/gim, "<strong>$1</strong>")
-    .replace(/^## (.*$)/gim, "<strong>$1</strong>")
-    .replace(/^# (.*$)/gim, "<strong>$1</strong>")
-    .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/gim, "<em>$1</em>")
-    .replace(/`([^`]+)`/gim, "<code>$1</code>")
-    .replace(/^\s*-\s+(.*$)/gim, "• $1<br/>")
-    .replace(/\n\n/g, "</p><p>")
-    .replace(/\n/g, "<br/>");
-  return `<p>${html}</p>`;
+
+  // 1. Escapar HTML base para segurança
+  let text = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // 2. Blocos de Código (``` ... ```)
+  text = text.replace(/```([\s\S]*?)```/g, (match, code) => {
+    return `\n<pre><code>${code.trim()}</code></pre>\n`;
+  });
+
+  // 3. Tabelas Markdown (| th | th |\n|---|---|\n| td | td |)
+  text = text.replace(/(?:^|\n)((?:\|[^\n]+\|\r?\n?)+)/g, (match, tableBlock) => {
+    const lines = tableBlock.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return match;
+    if (!lines[1].includes("-")) return match;
+
+    const parseRow = (line) => {
+      return line
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map(cell => cell.trim());
+    };
+
+    const headers = parseRow(lines[0]);
+    const headerHtml = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>`;
+
+    const bodyRows = lines.slice(2).map(rowLine => {
+      const cells = parseRow(rowLine);
+      return `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
+    }).join("");
+
+    return `\n<div class="table-container"><table>${headerHtml}<tbody>${bodyRows}</tbody></table></div>\n`;
+  });
+
+  // 4. Blockquotes / Citações (> texto)
+  text = text.replace(/(?:^|\n)&gt;\s*([^\n]+(?:\n&gt;\s*[^\n]+)*)/g, (match, quoteContent) => {
+    const cleaned = quoteContent.replace(/\n&gt;\s*/g, " ");
+    return `\n<blockquote>${cleaned}</blockquote>\n`;
+  });
+
+  // 5. Cabeçalhos (#, ##, ###)
+  text = text.replace(/^### (.*$)/gim, "<h3>$1</h3>");
+  text = text.replace(/^## (.*$)/gim, "<h3>$1</h3>");
+  text = text.replace(/^# (.*$)/gim, "<h3>$1</h3>");
+
+  // 6. Linhas Horizontais (--- ou ***)
+  text = text.replace(/^(?:---|\*\*\*|___)$/gim, "<hr/>");
+
+  // 7. Listas não ordenadas (- ou * ou •)
+  text = text.replace(/(?:^|\n)((?:[\t ]*[-*•]\s+[^\n]+\r?\n?)+)/g, (match, listBlock) => {
+    const items = listBlock.trim().split(/\r?\n/).map(it => {
+      return `<li>${it.replace(/^[\t ]*[-*•]\s+/, "")}</li>`;
+    }).join("");
+    return `\n<ul>${items}</ul>\n`;
+  });
+
+  // 8. Listas numeradas (1. 2. 3.)
+  text = text.replace(/(?:^|\n)((?:[\t ]*\d+\.\s+[^\n]+\r?\n?)+)/g, (match, listBlock) => {
+    const items = listBlock.trim().split(/\r?\n/).map(it => {
+      return `<li>${it.replace(/^[\t ]*\d+\.\s+/, "")}</li>`;
+    }).join("");
+    return `\n<ol>${items}</ol>\n`;
+  });
+
+  // 9. Estilos inline (negrito, itálico, código)
+  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // 10. Parágrafos e quebras
+  const blocks = text.split(/\n\s*\n/);
+  const formattedBlocks = blocks.map(block => {
+    const trimmed = block.trim();
+    if (!trimmed) return "";
+    if (/^<(div|table|thead|tbody|tr|th|td|ul|ol|li|h3|blockquote|pre|hr)/i.test(trimmed)) {
+      return trimmed;
+    }
+    return `<p>${trimmed.replace(/\n/g, "<br/>")}</p>`;
+  });
+
+  return formattedBlocks.filter(Boolean).join("");
 }
 
 // ============================================================================
@@ -1416,7 +1485,9 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
   if (state.skillAtual?.skillMd) {
     contexto = `${state.skillAtual.skillMd}\n\n${state.skillAtual.cheatsheet || ""}\n\n${state.skillAtual.glossary || ""}`;
   } else if (state.livroSelecionado) {
-    contexto = `Obra: ${state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo}\nAutor: ${state.livroSelecionado.autor}\nFormato: ${state.livroSelecionado.extensao}\nProgresso de leitura: Pág. ${state.livroSelecionado.progresso?.paginaAtual || 0}/${state.livroSelecionado.progresso?.totalPaginas || 0}\nAnotações: ${state.livroSelecionado.progresso?.anotacoes || "Nenhuma"}`;
+    const tit = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
+    const aut = state.livroSelecionado.autor !== "Desconhecido" ? state.livroSelecionado.autor : "Autor consagrado da obra";
+    contexto = `Obra: ${tit}\nAutor: ${aut}\nFormato: ${state.livroSelecionado.extensao}\nInstrução: Entregue uma síntese executiva rica, técnica e completa sobre esta obra consagrada, explicando seus princípios fundamentais, métodos e aplicações práticas.`;
   }
 
   const res = await window.api?.perguntarGroq?.({

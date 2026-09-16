@@ -57,6 +57,12 @@ const bundledIaConfigPaths = [
   path.join(__dirname, "app", "ia_config_bundle.json")
 ];
 
+function normalizarModeloIA(m) {
+  if (!m || m.includes("llama-3.1") || m === "llama-3.1-8b-instant") return "openai/gpt-oss-20b";
+  if (m.includes("llama-3.3") || m === "llama-3.3-70b-versatile") return "openai/gpt-oss-120b";
+  return m;
+}
+
 function obterConfigIA() {
   // 1. Prioridade máxima: Configuração personalizada salva pelo usuário em AppData
   if (fs.existsSync(iaConfigFile)) {
@@ -65,7 +71,7 @@ function obterConfigIA() {
       if (userCfg && userCfg.apiKey && userCfg.apiKey.trim()) {
         return {
           apiKey: userCfg.apiKey.trim(),
-          model: userCfg.model || "llama-3.1-8b-instant",
+          model: normalizarModeloIA(userCfg.model),
           origem: "usuario",
           isBundled: false
         };
@@ -83,7 +89,7 @@ function obterConfigIA() {
         if (bundleCfg && bundleCfg.apiKey && bundleCfg.apiKey.trim()) {
           return {
             apiKey: bundleCfg.apiKey.trim(),
-            model: bundleCfg.model || "llama-3.1-8b-instant",
+            model: normalizarModeloIA(bundleCfg.model),
             origem: "msi",
             isBundled: true
           };
@@ -98,13 +104,13 @@ function obterConfigIA() {
   if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim()) {
     return {
       apiKey: process.env.GROQ_API_KEY.trim(),
-      model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+      model: normalizarModeloIA(process.env.GROQ_MODEL),
       origem: "env",
       isBundled: true
     };
   }
 
-  return { apiKey: "", model: "llama-3.1-8b-instant", origem: "nenhuma", isBundled: false };
+  return { apiKey: "", model: "openai/gpt-oss-20b", origem: "nenhuma", isBundled: false };
 }
 
 function salvarConfigIA(cfg) {
@@ -820,7 +826,7 @@ ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "openai/gpt-oss-20b",
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 2
       })
@@ -848,13 +854,17 @@ ipcMain.handle("perguntar-groq", async (e, { pergunta, contexto, historico = [],
     };
   }
 
-  const modelToUse = modelo || cfg.model || "llama-3.1-8b-instant";
+  const modelToUse = normalizarModeloIA(modelo || cfg.model || "openai/gpt-oss-20b");
 
-  const systemPrompt = `Você é o Tutor e Mentor de Leitura Especialista integrado ao leitor EbookFinder.
-Seu papel é responder com máxima clareza, empatia e profundidade pedagógica sobre a obra que o usuário está lendo.
-Responda sempre em Português do Brasil com excelente formatação Markdown (tópicos com marcadores, negrito em conceitos-chave e listas quando apropriado).
+  const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
+Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
+Responda sempre em Português do Brasil com primorosa formatação Markdown (títulos temáticos, tabelas comparativas quando pertinente, listas limpas, citações elegantes em blockquote e negrito em termos centrais).
 
-${contexto ? `--- DADOS E CONTEÚDO EXTRAÍDO DA OBRA ---\n${contexto}\n---------------------------------------\nBaseie-se rigorosamente nos dados acima sempre que citar definições, capítulos e conceitos.` : "Responda de forma didática com base no seu vasto conhecimento."}`;
+DIRETRIZES FUNDAMENTAIS:
+1. Se houver notas ou dados extraídos da obra no contexto abaixo, priorize-os.
+2. Se a obra for um livro consagrado e o contexto trouxer apenas metadados iniciais, NUNCA responda dizendo que "o arquivo está vazio", que "o progresso é 0/0" ou que "não há conteúdo textual". Em vez disso, identifique a obra pelo título e autor e entregue imediatamente uma análise rica, profunda e brilhante sobre o livro real: seus conceitos essenciais, capítulos, lições práticas, modelos de pensamento e impacto.
+
+${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : ""}`;
 
   const messages = [
     { role: "system", content: systemPrompt },
