@@ -826,16 +826,33 @@ async function abrirModalConfigIA() {
   const modal = document.getElementById("modalConfigIA");
   if (!modal) return;
 
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "qwen/qwen3.8-27b" };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "qwen/qwen3.8-27b", isBundled: false };
   const inputKey = document.getElementById("inputGroqKey");
   const selectModel = document.getElementById("selectModeloIA");
   const lblStatus = document.getElementById("lblStatusConexao");
 
-  if (inputKey) inputKey.value = cfg.apiKey || "";
+  if (inputKey) {
+    inputKey.value = cfg.apiKey || "";
+    if (cfg.isBundled) {
+      inputKey.placeholder = "Chave integrada no Instalador MSI (Ativa)";
+    } else {
+      inputKey.placeholder = "gsk_...";
+    }
+  }
+
   if (selectModel) selectModel.value = cfg.model || "qwen/qwen3.8-27b";
+
   if (lblStatus) {
-    lblStatus.textContent = cfg.apiKey ? "🟢 Chave configurada no sistema" : "⚪ Nenhuma chave salva";
-    lblStatus.className = "status-indicator " + (cfg.apiKey ? "ok" : "");
+    if (cfg.isBundled) {
+      lblStatus.textContent = "🟢 Chave de IA ativa via Instalador MSI";
+      lblStatus.className = "status-indicator ok";
+    } else if (cfg.apiKey) {
+      lblStatus.textContent = "🟢 Chave configurada no perfil do usuário";
+      lblStatus.className = "status-indicator ok";
+    } else {
+      lblStatus.textContent = "⚪ Nenhuma chave configurada";
+      lblStatus.className = "status-indicator";
+    }
   }
 
   modal.hidden = false;
