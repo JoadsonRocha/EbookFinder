@@ -3,8 +3,9 @@
  * EbookFinder - Mobile Bridge (Ponte de Compatibilidade para Capacitor / Web)
  * ============================================================================
  * @description Substitui a camada de IPC do Electron quando o app roda no
- *              celular (Capacitor) ou navegador web, utilizando localStorage,
- *              IndexedDB e chamadas diretas à API da Groq.
+ *              celular (Capacitor) ou navegador web, utilizando IndexedDB para
+ *              armazenamento binário de PDFs, localStorage e chamadas diretas
+ *              à API da Groq.
  * @author Joadson Rocha <joadson.dev@gmail.com>
  * @license GPL-3.0
  * ============================================================================
@@ -17,31 +18,78 @@
     return;
   }
 
-  console.log("📱 [Bridge] Ambiente Mobile/Web detectado. Ativando Mobile Bridge.");
+  console.log("📱 [Bridge] Ambiente Mobile/Web detectado. Ativando Mobile Bridge com IndexedDB.");
 
-  // Memória local de arquivos carregados na sessão mobile
-  const bibliotecaMobile = {
-    livros: [],
-    buffers: new Map() // caminho/id -> Uint8Array
-  };
+  const NOME_PASTA_MOBILE = "📱 Armazenamento Local";
+  const DB_NAME = "EbookFinderMobileDB";
+  const DB_VERSION = 1;
+  const STORE_BUFFERS = "pdf_buffers";
 
-  // Inicializa livros salvos no localStorage
-  try {
-    const salvos = localStorage.getItem("ef_mobile_biblioteca");
-    if (salvos) {
-      bibliotecaMobile.livros = JSON.parse(salvos);
-    }
-  } catch (e) {
-    console.warn("Aviso ao carregar biblioteca mobile salva:", e);
+  // Inicializa o banco IndexedDB para armazenar PDFs binários
+  function abrirIndexedDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_BUFFERS)) {
+          db.createObjectStore(STORE_BUFFERS);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
   }
 
-  function salvarBibliotecaLocal() {
+  async function salvarBufferNoDB(id, buffer) {
     try {
-      localStorage.setItem("ef_mobile_biblioteca", JSON.stringify(bibliotecaMobile.livros));
-    } catch (e) {}
+      const db = await abrirIndexedDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_BUFFERS, "readwrite");
+        const store = tx.objectStore(STORE_BUFFERS);
+        store.put(buffer, id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {
+      console.error("❌ Erro ao salvar buffer no IndexedDB:", e);
+      return false;
+    }
   }
 
-  // Seletor invisível de arquivos para mobile
+  async function obterBufferDoDB(id) {
+    try {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_BUFFERS, "readonly");
+        const store = tx.objectStore(STORE_BUFFERS);
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (e) {
+      console.error("❌ Erro ao recuperar buffer do IndexedDB:", e);
+      return null;
+    }
+  }
+
+  // Cache em memória de livros para acesso síncrono rápido
+  let livrosSalvos = [];
+  try {
+    const raw = localStorage.getItem("ef_mobile_biblioteca");
+    if (raw) livrosSalvos = JSON.parse(raw);
+  } catch (e) {
+    livrosSalvos = [];
+  }
+
+  function persistirMetadadosLivros() {
+    try {
+      localStorage.setItem("ef_mobile_biblioteca", JSON.stringify(livrosSalvos));
+    } catch (e) {
+      console.warn("Aviso ao salvar metadados dos livros:", e);
+    }
+  }
+
+  // Cria ou reaproveita o seletor nativo de arquivos do celular
   let fileInput = null;
   function obterFileInput() {
     if (!fileInput) {
@@ -55,15 +103,11 @@
     return fileInput;
   }
 
-  // Cria a API mock compatível com o renderer.js
+  // API COMPLETA COMPATÍVEL COM O RENDERER.JS
   window.api = {
-    getPastaAtual: async () => {
-      return "📱 Armazenamento do Dispositivo";
-    },
+    getPastaAtual: async () => NOME_PASTA_MOBILE,
 
-    escolherPasta: async () => {
-      return window.api.escolherArquivos();
-    },
+    escolherPasta: async () => window.api.escolherArquivos(),
 
     escolherArquivos: () => {
       return new Promise((resolve) => {
@@ -71,63 +115,58 @@
         input.onchange = async (e) => {
           const files = Array.from(e.target.files || []);
           if (files.length === 0) {
-            resolve({ canceled: true, filePaths: [] });
+            resolve(livrosSalvos.length > 0 ? NOME_PASTA_MOBILE : null);
             return;
           }
 
-          const caminhos = [];
           for (const file of files) {
-            const id = "mobile_" + file.name + "_" + file.size;
-            const buffer = await file.arrayBuffer();
-            const uint8 = new Uint8Array(buffer);
-            bibliotecaMobile.buffers.set(id, uint8);
+            // Cria um identificador único e consistente para o arquivo
+            const id = "mobile_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_") + "_" + file.size;
+            const arrayBuffer = await file.arrayBuffer();
+            const uint8 = new Uint8Array(arrayBuffer);
+
+            // Grava o arquivo binário no IndexedDB
+            await salvarBufferNoDB(id, uint8);
 
             const ext = "." + (file.name.split(".").pop() || "").toLowerCase();
+            const nomeSemExt = file.name.replace(/\.[^/.]+$/, "");
             const novoLivro = {
               caminho: id,
               nome: file.name,
-              titulo: file.name.replace(/\.[^/.]+$/, ""),
-              tituloHumanizado: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+              titulo: nomeSemExt,
+              tituloHumanizado: nomeSemExt.replace(/[-_]/g, " "),
               autor: "Desconhecido",
               tamanho: file.size,
-              dataModificacao: new Date(file.lastModified).toISOString(),
+              dataModificacao: new Date(file.lastModified || Date.now()).toISOString(),
               extensao: ext,
               statusLeitura: "nenhum",
               progresso: { paginaAtual: 1, totalPaginas: 1, porcentagem: 0, anotacoes: "" }
             };
 
-            // Evita duplicatas
-            const idx = bibliotecaMobile.livros.findIndex(l => l.caminho === id);
+            const idx = livrosSalvos.findIndex(l => l.caminho === id);
             if (idx >= 0) {
-              bibliotecaMobile.livros[idx] = novoLivro;
+              livrosSalvos[idx] = novoLivro;
             } else {
-              bibliotecaMobile.livros.push(novoLivro);
+              livrosSalvos.push(novoLivro);
             }
-            caminhos.push(id);
           }
 
-          salvarBibliotecaLocal();
+          persistirMetadadosLivros();
           input.value = "";
-          resolve({ canceled: false, filePaths: caminhos });
+          // Retorna o nome da pasta para o renderer.js atualizar o estado
+          resolve(NOME_PASTA_MOBILE);
         };
         input.click();
       });
     },
 
-    definirPasta: async () => {
-      return "📱 Armazenamento do Dispositivo";
-    },
-
-    definirPastaDireta: async () => {
-      return "📱 Armazenamento do Dispositivo";
-    },
+    definirPasta: async () => NOME_PASTA_MOBILE,
+    definirPastaDireta: async () => NOME_PASTA_MOBILE,
 
     lerArquivoBuffer: async (caminho) => {
       if (!caminho) return null;
-      if (bibliotecaMobile.buffers.has(caminho)) {
-        return bibliotecaMobile.buffers.get(caminho);
-      }
-      return null;
+      const buffer = await obterBufferDoDB(caminho);
+      return buffer;
     },
 
     salvarCapaCache: async (caminho, dataUrl) => {
@@ -141,6 +180,7 @@
 
     obterStatusSistema: async () => {
       return {
+        pastaAtual: livrosSalvos.length > 0 ? NOME_PASTA_MOBILE : null,
         sistema: "Capacitor Mobile",
         versaoElectron: "N/A (Mobile)",
         versaoNode: "N/A",
@@ -149,10 +189,10 @@
     },
 
     salvarStatusLeitura: async (caminho, status) => {
-      const livro = bibliotecaMobile.livros.find(l => l.caminho === caminho);
+      const livro = livrosSalvos.find(l => l.caminho === caminho);
       if (livro) {
         livro.statusLeitura = status;
-        salvarBibliotecaLocal();
+        persistirMetadadosLivros();
       }
       try {
         localStorage.setItem("ef_status_" + caminho, status);
@@ -161,10 +201,10 @@
     },
 
     salvarProgressoLeitura: async (caminho, dados) => {
-      const livro = bibliotecaMobile.livros.find(l => l.caminho === caminho);
+      const livro = livrosSalvos.find(l => l.caminho === caminho);
       if (livro) {
         livro.progresso = { ...(livro.progresso || {}), ...dados };
-        salvarBibliotecaLocal();
+        persistirMetadadosLivros();
       }
       try {
         localStorage.setItem("ef_progresso_" + caminho, JSON.stringify(dados));
@@ -183,8 +223,8 @@
 
     buscarEbooks: async (termo = "") => {
       const termoLower = (termo || "").toLowerCase().trim();
-      if (!termoLower) return bibliotecaMobile.livros;
-      return bibliotecaMobile.livros.filter(l => 
+      if (!termoLower) return livrosSalvos;
+      return livrosSalvos.filter(l => 
         (l.titulo && l.titulo.toLowerCase().includes(termoLower)) ||
         (l.autor && l.autor.toLowerCase().includes(termoLower)) ||
         (l.nome && l.nome.toLowerCase().includes(termoLower))
@@ -192,16 +232,13 @@
     },
 
     abrirNoWindows: async (caminho) => {
-      // No mobile, abre direto no leitor interno
-      const livro = bibliotecaMobile.livros.find(l => l.caminho === caminho);
+      const livro = livrosSalvos.find(l => l.caminho === caminho);
       if (livro && window.abrirLeitorInterno) {
         window.abrirLeitorInterno(livro);
       }
     },
 
-    revelarNoExplorer: async () => {
-      return true;
-    },
+    revelarNoExplorer: async () => true,
 
     openExternal: async (url) => {
       if (url) window.open(url, "_blank");
@@ -211,7 +248,6 @@
       try {
         const raw = localStorage.getItem("ef_ia_config");
         if (raw) return JSON.parse(raw);
-        // Busca de bundle local se disponível (ignorado pelo git)
         const res = await fetch("ia_config_bundle.json").catch(() => null);
         if (res && res.ok) {
           const bundle = await res.json().catch(() => null);
@@ -238,7 +274,8 @@
 
     testarConexaoGroq: async (apiKey) => {
       try {
-        const key = (apiKey || (await window.api.obterConfigIA()).apiKey || "").trim();
+        const cfg = await window.api.obterConfigIA();
+        const key = (apiKey || cfg.apiKey || "").trim();
         if (!key) return { success: false, error: "Chave de API não informada." };
 
         const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -336,7 +373,6 @@ ${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : 
       const skill = await window.api.obterSkillLivro(caminho);
       if (!skill) return { success: false, error: "Skill não encontrada." };
       
-      // No mobile/web, baixa o arquivo SKILL.md
       const blob = new Blob([skill.skillMd || ""], { type: "text/markdown;charset=utf-8" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);

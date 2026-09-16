@@ -304,26 +304,26 @@ body[data-theme="light"] .badge-count {
 
 body[data-theme="light"] .book-card {
   background: #ffffff;
-  border-color: rgba(15, 13, 24, 0.14);
-  box-shadow: 0 4px 14px rgba(15, 13, 24, 0.08);
+  border: 1.5px solid #d4cebe;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 body[data-theme="light"] .book-card:hover {
-  border-color: rgba(180, 83, 9, 0.6);
-  box-shadow: 0 12px 28px rgba(15, 13, 24, 0.14), 0 0 16px rgba(180, 83, 9, 0.22);
+  border-color: #b45309;
+  box-shadow: 0 10px 24px rgba(180, 83, 9, 0.22);
 }
 body[data-theme="light"] .book-cover-wrapper {
-  background: #edeae2;
+  background: #eae6dc;
 }
 body[data-theme="light"] .cover-hover-overlay {
-  background: rgba(247, 246, 241, 0.88);
+  background: rgba(255, 255, 255, 0.92);
 }
 body[data-theme="light"] .fav-btn {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(15, 13, 24, 0.18);
+  background: #ffffff;
+  border: 1.5px solid #d4cebe;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 body[data-theme="light"] .fav-btn svg {
-  stroke: #57516d;
+  stroke: #453e5e;
 }
 body[data-theme="light"] .fav-btn:hover {
   background: #ffffff;
@@ -334,7 +334,7 @@ body[data-theme="light"] .fav-btn:hover svg {
   stroke: #b45309;
 }
 body[data-theme="light"] .fav-btn.active {
-  background: rgba(180, 83, 9, 0.14);
+  background: #fffbeb;
   border-color: #b45309;
 }
 body[data-theme="light"] .fav-btn.active svg {
