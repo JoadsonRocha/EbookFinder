@@ -83,7 +83,7 @@ No catálogo de livros do EbookFinder, você pode acionar a destilação de qual
   - Marcador de leitura com campo de anotações e registro da data da última leitura.
 
 - 🖼️ **Extração de Capas e Miniaturas Nativas**:
-  - Extração ultrarrápida em memória para arquivos `.epub` e `.cbz` via descompactação ZIP (zero dependências externas como FFmpeg).
+  - Extração ultrarrápida em memória para arquivos `.epub` e `.cbz` via descompactação ZIP (100% nativa e leve, sem dependências externas).
   - Renderização nativa de páginas iniciais de `.pdf` usando PDF.js e Canvas HTML5.
 
 - 🔍 **Busca em Tempo Real & Suporte Amplo a Formatos**:
