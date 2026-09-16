@@ -66,13 +66,7 @@
         </svg>
       </button>
 
-      <!-- Botão Configuração da IA (Groq) -->
-      <button id="btnConfigIA" class="btn-header" title="Configurações do SkillBook (Groq)">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
-        <span class="btn-label">SkillBook</span>
-      </button>
+      <!-- Botão Trocar Pasta / Biblioteca -->
 
       <button id="btnTrocarPastaHeader" class="btn-header" title="Escolher pasta de e-books">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -139,6 +133,12 @@
     <div class="menu-section">
       <span class="menu-section-title">Opções</span>
       <ul>
+        <li>
+          <button data-action="config-ia" class="menu-item" id="menuItemConfigIA">
+            <span class="item-icon">⚡</span>
+            <span class="item-text">Configurações do SkillBook (Groq)</span>
+          </button>
+        </li>
         <li>
           <button data-action="trocar-pasta" class="menu-item">
             <span class="item-icon">📁</span>

@@ -1745,6 +1745,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (action === "lendo") { alternarAba("lendo"); fecharMenu(); }
     else if (action === "concluidos") { alternarAba("concluidos"); fecharMenu(); }
     else if (action === "quero-ler") { alternarAba("quero-ler"); fecharMenu(); }
+    else if (action === "config-ia") { fecharMenu(); abrirModalConfigIA(); }
     else if (action === "trocar-pasta") { acaoTrocarPasta(); }
     else if (action === "recarregar") { fecharMenu(); carregarBiblioteca(); showToast("Biblioteca recarregada!"); }
     else if (action === "toggle-recursivo") { fecharMenu(); alternarSubpastas(); }
