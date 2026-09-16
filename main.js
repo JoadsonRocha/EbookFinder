@@ -52,12 +52,12 @@ const iaConfigFile = path.join(userDataPath, "ia_config.json");
 function obterConfigIA() {
   if (fs.existsSync(iaConfigFile)) {
     try {
-      return JSON.parse(fs.readFileSync(iaConfigFile, "utf8")) || { apiKey: "", model: "llama-3.3-70b-versatile" };
+      return JSON.parse(fs.readFileSync(iaConfigFile, "utf8")) || { apiKey: "", model: "qwen/qwen3.8-27b" };
     } catch (e) {
       console.error("❌ Erro ao ler ia_config.json:", e);
     }
   }
-  return { apiKey: "", model: "llama-3.3-70b-versatile" };
+  return { apiKey: "", model: "qwen/qwen3.8-27b" };
 }
 
 function salvarConfigIA(cfg) {
@@ -647,7 +647,7 @@ ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "groq/compound-mini",
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 2
       })
@@ -675,7 +675,7 @@ ipcMain.handle("perguntar-groq", async (e, { pergunta, contexto, historico = [],
     };
   }
 
-  const modelToUse = modelo || cfg.model || "llama-3.3-70b-versatile";
+  const modelToUse = modelo || cfg.model || "qwen/qwen3.8-27b";
 
   const systemPrompt = `Você é o Tutor e Mentor de Leitura Especialista integrado ao leitor EbookFinder.
 Seu papel é responder com máxima clareza, empatia e profundidade pedagógica sobre a obra que o usuário está lendo.
