@@ -127,5 +127,15 @@ contextBridge.exposeInMainWorld("api", {
   /**
    * Define diretamente a pasta da biblioteca sem abrir seletor.
    */
-  definirPastaDireta: (caminho) => safeInvoke("definir-pasta-direta", caminho)
+  definirPastaDireta: (caminho) => safeInvoke("definir-pasta-direta", caminho),
+
+  /**
+   * Exporta a pasta da Skill para qualquer local escolhido pelo usuário.
+   */
+  exportarSkillLivro: (dados) => safeInvoke("exportar-skill-livro", dados),
+
+  /**
+   * Revela a pasta da Skill no Windows Explorer.
+   */
+  abrirPastaSkill: (caminho) => safeInvoke("abrir-pasta-skill", caminho)
 });

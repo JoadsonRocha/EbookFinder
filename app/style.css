@@ -492,8 +492,28 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  user-select: none;
+  user-select: auto;
+  -webkit-user-select: text;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Habilitar seleção e cópia de textos em todas as telas */
+p, span, h1, h2, h3, h4, h5, h6,
+.book-title, .book-meta, .meta-size, .meta-ext,
+.book-dialog-body, .book-dialog-info, .modal-filepath, .spec-pill,
+.copilot-chat-feed, .copilot-msg-bubble, .copilot-msg-content,
+.copilot-hero-title, .copilot-hero-subtitle,
+.skill-file-viewer, .skill-markdown-view, .skill-status-texts,
+pre, code, blockquote, label {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Evitar seleção acidental em botões interativos */
+button, .btn-header, .tab-btn, .fav-btn, .card-copilot-badge,
+.menu-toggle, .btn-cover-read, .btn-cover-copilot, .btn-cover-skill, .btn-cover-info {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Custom Scrollbar */

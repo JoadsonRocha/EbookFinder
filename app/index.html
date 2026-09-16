@@ -291,8 +291,8 @@
         <div class="form-group">
           <label for="selectModeloIA" class="form-label">Modelo de IA:</label>
           <select id="selectModeloIA" class="config-select">
-            <option value="qwen/qwen3.8-27b">Qwen 2.5 27B (Recomendado — Raciocínio Profundo em Português)</option>
-            <option value="groq/compound-mini">Groq Compound Mini (Ultra Rápido)</option>
+            <option value="llama-3.1-8b-instant" selected>LLaMA 3.1 8B Instant (Padrão Mini — Ultra Rápido e Estável)</option>
+            <option value="llama-3.3-70b-versatile">LLaMA 3.3 70B Versatile (Raciocínio Avançado)</option>
           </select>
         </div>
 
@@ -448,6 +448,12 @@
               <button id="btnGerarSkillLivro" class="btn-action-skill">
                 ⚡ Gerar Skill do Livro
               </button>
+              <button id="btnExportarSkillDetalhes" class="btn-action-skill" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #10b981;" hidden>
+                📦 Exportar Skill
+              </button>
+              <button id="btnAbrirPastaSkill" class="btn-action-skill" style="background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); color: var(--text-primary);" hidden>
+                📂 Abrir Pasta
+              </button>
             </div>
             <div id="skillProgressBarTrack" class="skill-progress-track" hidden>
               <div id="skillProgressBarFill" class="skill-progress-fill" style="width: 0%;"></div>
@@ -516,7 +522,7 @@
         <div class="copilot-header-actions">
           <div class="copilot-model-pill" id="btnCopilotConfigPill" title="Configurações do modelo e chave Groq">
             <span class="model-sparkle">⚡</span>
-            <span id="copilotModelName">Qwen 2.5 27B</span>
+            <span id="copilotModelName">LLaMA 3.1 8B Mini</span>
           </div>
           <button id="btnCopilotLimparChat" class="btn-copilot-header-tool" title="Limpar conversa e iniciar novo chat">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -527,6 +533,10 @@
           <button id="btnCopilotIndexarObra" class="btn-copilot-header-tool highlight" title="Criar Skill modular desta obra com Book-to-Skill">
             <span>⚡</span>
             <span id="lblCopilotIndexarBtn">Criar Skill</span>
+          </button>
+          <button id="btnCopilotExportarSkill" class="btn-copilot-header-tool" title="Exportar pasta da Skill (SKILL.md, cheatsheet, glossary) para seu computador">
+            <span>📦</span>
+            <span id="lblCopilotExportarBtn">Exportar Skill</span>
           </button>
           <button id="btnFecharCopiloto" class="btn-close-modal" aria-label="Fechar SkillBook">&times;</button>
         </div>

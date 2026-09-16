@@ -10,7 +10,7 @@
  * ============================================================================
  */
 
-const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu, MenuItem } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -65,7 +65,7 @@ function obterConfigIA() {
       if (userCfg && userCfg.apiKey && userCfg.apiKey.trim()) {
         return {
           apiKey: userCfg.apiKey.trim(),
-          model: userCfg.model || "qwen/qwen3.8-27b",
+          model: userCfg.model || "llama-3.1-8b-instant",
           origem: "usuario",
           isBundled: false
         };
@@ -83,7 +83,7 @@ function obterConfigIA() {
         if (bundleCfg && bundleCfg.apiKey && bundleCfg.apiKey.trim()) {
           return {
             apiKey: bundleCfg.apiKey.trim(),
-            model: bundleCfg.model || "qwen/qwen3.8-27b",
+            model: bundleCfg.model || "llama-3.1-8b-instant",
             origem: "msi",
             isBundled: true
           };
@@ -98,13 +98,13 @@ function obterConfigIA() {
   if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim()) {
     return {
       apiKey: process.env.GROQ_API_KEY.trim(),
-      model: process.env.GROQ_MODEL || "qwen/qwen3.8-27b",
+      model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
       origem: "env",
       isBundled: true
     };
   }
 
-  return { apiKey: "", model: "qwen/qwen3.8-27b", origem: "nenhuma", isBundled: false };
+  return { apiKey: "", model: "llama-3.1-8b-instant", origem: "nenhuma", isBundled: false };
 }
 
 function salvarConfigIA(cfg) {
@@ -302,6 +302,33 @@ function createWindow() {
   mainWindow.webContents.on("before-input-event", (event, input) => {
     if (input.key === "F5" || (input.control && input.key.toLowerCase() === "r")) {
       mainWindow.reload();
+    }
+  });
+
+  // Menu de contexto nativo para copiar texto e editar
+  mainWindow.webContents.on("context-menu", (event, params) => {
+    const menu = new Menu();
+
+    if (params.selectionText && params.selectionText.trim().length > 0) {
+      menu.append(new MenuItem({ label: "Copiar", role: "copy" }));
+      menu.append(new MenuItem({ type: "separator" }));
+    }
+
+    if (params.isEditable) {
+      menu.append(new MenuItem({ label: "Desfazer", role: "undo" }));
+      menu.append(new MenuItem({ label: "Refazer", role: "redo" }));
+      menu.append(new MenuItem({ type: "separator" }));
+      menu.append(new MenuItem({ label: "Recortar", role: "cut" }));
+      menu.append(new MenuItem({ label: "Copiar", role: "copy" }));
+      menu.append(new MenuItem({ label: "Colar", role: "paste" }));
+      menu.append(new MenuItem({ type: "separator" }));
+      menu.append(new MenuItem({ label: "Selecionar Tudo", role: "selectAll" }));
+    } else if (!params.selectionText) {
+      menu.append(new MenuItem({ label: "Recarregar (F5)", click: () => mainWindow.reload() }));
+    }
+
+    if (menu.items.length > 0) {
+      menu.popup({ window: mainWindow, x: params.x, y: params.y });
     }
   });
 
@@ -793,7 +820,7 @@ ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "groq/compound-mini",
+        model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 2
       })
@@ -817,11 +844,11 @@ ipcMain.handle("perguntar-groq", async (e, { pergunta, contexto, historico = [],
   if (!key) {
     return {
       success: false,
-      error: "Chave da API Groq não configurada. Clique no botão ⚙️ IA no topo para inserir sua chave gratuita."
+      error: "Chave da API Groq não configurada. Configure no menu de opções."
     };
   }
 
-  const modelToUse = modelo || cfg.model || "qwen/qwen3.8-27b";
+  const modelToUse = modelo || cfg.model || "llama-3.1-8b-instant";
 
   const systemPrompt = `Você é o Tutor e Mentor de Leitura Especialista integrado ao leitor EbookFinder.
 Seu papel é responder com máxima clareza, empatia e profundidade pedagógica sobre a obra que o usuário está lendo.
@@ -911,4 +938,60 @@ ipcMain.handle("salvar-skill-livro", (e, { caminho, titulo, slug, skillMd, cheat
     console.error("❌ Falha ao salvar Skill do livro:", err);
     return false;
   }
+});
+
+ipcMain.handle("exportar-skill-livro", async (e, { caminho, titulo }) => {
+  if (!caminho) return { success: false, error: "Caminho da obra não informado." };
+  const hash = gerarHashCaminho(caminho);
+  const skillPath = path.join(skillsDir, hash);
+
+  if (!fs.existsSync(path.join(skillPath, "SKILL.md"))) {
+    return { success: false, error: "Ainda não existe Skill gerada para este livro." };
+  }
+
+  const nomeBase = (titulo || path.basename(caminho, path.extname(caminho)))
+    .replace(/[<>:"/\\|?*]/g, "_")
+    .trim();
+  const folderName = `Skill_${nomeBase}`.slice(0, 50);
+
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: `Exportar Skill: ${titulo}`,
+    buttonLabel: "Exportar Aqui",
+    properties: ["openDirectory", "createDirectory"]
+  });
+
+  if (res.canceled || !res.filePaths || res.filePaths.length === 0) {
+    return { success: false, canceled: true };
+  }
+
+  const pastaDestino = path.join(res.filePaths[0], folderName);
+
+  try {
+    if (!fs.existsSync(pastaDestino)) fs.mkdirSync(pastaDestino, { recursive: true });
+
+    const arquivos = ["SKILL.md", "cheatsheet.md", "glossary.md"];
+    for (const f of arquivos) {
+      const orig = path.join(skillPath, f);
+      if (fs.existsSync(orig)) {
+        fs.copyFileSync(orig, path.join(pastaDestino, f));
+      }
+    }
+
+    shell.openPath(pastaDestino);
+    return { success: true, pastaDestino };
+  } catch (err) {
+    console.error("Erro ao exportar skill:", err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("abrir-pasta-skill", (e, caminho) => {
+  if (!caminho) return false;
+  const hash = gerarHashCaminho(caminho);
+  const skillPath = path.join(skillsDir, hash);
+  if (fs.existsSync(skillPath)) {
+    shell.openPath(skillPath);
+    return true;
+  }
+  return false;
 });
