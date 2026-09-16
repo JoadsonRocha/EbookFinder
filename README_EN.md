@@ -4,59 +4,104 @@
 
 # 📚 EbookFinder
 
-### Smart Local E-book and Digital Document Organizer & Reader
+### Smart Local E-book & Digital Document Organizer with SkillBook AI & Book-to-Skill
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](./LICENSE.md)
 [![Electron](https://img.shields.io/badge/Electron-39.x-47848F?style=for-the-badge&logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-v24%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Groq LPU](https://img.shields.io/badge/Groq-LPU%20Inference-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
+[![Book to Skill](https://img.shields.io/badge/Architecture-Book--to--Skill-10B981?style=for-the-badge)](https://github.com/virgiliojr94/book-to-skill)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-E5A93B?style=for-the-badge)](./package.json)
+[![Version](https://img.shields.io/badge/Version-1.1.0-E5A93B?style=for-the-badge)](./package.json)
 
 <br />
 
 **[🇧🇷 Português](./README.md)** &nbsp;|&nbsp; **[🇺🇸 English](./README_EN.md)**
 
 <p align="center">
-  <strong>EbookFinder</strong> is a modern desktop app crafted for book lovers and researchers to organize, explore, and read their personal library of digital books, comics, and documents. Featuring instant EPUB/CBZ cover extraction, virtual reading shelves (Currently Reading, Completed, Want to Read), and a rich <em>Bibliophile Dark</em> interface.
+  <strong>EbookFinder</strong> is a modern desktop ecosystem crafted for book lovers, researchers, and builders to organize, explore, study, and transform personal libraries into modular AI skills. Featuring instant cover extraction, virtual reading shelves, high-contrast Dark & Light themes, seamless <strong>Google Drive / OneDrive</strong> auto-detection, and the market-grade <strong>SkillBook AI</strong> workspace.
 </p>
 
 </div>
 
 ---
 
+## ⚡ SkillBook AI & Book-to-Skill Architecture
+
+**SkillBook** is EbookFinder's native intelligence workspace, powered by ultra-fast **Groq LPU** inference (supporting models like *Qwen 2.5 32B*, *LLaMA 3.3 70B*, and *DeepSeek R1 Distill*), enabling contextual interactions and transforming books into machine-actionable skills.
+
+### 🧠 Official Integration with the Book-to-Skill Repository
+EbookFinder adopts and natively implements the architecture specification from **[virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill)**, created by [Virgílio Santos](https://github.com/virgiliojr94).
+
+The **Book-to-Skill** methodology distills entire books (PDF, EPUB, etc.) into a standardized, modular set of three core files:
+
+1. **`SKILL.md`**: Foundational principles, mental models, decision heuristics, and core concepts structured for direct context ingestion by autonomous AI coding and research agents (Antigravity, Claude Code, Cursor, Copilot, etc.).
+2. **`cheatsheet.md`**: Rapid lookup reference sheet containing actionable rules, commands, and best practices.
+3. **`glossary.md`**: Comprehensive technical and conceptual glossary defining all domain-specific terms from the work.
+
+> 🔗 **Official Book-to-Skill Repository**:  
+> Explore the original project and specification at: **[https://github.com/virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill)**
+
+---
+
+### ⚡ Create Skill Directly from the Book Index
+In EbookFinder's main book catalog, you can trigger distillation with a single click:
+- Hover over any book card on the bookshelf and click the **`⚡ Criar Skill`** button.
+- The application extracts the table of contents and sample pages, processes the distillation through Groq LPU, and automatically stores the resulting skill in an associated `.skill/` directory.
+- Inside the **SkillBook** conversational workbench, you can also click **`⚡ Criar Skill`** in the top action bar at any time to reindex or update the knowledge base.
+
+---
+
 ## ✨ Key Features
 
-- ⚡ **Ultra-Fast Cover Extraction (Zero FFmpeg)**: Extracts original cover artwork and metadata from `.epub` and `.cbz` files directly from internal ZIP structures in mere milliseconds.
-- 📖 **Authentic Book Proportions (2:3)**: Card layout designed with realistic 3D book spine shadows and paper aesthetics.
-- 🔖 **Reading Progress & Digital Bookmark**:
-  - Save the last read page and total page count with quick adjustment stepper buttons (`+1`, `+5`, `+10`, `-1`).
-  - Real-time animated progress bar with percentage indicator on both bookshelf cards and the book details dialog.
-  - Custom bookmarks and chapter/reading notes.
-  - Smart status transition: automatically updates to *"Currently Reading"* when started and *"Completed"* when reaching the final page.
-- 📚 **Virtual Reading Shelves**:
-  - 📚 **All Books**: Complete catalog of digital media.
-  - ⭐ **Favorites**: Quick access to your most cherished books.
-  - 📖 **Currently Reading**: Keep your current reads at the forefront.
-  - ✅ **Completed**: Track and celebrate finished books.
-  - 📌 **Want to Read**: Your digital reading wishlist.
-- 🔍 **Real-Time Title & Author Search**: Fast debounce search to instantly locate any author or title.
-- 📂 **Broad Format Support**:
-  - E-books: `.epub`, `.pdf`, `.mobi`, `.azw`, `.azw3`, `.fb2`, `.txt`.
-  - Comic books & Manga: `.cbr`, `.cbz`.
+- ⚡ **SkillBook AI (Market-Grade Conversational Workspace)**:
+  - Clean conversational UI designed with inspirations from ChatGPT, Claude, and Perplexity.
+  - One-click prompt starters (*Executive Summary*, *Key Concepts & Rules*, *Practical Applications*, *Knowledge Quiz*).
+  - Rich Markdown rendering with a 1-click clipboard copy button.
+  - Sub-second latency powered by Groq LPU inference.
+  - Secure API key storage (with native support for bundled MSI installer keys).
+
+- ☁️ **Google Drive & OneDrive Integration**:
+  - Automatic detection of synced cloud drives on Windows:
+    - **Google Drive** (virtual drive `G:\Meu Drive` / `G:\My Drive` or local mirror directories).
+    - **Microsoft OneDrive** (Personal and Commercial).
+    - Default system **Documents**, **Downloads**, and disk drive partitions (`D:`, `E:`, etc.).
+  - Quick-connect chip selector modal.
+
+- 🎨 **Luxury Light & Bibliophile Dark Themes**:
+  - Fast theme switcher in the top navigation bar with persistent local storage.
+  - *Light Mode*: Soft ivory paper background (`#f9f8f4`), deep obsidian ink typography (`#0f0d18`), and high-contrast amber accents.
+  - *Dark Mode*: Immersive Bibliophile Dark palette with glassmorphic cards and golden highlights.
+
+- 📖 **Virtual Bookshelves & Reading Progress**:
+  - Shelves: 📚 *All Books*, ⭐ *Favorites*, 📖 *Currently Reading*, ✅ *Completed*, 📌 *Want to Read*.
+  - Reading progress tracker with page counter, percentage calculation, and quick steppers (`+1`, `+5`, `-1`).
+  - Chapter bookmarks with customizable notes and last-read timestamps.
+
+- 🖼️ **Native Cover Extraction & PDF Thumbnails**:
+  - Zero-dependency, memory-based extraction for `.epub` and `.cbz` files.
+  - Native front-page rendering for `.pdf` documents using Mozilla PDF.js on HTML5 Canvas.
+
+- 🔍 **Real-Time Search & Broad Format Support**:
+  - Instant debounce search by title, author, and file extension.
+  - Formats: `.epub`, `.pdf`, `.mobi`, `.azw`, `.azw3`, `.fb2`, `.txt`, `.cbr`, `.cbz`.
+  - Recursive subfolder search toggle via the main menu.
+
 - 🚀 **Windows OS Integration**:
-  - *Open in System Reader*: Open books in your favorite reader (SumatraPDF, Calibre, Adobe Acrobat, Kindle PC, Edge).
+  - *Open in System Reader*: Launch books in your preferred Windows viewer (SumatraPDF, Calibre, Adobe Acrobat, Edge).
   - *Show in Folder*: Reveal and highlight the source file in Windows File Explorer.
-- 🛡️ **100% Offline and Private**: Zero cloud sync, zero telemetry, and no account or internet connection required.
+  - *Drag and Drop*: Drag any folder or PDF file directly onto the window to instantly load it into your library.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **[Electron](https://www.electronjs.org/)** — Desktop environment built with web technologies.
-- **[Node.js](https://nodejs.org/)** — Fast asynchronous filesystem access and child process management.
-- **[Adm-Zip](https://github.com/cthackers/adm-zip)** — In-memory zip archive decompression for lightning-fast EPUB/CBZ cover extraction.
-- **[HTML5 & Vanilla CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)** — "Bibliophile Dark" design system with warm amber accents.
-- **[JavaScript (ES6+)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)** — Reactive state handling and bookshelf categorization.
+- **[Electron](https://www.electronjs.org/)** — Desktop platform with Windows native integration.
+- **[Node.js](https://nodejs.org/)** — Asynchronous filesystem and OS process control.
+- **[Groq SDK / REST API](https://groq.com/)** — Ultra-fast LPU inference for state-of-the-art LLMs.
+- **[PDF.js](https://mozilla.github.io/pdf.js/)** — Native in-browser PDF cover rendering and text extraction.
+- **[Adm-Zip](https://github.com/cthackers/adm-zip)** — In-memory ZIP archive decompression for EPUB and CBZ files.
+- **[HTML5 & Vanilla CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)** — Handcrafted design system supporting Light & Dark themes without heavy CSS frameworks.
 
 ---
 
@@ -65,13 +110,15 @@
 ```text
 EbookFinder/
 ├── app/                      # User interface (Frontend)
-│   ├── index.html            # Layout and virtual bookshelf tabs
-│   ├── renderer.js           # Shelf management, search & modal viewer
-│   ├── style.css             # Bibliophile Dark theme and book cover styles
+│   ├── index.html            # Main layout and SkillBook workspace
+│   ├── renderer.js           # Shelf management, search, AI and cloud drive logic
+│   ├── style.css             # Light/Dark design system, book cards & modal styling
+│   ├── pdf.min.js            # PDF.js library for cover thumbnail rendering
+│   ├── pdf.worker.min.js     # Web Worker for asynchronous PDF processing
 │   └── ebookFinder.ico       # Application icon
-├── main.js                   # Electron main process & EPUB/CBZ parsers
+├── main.js                   # Electron main process, EPUB/CBZ parsers, IPC & Groq API
 ├── preload.js                # Secure ContextBridge IPC bridge
-├── package.json              # Project manifest and dependencies
+├── package.json              # Project manifest and scripts
 ├── .gitignore                # Git ignore patterns
 ├── LICENSE.md                # GNU General Public License v3.0
 ├── README.md                 # Documentation in Portuguese
@@ -104,16 +151,32 @@ EbookFinder/
    npm start
    ```
 
-4. **Build Windows executable release:**
+4. **Build Windows executable release (.exe / .msi):**
    ```bash
    npm run dist
    ```
 
 ---
 
+## 🔑 Groq API Configuration (Optional)
+
+To enable **SkillBook** conversational intelligence and the **Book-to-Skill** generator:
+1. Obtain a free API key at Groq Console: [https://console.groq.com/keys](https://console.groq.com/keys).
+2. In EbookFinder, click the **⚡ SkillBook** button in the header or assistant settings.
+3. Paste your key and click **Salvar Configurações**.
+4. The key is securely stored locally on your machine.
+
+---
+
+## 📄 Credits and Acknowledgements
+
+- **Book-to-Skill Architecture**: Created by [Virgílio Santos (virgiliojr94)](https://github.com/virgiliojr94). Official repository: **[virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill)**.
+
+---
+
 ## 📄 License
 
-This project is licensed under the **GNU General Public License v3.0 (GNU GPLv3)**. See [LICENSE.md](./LICENSE.md) for full license terms.
+This project is licensed under the **GNU General Public License v3.0 (GNU GPLv3)**. See [LICENSE.md](./LICENSE.md) for full license details.
 
 ---
 

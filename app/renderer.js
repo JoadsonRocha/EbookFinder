@@ -621,9 +621,9 @@ function renderizarGrade(lista) {
         <span class="badge-format">${formato}</span>
         ${statusBadge}
 
-        <button class="card-copilot-badge" title="Conversar com o Copiloto IA deste livro">
+        <button class="card-copilot-badge" title="Conversar com o SkillBook deste livro">
           <span class="copilot-sparkle-icon">✨</span>
-          <span class="copilot-badge-text">Copiloto</span>
+          <span class="copilot-badge-text">SkillBook</span>
         </button>
 
         <button class="fav-btn ${isFav ? "active" : ""}" title="Favoritar">
@@ -633,15 +633,19 @@ function renderizarGrade(lista) {
         </button>
 
         <div class="cover-hover-overlay">
+          <button class="btn-cover-info" title="Ver detalhes da obra">ℹ️</button>
           <button class="btn-cover-read" title="Abrir e ler no Windows">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>Ler</span>
           </button>
-          <button class="btn-cover-copilot" title="Conversar com o Copiloto IA deste livro">
+          <button class="btn-cover-copilot" title="Conversar com o SkillBook deste livro">
             <span>✨</span>
-            <span>Copiloto</span>
+            <span>SkillBook</span>
           </button>
-          <button class="btn-cover-info" title="Ver detalhes da obra">ℹ️</button>
+          <button class="btn-cover-skill" title="Criar Skill deste livro (Book-to-Skill)">
+            <span>⚡</span>
+            <span>Criar Skill</span>
+          </button>
         </div>
         ${progressHtml}
       </div>
@@ -655,7 +659,7 @@ function renderizarGrade(lista) {
       </div>
     `;
 
-    // Ação do Botão Copiloto no Card (Badge Direto e Hover)
+    // Ação do Botão SkillBook no Card (Badge Direto e Hover)
     card.querySelector(".card-copilot-badge")?.addEventListener("click", (e) => {
       e.stopPropagation();
       abrirCopilotoIA(livro);
@@ -664,6 +668,12 @@ function renderizarGrade(lista) {
     card.querySelector(".btn-cover-copilot")?.addEventListener("click", (e) => {
       e.stopPropagation();
       abrirCopilotoIA(livro);
+    });
+
+    // Ação Criar Skill Diretamente do Card (Book-to-Skill)
+    card.querySelector(".btn-cover-skill")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      criarSkillDiretoDoCard(livro);
     });
 
     // Ação do Botão Flutuante de Leitura na Capa
@@ -687,7 +697,7 @@ function renderizarGrade(lista) {
 
     // Clique no Card: Abre o Modal de Detalhes
     card.addEventListener("click", (e) => {
-      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-cover-copilot") || e.target.closest(".card-copilot-badge") || e.target.closest(".btn-cover-info")) return;
+      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-cover-copilot") || e.target.closest(".btn-cover-skill") || e.target.closest(".card-copilot-badge") || e.target.closest(".btn-cover-info")) return;
       abrirModalLivro(livro);
     });
 
@@ -700,6 +710,18 @@ function renderizarGrade(lista) {
 
     grid.appendChild(card);
   });
+}
+
+async function criarSkillDiretoDoCard(livro) {
+  if (!livro) return;
+  state.livroSelecionado = livro;
+  await abrirCopilotoIA(livro);
+  if (state.skillAtual?.temSkill) {
+    showToast(`O livro "${livro.tituloHumanizado || livro.titulo}" já possui Skill modular criada!`);
+  } else {
+    showToast(`Iniciando Book-to-Skill para "${livro.tituloHumanizado || livro.titulo}"...`);
+    executarBookToSkillCopiloto();
+  }
 }
 
 function renderizarEstadoSemPasta() {
@@ -1242,7 +1264,7 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
 
   const cfg = await window.api?.obterConfigIA?.();
   if (!cfg?.apiKey) {
-    showToast("Configure sua chave da API Groq no botão ⚡ Copiloto IA.");
+    showToast("Configure sua chave da API Groq no botão ⚡ SkillBook.");
     abrirModalConfigIA();
     return;
   }
@@ -1431,7 +1453,7 @@ ${textoAmostra.slice(0, 8000)}`;
       });
 
       if (progressFill) progressFill.style.width = "100%";
-      showToast("Obra indexada com sucesso pelo Copiloto IA!");
+      showToast("Skill criada com sucesso pelo SkillBook!");
       state.skillAtual = { temSkill: true, skillMd, cheatsheet, glossary };
       if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
       if (btnIndexar) btnIndexar.textContent = "Reindexar";
@@ -1551,9 +1573,48 @@ function fecharMenu() {
   }
 }
 
-function abrirPopupPasta() {
+async function abrirPopupPasta() {
   const popup = document.getElementById("popupPasta");
   if (popup) popup.hidden = false;
+
+  const section = document.getElementById("cloudDriveSection");
+  const chipsContainer = document.getElementById("cloudDriveChips");
+
+  if (section && chipsContainer && window.api?.detectarLocaisDrive) {
+    try {
+      const locais = await window.api.detectarLocaisDrive();
+      if (locais && locais.length > 0) {
+        chipsContainer.innerHTML = "";
+        locais.forEach(loc => {
+          const chip = document.createElement("button");
+          chip.className = "cloud-drive-chip";
+          chip.type = "button";
+          chip.title = loc.caminho;
+          chip.innerHTML = `
+            <span class="chip-icon">${loc.icone || "☁️"}</span>
+            <span class="chip-name">${loc.nome}</span>
+          `;
+          chip.addEventListener("click", async () => {
+            fecharPopupPasta();
+            fecharMenu();
+            const pastaDefinida = await window.api?.definirPastaDireta?.(loc.caminho);
+            if (pastaDefinida) {
+              state.pastaAtual = pastaDefinida;
+              showToast(`Conectado a ${loc.nome}!`);
+              carregarBiblioteca();
+            }
+          });
+          chipsContainer.appendChild(chip);
+        });
+        section.hidden = false;
+      } else {
+        section.hidden = true;
+      }
+    } catch (err) {
+      console.warn("Falha ao detectar unidades de nuvem:", err);
+      section.hidden = true;
+    }
+  }
 }
 
 function fecharPopupPasta() {
@@ -1922,6 +1983,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.aplicarTema = aplicarTema;
   window.abrirModalConfigIA = abrirModalConfigIA;
   window.abrirCopilotoIA = abrirCopilotoIA;
+  window.abrirSkillBook = abrirCopilotoIA;
+  window.criarSkillDiretoDoCard = criarSkillDiretoDoCard;
 
   carregarBiblioteca();
 });

@@ -851,15 +851,18 @@ main#mainContent {
 }
 
 /* Overlay de Ação Rápida na Capa */
+/* Overlay de Ação Rápida na Capa */
 .cover-hover-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(10, 8, 18, 0.72);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 8, 18, 0.8);
+  backdrop-filter: blur(5px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
+  padding: 10px 8px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -871,20 +874,46 @@ main#mainContent {
   pointer-events: auto;
 }
 
+.btn-cover-info {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+.btn-cover-info:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.12);
+}
+
 .btn-cover-read {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
+  width: 86%;
+  max-width: 120px;
   background: linear-gradient(135deg, #e5a93b, #d97706);
   color: #120e03;
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 6px 14px;
+  padding: 6px 10px;
   border-radius: var(--radius-full);
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(229, 169, 59, 0.45);
+  box-shadow: 0 4px 12px rgba(229, 169, 59, 0.4);
   transform: translateY(4px);
   transition: all 0.2s ease;
 }
@@ -894,28 +923,9 @@ main#mainContent {
 }
 
 .btn-cover-read:hover {
-  transform: scale(1.06) translateY(-1px);
+  transform: scale(1.04) translateY(-1px);
   box-shadow: 0 6px 18px rgba(229, 169, 59, 0.65);
   background: linear-gradient(135deg, #f5b74c, #e5a93b);
-}
-
-.btn-cover-info {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.76rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.btn-cover-info:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
 }
 
 /* Fallback de Capa com Textura de Livro Físico */
@@ -2273,22 +2283,25 @@ body[data-theme="light"] .card-copilot-badge:hover {
   color: #fff;
 }
 
-/* Botão de Copiloto no Hover Overlay */
+/* Botão de SkillBook no Hover Overlay */
 .btn-cover-copilot {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  background: rgba(36, 29, 60, 0.9);
+  width: 86%;
+  max-width: 120px;
+  background: rgba(36, 29, 60, 0.92);
   backdrop-filter: blur(6px);
   color: #fff;
   border: 1px solid rgba(229, 169, 59, 0.45);
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-full);
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   transform: translateY(4px);
   transition: all 0.2s ease;
 }
@@ -2301,8 +2314,43 @@ body[data-theme="light"] .card-copilot-badge:hover {
   background: linear-gradient(135deg, #e5a93b, #d97706);
   color: #120e03;
   border-color: var(--amber);
-  transform: scale(1.06) translateY(-1px);
-  box-shadow: 0 6px 18px var(--amber-glow);
+  transform: scale(1.04) translateY(-1px);
+  box-shadow: 0 6px 16px var(--amber-glow);
+}
+
+/* Botão Criar Skill (Book-to-Skill) no Hover Overlay */
+.btn-cover-skill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 86%;
+  max-width: 120px;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #fff;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.book-card:hover .btn-cover-skill {
+  transform: translateY(0);
+}
+
+.btn-cover-skill:hover {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border-color: #6ee7b7;
+  transform: scale(1.04) translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
 }
 
 /* Botão Copiloto no Modal de Detalhes */
