@@ -26,3 +26,12 @@ desktop.ini
 
 # Antigravity / Gemini logs
 .gemini/
+
+# Android / Capacitor Builds
+.gradle/
+android/.gradle/
+android/app/build/
+android/build/
+*.apk
+*.aab
+

@@ -4433,3 +4433,99 @@ body[data-theme="light"] .about-btn-link {
 body[data-theme="light"] .about-footer {
   background: #f8f9fb;
 }
+
+/* ============================================================
+   RESPONSIVIDADE MOBILE & CAPACITOR (Telas <= 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Layout principal do Leitor */
+  .reader-split-layout {
+    flex-direction: column !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .reader-pdf-viewport {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 10px 4px 60px 4px !important;
+  }
+
+  /* SkillBook como Bottom Sheet (Gaveta Inferior) */
+  #readerSkillSidebar {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 75vh !important;
+    z-index: 100 !important;
+    border-top: 2px solid var(--accent-gold) !important;
+    border-left: none !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6) !important;
+    transform: translateY(0);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    background: #110d22 !important;
+  }
+
+  #readerSkillSidebar.collapsed {
+    transform: translateY(calc(100% - 46px)) !important;
+    display: flex !important; /* Mantém a barra visível para puxar */
+  }
+
+  .reader-sidebar-header {
+    cursor: pointer !important;
+    padding: 12px 16px !important;
+    user-select: none !important;
+    position: relative !important;
+  }
+
+  .reader-sidebar-header::before {
+    content: "";
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 38px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+
+  /* Toolbar do leitor mais compacta */
+  .leitor-toolbar {
+    padding: 0 8px !important;
+    gap: 6px !important;
+  }
+
+  .leitor-btn-back span,
+  .leitor-zoom-controls,
+  .skill-toggle-text,
+  .shortcut-badge {
+    display: none !important;
+  }
+
+  .leitor-book-author {
+    display: none !important;
+  }
+
+  .leitor-book-title {
+    max-width: 120px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Grid da Estante no Celular */
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)) !important;
+    gap: 12px !important;
+    padding: 12px 8px !important;
+  }
+
+  .main-header {
+    padding: 10px !important;
+    flex-wrap: wrap !important;
+  }
+}

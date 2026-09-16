@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EbookFinder</string>
+    <string name="title_activity_main">EbookFinder</string>
+    <string name="package_name">com.joadsonrocha.ebookfinder</string>
+    <string name="custom_url_scheme">com.joadsonrocha.ebookfinder</string>
+</resources>
