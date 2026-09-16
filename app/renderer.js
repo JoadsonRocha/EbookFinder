@@ -922,8 +922,12 @@ async function abrirLeitorInterno(livro) {
     lblModel.textContent = isPro ? "Pro" : "Turbo";
   }
 
-  // Carrega histórico de chat desta obra
-  carregarHistoricoChatLeitor(livro.caminho, tituloLimpo);
+  // Carrega histórico de chat desta obra com proteção
+  try {
+    carregarHistoricoChatLeitor(livro.caminho, tituloLimpo);
+  } catch (errChat) {
+    console.warn("Aviso ao carregar histórico de chat do leitor:", errChat);
+  }
 
   try {
     const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
@@ -940,7 +944,7 @@ async function abrirLeitorInterno(livro) {
       return;
     }
 
-    const uint8Array = new Uint8Array(buffer);
+    const uint8Array = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
     const loadingTask = pdfjs.getDocument({ data: uint8Array });
     const pdfDoc = await loadingTask.promise;
 
@@ -1120,7 +1124,7 @@ function carregarHistoricoChatLeitor(caminhoLivro, tituloObra) {
   const feed = document.getElementById("readerChatFeed");
   if (!feed) return;
 
-  const historico = carregarHistoricoChatStorage(caminhoLivro);
+  const historico = obterHistoricoChatStorage(caminhoLivro);
   if (historico && historico.length > 0) {
     feed.innerHTML = "";
     historico.forEach(msg => {
@@ -1192,7 +1196,7 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
     feed.scrollTop = feed.scrollHeight;
 
     const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
-    const historicoAtual = carregarHistoricoChatStorage(state.leitor.livro.caminho) || [];
+    const historicoAtual = obterHistoricoChatStorage(state.leitor.livro.caminho) || [];
 
     const res = await window.api?.perguntarGroq?.({
       pergunta,
@@ -1693,6 +1697,9 @@ function obterHistoricoChatStorage(caminho) {
     return [];
   }
 }
+
+// Alias para compatibilidade
+const carregarHistoricoChatStorage = obterHistoricoChatStorage;
 
 function salvarHistoricoChatStorage(caminho, historico) {
   try {
