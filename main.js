@@ -40,6 +40,36 @@ if (!fs.existsSync(thumbsDir)) {
   fs.mkdirSync(thumbsDir, { recursive: true });
 }
 
+// Pasta para armazenamento das Skills de IA dos livros
+const skillsDir = path.join(userDataPath, "skills");
+if (!fs.existsSync(skillsDir)) {
+  fs.mkdirSync(skillsDir, { recursive: true });
+}
+
+// Arquivo de configuração da IA (Groq)
+const iaConfigFile = path.join(userDataPath, "ia_config.json");
+
+function obterConfigIA() {
+  if (fs.existsSync(iaConfigFile)) {
+    try {
+      return JSON.parse(fs.readFileSync(iaConfigFile, "utf8")) || { apiKey: "", model: "llama-3.3-70b-versatile" };
+    } catch (e) {
+      console.error("❌ Erro ao ler ia_config.json:", e);
+    }
+  }
+  return { apiKey: "", model: "llama-3.3-70b-versatile" };
+}
+
+function salvarConfigIA(cfg) {
+  try {
+    fs.writeFileSync(iaConfigFile, JSON.stringify(cfg, null, 2));
+    return true;
+  } catch (e) {
+    console.error("❌ Erro ao gravar ia_config.json:", e);
+    return false;
+  }
+}
+
 // Arquivo de configuração da pasta de livros
 const pastaConfigFile = path.join(userDataPath, "pasta_ebooks.json");
 let pastaEbooks = null;
