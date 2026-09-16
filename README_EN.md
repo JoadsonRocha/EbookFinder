@@ -22,6 +22,10 @@
   <strong>EbookFinder</strong> is a modern desktop ecosystem crafted for book lovers, researchers, and builders to organize, explore, study, and transform personal libraries into modular AI skills. Featuring instant cover extraction, virtual reading shelves, high-contrast Dark & Light themes, seamless <strong>Google Drive / OneDrive</strong> auto-detection, and the market-grade <strong>SkillBook AI</strong> workspace.
 </p>
 
+<p align="center">
+  <img src="./Captura%20de%20Tela.png" width="100%" alt="EbookFinder Interface" style="border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.25);" />
+</p>
+
 </div>
 
 ---

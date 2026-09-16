@@ -22,6 +22,10 @@
   O <strong>EbookFinder</strong> é um ecossistema desktop moderno para gerenciar, explorar, estudar e transformar suas coleções de e-books, histórias em quadrinhos e documentos digitais em habilidades modulares de IA. Com extração instantânea de capas, organização por estantes de leitura, modos Claro & Escuro de alto contraste, integração com <strong>Google Drive / OneDrive</strong> e o poderoso assistente <strong>SkillBook IA</strong>.
 </p>
 
+<p align="center">
+  <img src="./Captura%20de%20Tela.png" width="100%" alt="Interface do EbookFinder" style="border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.25);" />
+</p>
+
 </div>
 
 ---
