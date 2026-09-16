@@ -40,6 +40,10 @@
       "oneClick": false,
       "perMachine": false,
       "runAfterFinish": true,
+      "warningsAsErrors": false,
+      "additionalLightArgs": [
+        "-sval"
+      ],
       "upgradeCode": "d4e2d31c-3b95-46f8-9a25-e593439b1a20"
     }
   },
