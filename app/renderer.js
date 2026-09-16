@@ -630,6 +630,11 @@ function renderizarGrade(lista) {
         <span class="badge-format">${formato}</span>
         ${statusBadge}
 
+        <button class="card-copilot-badge" title="Conversar com o Copiloto IA deste livro">
+          <span class="copilot-sparkle-icon">✨</span>
+          <span class="copilot-badge-text">Copiloto</span>
+        </button>
+
         <button class="fav-btn ${isFav ? "active" : ""}" title="Favoritar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="${isFav ? "#e5a93b" : "rgba(255,255,255,0.7)"}">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -640,6 +645,10 @@ function renderizarGrade(lista) {
           <button class="btn-cover-read" title="Abrir e ler no Windows">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>Ler</span>
+          </button>
+          <button class="btn-cover-copilot" title="Conversar com o Copiloto IA deste livro">
+            <span>✨</span>
+            <span>Copiloto</span>
           </button>
           <button class="btn-cover-info" title="Ver detalhes da obra">ℹ️</button>
         </div>
@@ -654,6 +663,17 @@ function renderizarGrade(lista) {
         </div>
       </div>
     `;
+
+    // Ação do Botão Copiloto no Card (Badge Direto e Hover)
+    card.querySelector(".card-copilot-badge")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      abrirCopilotoIA(livro);
+    });
+
+    card.querySelector(".btn-cover-copilot")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      abrirCopilotoIA(livro);
+    });
 
     // Ação do Botão Flutuante de Leitura na Capa
     card.querySelector(".btn-cover-read")?.addEventListener("click", (e) => {
@@ -676,7 +696,7 @@ function renderizarGrade(lista) {
 
     // Clique no Card: Abre o Modal de Detalhes
     card.addEventListener("click", (e) => {
-      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-cover-info")) return;
+      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-cover-copilot") || e.target.closest(".card-copilot-badge") || e.target.closest(".btn-cover-info")) return;
       abrirModalLivro(livro);
     });
 
@@ -802,6 +822,7 @@ function lidarTeclasModal(e) {
   if (e.key === "Escape") {
     fecharModalLivro();
     fecharModalConfigIA();
+    fecharCopilotoIA();
   }
 }
 
@@ -1126,6 +1147,315 @@ function formatarMarkdownSimples(md) {
     .replace(/\n\n/g, "</p><p>")
     .replace(/\n/g, "<br/>");
   return `<p>${html}</p>`;
+}
+
+// ============================================================================
+// 5.3 WORKSPACE DEDICADO DO COPILOTO IA (ESTILO CHATGPT / CLAUDE)
+// ============================================================================
+
+async function abrirCopilotoIA(livro) {
+  if (!livro) return;
+  state.livroSelecionado = livro;
+  state.chatHistorico = [];
+
+  const modal = document.getElementById("modalCopilotoIA");
+  if (!modal) return;
+
+  const tituloLimpo = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
+  const autorLimpo = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
+  const paleta = obterPaletaCapa(livro.titulo || livro.nome);
+
+  // Preenche metadados do livro no cabeçalho
+  const lblTitulo = document.getElementById("copilotModalTitulo");
+  const lblAutor = document.getElementById("copilotModalAutor");
+  const thumbContainer = document.getElementById("copilotHeaderThumb");
+  const greeting = document.getElementById("copilotHeroGreeting");
+  const modelName = document.getElementById("copilotModelName");
+  const badgeStatus = document.getElementById("copilotStatusBadge");
+  const btnIndexar = document.getElementById("lblCopilotIndexarBtn");
+
+  if (lblTitulo) {
+    lblTitulo.textContent = tituloLimpo;
+    lblTitulo.title = `${livro.titulo} (${livro.nome})`;
+  }
+  if (lblAutor) lblAutor.textContent = autorLimpo;
+  if (greeting) greeting.textContent = `Como posso te ajudar com "${tituloLimpo}"?`;
+
+  if (thumbContainer) {
+    if (livro.thumbnail) {
+      thumbContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${tituloLimpo}">`;
+    } else {
+      thumbContainer.innerHTML = `
+        <div class="theme-${paleta.tema}" style="width:100%;height:100%;background:${paleta.bg};border-left:2px solid ${paleta.borda};display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#fff;">
+          📖
+        </div>
+      `;
+    }
+  }
+
+  // Identifica o modelo ativo
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "qwen/qwen3.8-27b" };
+  if (modelName) {
+    const isQwen = (cfg.model || "").includes("qwen");
+    modelName.textContent = isQwen ? "Qwen 2.5 27B" : "Compound Mini";
+  }
+
+  // Verifica se o livro já possui Skill gerada
+  const skillInfo = await window.api?.obterSkillLivro?.(livro.caminho);
+  if (skillInfo?.temSkill) {
+    state.skillAtual = skillInfo;
+    if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
+    if (btnIndexar) btnIndexar.textContent = "Reindexar";
+  } else {
+    state.skillAtual = null;
+    if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot" style="background:#e5a93b;box-shadow:0 0 6px #e5a93b;"></span> Obra Conectada`;
+    if (btnIndexar) btnIndexar.textContent = "Indexar Livro";
+  }
+
+  // Limpa feed e reseta para o estado Hero inicial
+  const heroState = document.getElementById("copilotHeroState");
+  const messagesList = document.getElementById("copilotMessagesList");
+  const quickChips = document.getElementById("copilotQuickChipsBar");
+  const input = document.getElementById("copilotChatInput");
+
+  if (heroState) heroState.hidden = false;
+  if (messagesList) {
+    messagesList.hidden = true;
+    messagesList.innerHTML = "";
+  }
+  if (quickChips) quickChips.hidden = true;
+  if (input) {
+    input.value = "";
+    input.style.height = "auto";
+  }
+
+  modal.hidden = false;
+  setTimeout(() => input?.focus(), 150);
+}
+
+function fecharCopilotoIA() {
+  const modal = document.getElementById("modalCopilotoIA");
+  if (modal) modal.hidden = true;
+}
+
+async function enviarPerguntaCopiloto(textoPergunta = null) {
+  const input = document.getElementById("copilotChatInput");
+  const pergunta = (textoPergunta || input?.value || "").trim();
+  if (!pergunta) return;
+
+  if (input) {
+    input.value = "";
+    input.style.height = "auto";
+    document.getElementById("btnCopilotEnviar")?.classList.remove("active");
+  }
+
+  const cfg = await window.api?.obterConfigIA?.();
+  if (!cfg?.apiKey) {
+    showToast("Configure sua chave da API Groq no botão ⚡ Copiloto IA.");
+    abrirModalConfigIA();
+    return;
+  }
+
+  const heroState = document.getElementById("copilotHeroState");
+  const messagesList = document.getElementById("copilotMessagesList");
+  const quickChips = document.getElementById("copilotQuickChipsBar");
+  const chatFeed = document.getElementById("copilotChatFeed");
+
+  if (heroState) heroState.hidden = true;
+  if (messagesList) messagesList.hidden = false;
+  if (quickChips) quickChips.hidden = false;
+
+  // 1. Balão do Usuário
+  const userRow = document.createElement("div");
+  userRow.className = "copilot-msg-row user";
+  userRow.innerHTML = `
+    <div class="copilot-msg-bubble">
+      <p>${pergunta.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+    </div>
+    <div class="copilot-msg-avatar">👤</div>
+  `;
+  messagesList.appendChild(userRow);
+
+  // 2. Balão de Pensando do Copiloto IA
+  const assistantRow = document.createElement("div");
+  assistantRow.className = "copilot-msg-row assistant";
+  assistantRow.innerHTML = `
+    <div class="copilot-msg-avatar">✨</div>
+    <div class="copilot-msg-bubble">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="copilot-thinking-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span style="font-size:0.78rem; color:var(--text-secondary);">Consultando o conteúdo da obra...</span>
+      </div>
+    </div>
+  `;
+  messagesList.appendChild(assistantRow);
+  if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+
+  state.chatHistorico.push({ role: "user", content: pergunta });
+
+  // Monta contexto completo
+  let contexto = "";
+  if (state.skillAtual?.skillMd) {
+    contexto = `${state.skillAtual.skillMd}\n\n${state.skillAtual.cheatsheet || ""}\n\n${state.skillAtual.glossary || ""}`;
+  } else if (state.livroSelecionado) {
+    contexto = `Obra: ${state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo}\nAutor: ${state.livroSelecionado.autor}\nFormato: ${state.livroSelecionado.extensao}\nProgresso de leitura: Pág. ${state.livroSelecionado.progresso?.paginaAtual || 0}/${state.livroSelecionado.progresso?.totalPaginas || 0}\nAnotações: ${state.livroSelecionado.progresso?.anotacoes || "Nenhuma"}`;
+  }
+
+  const res = await window.api?.perguntarGroq?.({
+    pergunta,
+    contexto,
+    historico: state.chatHistorico
+  });
+
+  if (res?.success && res.resposta) {
+    state.chatHistorico.push({ role: "assistant", content: res.resposta });
+    const formattedHtml = formatarMarkdownSimples(res.resposta);
+    assistantRow.querySelector(".copilot-msg-bubble").innerHTML = `
+      <div class="copilot-msg-content">${formattedHtml}</div>
+      <div class="copilot-msg-actions">
+        <button type="button" class="btn-msg-copy" title="Copiar resposta">
+          <span>📋</span> <span>Copiar</span>
+        </button>
+      </div>
+    `;
+
+    // Ação do Botão Copiar
+    assistantRow.querySelector(".btn-msg-copy")?.addEventListener("click", () => {
+      navigator.clipboard.writeText(res.resposta);
+      showToast("Resposta copiada para a área de transferência!");
+    });
+  } else {
+    assistantRow.querySelector(".copilot-msg-bubble").innerHTML = `
+      <p style="color:#f43f5e; font-weight:600;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>
+    `;
+  }
+
+  if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+}
+
+async function executarBookToSkillCopiloto() {
+  if (!state.livroSelecionado) return;
+  const cfg = await window.api?.obterConfigIA?.();
+  if (!cfg?.apiKey) {
+    showToast("Configure sua chave da API Groq antes de indexar.");
+    abrirModalConfigIA();
+    return;
+  }
+
+  const progressTrack = document.getElementById("copilotIndexProgressTrack");
+  const progressFill = document.getElementById("copilotIndexProgressFill");
+  const progressText = document.getElementById("copilotIndexProgressText");
+  const btnIndexar = document.getElementById("lblCopilotIndexarBtn");
+  const badgeStatus = document.getElementById("copilotStatusBadge");
+
+  if (btnIndexar) btnIndexar.textContent = "Extraindo...";
+  if (progressTrack) progressTrack.hidden = false;
+  if (progressFill) progressFill.style.width = "20%";
+  if (progressText) progressText.textContent = "Lendo páginas da obra para indexação...";
+
+  try {
+    const caminho = state.livroSelecionado.caminho;
+    const titulo = state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo || state.livroSelecionado.nome;
+    let textoAmostra = "";
+
+    if (state.livroSelecionado.extensao === ".pdf" && window.pdfjsLib) {
+      const buffer = await window.api?.lerArquivoBuffer?.(caminho);
+      if (buffer) {
+        const loadingTask = window.pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+        const pdf = await loadingTask.promise;
+        const totalPag = Math.min(pdf.numPages, 30);
+        let textos = [];
+        for (let p = 1; p <= totalPag; p++) {
+          const page = await pdf.getPage(p);
+          const content = await page.getTextContent();
+          const strings = content.items.map(it => it.str).join(" ");
+          if (strings.trim().length > 30) {
+            textos.push(`[Pág ${p}] ${strings.slice(0, 1000)}`);
+          }
+          if (progressFill) progressFill.style.width = `${20 + Math.round((p / totalPag) * 45)}%`;
+        }
+        textoAmostra = textos.join("\n\n");
+      }
+    }
+
+    if (!textoAmostra) {
+      const nomeBase = (caminho || "").split(/[\\/]/).pop();
+      textoAmostra = `Obra: ${titulo}. Autor: ${state.livroSelecionado.autor || "Não informado"}. Tamanho: ${state.livroSelecionado.tamanho} bytes. Arquivo: ${nomeBase}.`;
+    }
+
+    if (progressFill) progressFill.style.width = "75%";
+    if (progressText) progressText.textContent = "Destilando conhecimento modular com a Groq...";
+
+    const promptDestilacao = `Você é o compilador da arquitetura book-to-skill para a obra "${titulo}".
+Gere uma destilação modular técnica e profunda nos 3 blocos abaixo rigorosamente separados:
+
+===SKILL.MD===
+# Livro: ${titulo}
+## Visão Geral e Tópicos Fundamentais
+(Escreva os 5 princípios mais importantes da obra)
+
+===CHEATSHEET.MD===
+# Cola Rápida e Regras Práticas
+(Tópicos práticos, comandos ou regras do livro)
+
+===GLOSSARY.MD===
+# Glossário de Termos e Conceitos
+(Definições dos termos-chave)
+
+TEXTO DA OBRA EXTRAÍDO:
+${textoAmostra.slice(0, 8000)}`;
+
+    const resIA = await window.api?.perguntarGroq?.({
+      pergunta: promptDestilacao,
+      contexto: "",
+      modelo: cfg.model || "qwen/qwen3.8-27b"
+    });
+
+    if (resIA?.success && resIA.resposta) {
+      const resp = resIA.resposta;
+      let skillMd = "";
+      let cheatsheet = "";
+      let glossary = "";
+
+      const p1 = resp.indexOf("===SKILL.MD===");
+      const p2 = resp.indexOf("===CHEATSHEET.MD===");
+      const p3 = resp.indexOf("===GLOSSARY.MD===");
+
+      if (p1 !== -1 && p2 !== -1 && p3 !== -1) {
+        skillMd = resp.slice(p1 + 14, p2).trim();
+        cheatsheet = resp.slice(p2 + 19, p3).trim();
+        glossary = resp.slice(p3 + 17).trim();
+      } else {
+        skillMd = resp;
+      }
+
+      await window.api?.salvarSkillLivro?.({
+        caminho,
+        titulo,
+        skillMd,
+        cheatsheet,
+        glossary
+      });
+
+      if (progressFill) progressFill.style.width = "100%";
+      showToast("Obra indexada com sucesso pelo Copiloto IA!");
+      state.skillAtual = { temSkill: true, skillMd, cheatsheet, glossary };
+      if (badgeStatus) badgeStatus.innerHTML = `<span class="live-dot"></span> Obra Indexada (30 págs)`;
+      if (btnIndexar) btnIndexar.textContent = "Reindexar";
+    } else {
+      throw new Error(resIA?.error || "Falha ao sintetizar com o Groq.");
+    }
+  } catch (err) {
+    console.error("Erro no book-to-skill:", err);
+    showToast(`Erro na indexação: ${err.message}`);
+  } finally {
+    if (btnIndexar && btnIndexar.textContent === "Extraindo...") {
+      btnIndexar.textContent = state.skillAtual?.temSkill ? "Reindexar" : "Indexar Livro";
+    }
+    setTimeout(() => { if (progressTrack) progressTrack.hidden = true; }, 1600);
+  }
 }
 
 async function atualizarStatusLeitura(status) {
@@ -1532,12 +1862,75 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // ============================================================
+  // EVENTOS DO COPILOTO IA DEDICADO (WORKBENCH CHATGPT STYLE)
+  // ============================================================
+  document.getElementById("btnAbrirCopilotoModal")?.addEventListener("click", () => {
+    if (state.livroSelecionado) {
+      const livro = state.livroSelecionado;
+      fecharModalLivro();
+      abrirCopilotoIA(livro);
+    }
+  });
+
+  document.getElementById("btnFecharCopiloto")?.addEventListener("click", fecharCopilotoIA);
+  document.getElementById("modalCopilotoIA")?.addEventListener("click", (e) => {
+    if (e.target.id === "modalCopilotoIA") fecharCopilotoIA();
+  });
+
+  const copilotInput = document.getElementById("copilotChatInput");
+  const btnCopilotSend = document.getElementById("btnCopilotEnviar");
+
+  if (copilotInput) {
+    copilotInput.addEventListener("input", () => {
+      copilotInput.style.height = "auto";
+      copilotInput.style.height = Math.min(copilotInput.scrollHeight, 120) + "px";
+      if (btnCopilotSend) btnCopilotSend.classList.toggle("active", copilotInput.value.trim().length > 0);
+    });
+
+    copilotInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        enviarPerguntaCopiloto();
+      }
+    });
+  }
+
+  btnCopilotSend?.addEventListener("click", () => enviarPerguntaCopiloto());
+
+  document.querySelectorAll(".copilot-prompt-card").forEach(card => {
+    card.addEventListener("click", () => {
+      enviarPerguntaCopiloto(card.dataset.prompt);
+    });
+  });
+
+  document.querySelectorAll(".copilot-mini-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      enviarPerguntaCopiloto(chip.dataset.prompt);
+    });
+  });
+
+  document.getElementById("btnCopilotLimparChat")?.addEventListener("click", () => {
+    state.chatHistorico = [];
+    const heroState = document.getElementById("copilotHeroState");
+    const messagesList = document.getElementById("copilotMessagesList");
+    const quickChips = document.getElementById("copilotQuickChipsBar");
+    if (heroState) heroState.hidden = false;
+    if (messagesList) { messagesList.hidden = true; messagesList.innerHTML = ""; }
+    if (quickChips) quickChips.hidden = true;
+    showToast("Nova conversa iniciada!");
+  });
+
+  document.getElementById("btnCopilotIndexarObra")?.addEventListener("click", executarBookToSkillCopiloto);
+  document.getElementById("btnCopilotConfigPill")?.addEventListener("click", abrirModalConfigIA);
+
   window.alternarAba = alternarAba;
   window.abrirPopupPasta = abrirPopupPasta;
   window.alternarSubpastas = alternarSubpastas;
   window.aplicarModoVisualizacao = aplicarModoVisualizacao;
   window.aplicarTema = aplicarTema;
   window.abrirModalConfigIA = abrirModalConfigIA;
+  window.abrirCopilotoIA = abrirCopilotoIA;
 
   carregarBiblioteca();
 });

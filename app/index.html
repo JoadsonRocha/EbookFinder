@@ -67,11 +67,11 @@
       </button>
 
       <!-- Botão Configuração da IA (Groq) -->
-      <button id="btnConfigIA" class="btn-header" title="Configurar Tutor IA (Groq)">
+      <button id="btnConfigIA" class="btn-header" title="Configurações do Copiloto IA (Groq)">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
         </svg>
-        <span class="btn-label">Tutor IA</span>
+        <span class="btn-label">Copiloto IA</span>
       </button>
 
       <button id="btnTrocarPastaHeader" class="btn-header" title="Escolher pasta de e-books">
@@ -329,7 +329,7 @@
           <span class="dialog-badge" id="modalBadgeFormato">EPUB</span>
           <div class="dialog-tab-switch">
             <button class="dialog-tab-btn active" id="tabBtnDetalhes" data-tab="detalhes">📖 Detalhes</button>
-            <button class="dialog-tab-btn" id="tabBtnTutorIA" data-tab="tutor">🤖 Tutor IA</button>
+            <button class="dialog-tab-btn" id="tabBtnTutorIA" data-tab="tutor">✨ Copiloto IA</button>
           </div>
         </div>
         <button id="btnFecharModal" class="btn-close-modal" aria-label="Fechar detalhes">&times;</button>
@@ -420,6 +420,10 @@
 
           <!-- Ações Principais -->
           <div class="book-dialog-actions">
+            <button id="btnAbrirCopilotoModal" class="btn-copilot-action" title="Abrir Copiloto IA deste livro">
+              <span class="copilot-sparkle">✨</span>
+              <span>Copiloto IA</span>
+            </button>
             <button id="btnAbrirLeitorWindows" class="btn-primary-action">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -490,6 +494,133 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL DEDICADO: COPILOTO IA DO LIVRO (ESTILO MARKET AI)
+       ============================================================ -->
+  <div id="modalCopilotoIA" class="modal-backdrop" hidden>
+    <div class="copilot-workspace">
+      <!-- Cabeçalho Superior Estilo ChatGPT / Claude / Perplexity -->
+      <div class="copilot-header">
+        <div class="copilot-header-book">
+          <div class="copilot-cover-thumb" id="copilotHeaderThumb">
+            <!-- Miniatura da Capa injetada via JS -->
+          </div>
+          <div class="copilot-book-meta">
+            <div class="copilot-book-title-row">
+              <h3 id="copilotModalTitulo" class="copilot-book-title">Título do Livro</h3>
+              <span class="copilot-live-badge" id="copilotStatusBadge">
+                <span class="live-dot"></span> Obra Conectada
+              </span>
+            </div>
+            <p id="copilotModalAutor" class="copilot-book-author">Autor da Obra</p>
+          </div>
+        </div>
+
+        <div class="copilot-header-actions">
+          <div class="copilot-model-pill" id="btnCopilotConfigPill" title="Configurações do modelo e chave Groq">
+            <span class="model-sparkle">⚡</span>
+            <span id="copilotModelName">Qwen 2.5 27B</span>
+          </div>
+          <button id="btnCopilotLimparChat" class="btn-copilot-header-tool" title="Limpar conversa e iniciar novo chat">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Novo Chat</span>
+          </button>
+          <button id="btnCopilotIndexarObra" class="btn-copilot-header-tool highlight" title="Destilar livro em Skill modular para respostas sem alucinações (Book-to-Skill)">
+            <span>✨</span>
+            <span id="lblCopilotIndexarBtn">Indexar Livro</span>
+          </button>
+          <button id="btnFecharCopiloto" class="btn-close-modal" aria-label="Fechar Copiloto">&times;</button>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso da Indexação (Book-to-Skill) -->
+      <div id="copilotIndexProgressTrack" class="copilot-index-progress-track" hidden>
+        <div id="copilotIndexProgressFill" class="copilot-index-progress-fill" style="width: 0%;"></div>
+        <span id="copilotIndexProgressText" class="copilot-index-progress-text">Lendo páginas e indexando com a Groq...</span>
+      </div>
+
+      <!-- Feed Principal de Conversa -->
+      <div id="copilotChatFeed" class="copilot-chat-feed">
+        <!-- Hero / Empty State Inicial -->
+        <div id="copilotHeroState" class="copilot-hero-state">
+          <div class="copilot-hero-icon-wrap">
+            <div class="copilot-hero-icon">✨</div>
+          </div>
+          <h2 class="copilot-hero-title" id="copilotHeroGreeting">Como posso te ajudar com este livro hoje?</h2>
+          <p class="copilot-hero-subtitle">Pergunte qualquer conceito, peça sínteses estruturadas ou tire dúvidas com base no conteúdo real desta obra.</p>
+
+          <!-- Grade de Prompts Iniciais / Sugestões -->
+          <div class="copilot-prompt-grid">
+            <button class="copilot-prompt-card" data-prompt="Faça um resumo executivo estruturado com os pontos e lições mais importantes deste livro.">
+              <div class="prompt-icon">📑</div>
+              <div class="prompt-texts">
+                <strong>Resumo Executivo</strong>
+                <span>Pontos e lições centrais em tópicos</span>
+              </div>
+            </button>
+            <button class="copilot-prompt-card" data-prompt="Quais são os principais conceitos, técnicas e regras práticas ensinadas nesta obra?">
+              <div class="prompt-icon">🧠</div>
+              <div class="prompt-texts">
+                <strong>Conceitos & Regras</strong>
+                <span>Definições e métodos essenciais</span>
+              </div>
+            </button>
+            <button class="copilot-prompt-card" data-prompt="Como posso aplicar os ensinamentos deste livro no meu dia a dia profissional e prático?">
+              <div class="prompt-icon">🎯</div>
+              <div class="prompt-texts">
+                <strong>Aplicação Prática</strong>
+                <span>Guia passo a passo de ação</span>
+              </div>
+            </button>
+            <button class="copilot-prompt-card" data-prompt="Crie um quiz com 3 perguntas práticas para testar meu aprendizado sobre este livro.">
+              <div class="prompt-icon">❓</div>
+              <div class="prompt-texts">
+                <strong>Quiz de Fixação</strong>
+                <span>Perguntas para testar compreensão</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista Dinâmica de Balões de Mensagem -->
+        <div id="copilotMessagesList" class="copilot-messages-list" hidden>
+          <!-- Mensagens injetadas via JS -->
+        </div>
+      </div>
+
+      <!-- Rodapé / Barra de Entrada Estilo ChatGPT / Claude -->
+      <div class="copilot-footer">
+        <!-- Chips Rápidos em Linha (durante a conversa) -->
+        <div class="copilot-quick-chips-bar" id="copilotQuickChipsBar" hidden>
+          <button class="copilot-mini-chip" data-prompt="Explique de forma mais simples e didática.">💡 Simplificar</button>
+          <button class="copilot-mini-chip" data-prompt="Dê um exemplo prático do mundo real sobre isso.">🔍 Exemplo Real</button>
+          <button class="copilot-mini-chip" data-prompt="Quais são os erros mais comuns cometidos nesse tema?">⚠️ Erros Comuns</button>
+          <button class="copilot-mini-chip" data-prompt="O que o autor recomenda fazer em seguida?">➡️ Próximos Passos</button>
+        </div>
+
+        <div class="copilot-input-card">
+          <textarea 
+            id="copilotChatInput" 
+            class="copilot-textarea" 
+            placeholder="Pergunte qualquer coisa sobre este livro... (Enter para enviar, Shift+Enter para quebra de linha)"
+            rows="1"
+          ></textarea>
+          <button id="btnCopilotEnviar" class="btn-copilot-send" title="Enviar pergunta">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </button>
+        </div>
+        <p class="copilot-disclaimer">
+          O Copiloto IA responde com base no texto, índice e conhecimento desta obra • Alimentado pela Groq LPU
+        </p>
       </div>
     </div>
   </div>
