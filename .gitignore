@@ -10,6 +10,9 @@ out/
 # Dados locais e temporarios
 thumbs/
 pasta.json
+ia_config.json
+.env*
+*.env
 *.log
 
 # Sistema Operacional
