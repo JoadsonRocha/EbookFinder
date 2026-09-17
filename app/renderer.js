@@ -1004,8 +1004,22 @@ async function abrirLeitorInterno(livro) {
       state.leitor.paginaAtual = 1;
     }
 
+    // Pré-calcula a escala ideal para a tela (evita render duplo e piscas)
+    try {
+      const pageInit = await pdfDoc.getPage(state.leitor.paginaAtual);
+      state.leitor.paginaObj = pageInit;
+      const unscaled = pageInit.getViewport({ scale: 1 });
+      const viewportEl = document.getElementById("readerPdfViewport");
+      const margem = isMobile ? 0 : 40;
+      const larguraDisponivel = (viewportEl?.clientWidth || window.innerWidth) - margem;
+      if (larguraDisponivel > 50 && unscaled.width > 0) {
+        state.leitor.escala = Math.max(0.35, Math.min(3.5, larguraDisponivel / unscaled.width));
+      }
+    } catch (eCalc) {
+      console.warn("Aviso no pré-cálculo da escala:", eCalc);
+    }
+
     await renderizarPaginaLeitor(state.leitor.paginaAtual);
-    ajustarLarguraLeitor();
     configurarGestosTouchLeitor();
   } catch (err) {
     console.error("Erro ao abrir PDF no leitor interno:", err);
