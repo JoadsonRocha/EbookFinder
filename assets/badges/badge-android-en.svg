@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="225" height="64" viewBox="0 0 225 64" fill="none">
+  <defs>
+    <linearGradient id="droid-bg-en" x1="0" y1="0" x2="225" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0c0a17"/>
+      <stop offset="100%" stop-color="#161226"/>
+    </linearGradient>
+    <linearGradient id="droid-border-en" x1="0" y1="0" x2="225" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3DDC84"/>
+      <stop offset="50%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#00C9FF"/>
+    </linearGradient>
+
+    <linearGradient id="play-blue-en" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0%" stop-color="#00A0FF"/>
+      <stop offset="100%" stop-color="#00D2FF"/>
+    </linearGradient>
+    <linearGradient id="play-green-en" x1="0" y1="1" x2="0.8" y2="0.2">
+      <stop offset="0%" stop-color="#00E676"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+    <linearGradient id="play-red-en" x1="0" y1="0" x2="0.8" y2="0.8">
+      <stop offset="0%" stop-color="#FF334B"/>
+      <stop offset="100%" stop-color="#FF5252"/>
+    </linearGradient>
+    <linearGradient id="play-yellow-en" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFD600"/>
+      <stop offset="100%" stop-color="#FFA000"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="223" height="62" rx="14" fill="url(#droid-bg-en)" stroke="url(#droid-border-en)" stroke-width="1.8"/>
+
+  <g transform="translate(18, 17)">
+    <path d="M1.2 1.5 L19.5 15 L1.2 28.5 C0.8 28.1 0.5 27.4 0.5 26.5 L0.5 3.5 C0.5 2.6 0.8 1.9 1.2 1.5 Z" fill="url(#play-blue-en)"/>
+    <path d="M19.5 15 L25.5 19.5 L1.2 1.5 L19.5 15 Z" fill="url(#play-green-en)"/>
+    <path d="M1.2 28.5 L25.5 10.5 L19.5 15 L1.2 28.5 Z" fill="url(#play-red-en)"/>
+    <path d="M19.5 15 L28 20.8 C29.2 21.6 29.2 22.8 28 23.6 L25.5 25.2 L19.5 15 Z" fill="url(#play-yellow-en)"/>
+  </g>
+
+  <text x="62" y="24" fill="#9DA3BA" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="10" font-weight="600" letter-spacing="1">DOWNLOAD FOR</text>
+  <text x="62" y="47" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="19" font-weight="800" letter-spacing="0.3">Android</text>
+
+  <rect x="160" y="31" width="48" height="19" rx="5" fill="#3DDC84" fill-opacity="0.22" stroke="#3DDC84" stroke-width="1"/>
+  <text x="184" y="44" fill="#3DDC84" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">.APK</text>
+</svg>

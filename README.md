@@ -24,6 +24,29 @@
   O <strong>EbookFinder</strong> é um ecossistema moderno para <strong>Windows Desktop e Android Mobile</strong> projetado para gerenciar, explorar, estudar e transformar suas coleções de e-books, histórias em quadrinhos e documentos digitais em habilidades modulares de IA. Com extração instantânea de capas, organização por estantes de leitura, modos Claro & Escuro de alto contraste, integração com <strong>Google Drive / OneDrive</strong> e o poderoso assistente <strong>SkillBook IA</strong>.
 </p>
 
+<!-- BOTÕES DE DOWNLOAD PRINCIPAIS (1 CLIQUE) -->
+<p align="center">
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.1.0.0.msi" title="Baixar Instalador Oficial para Windows (.MSI Direto)">
+    <img src="./assets/badges/badge-windows.svg" height="54" alt="Download para Windows (.MSI Direto)" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.apk" title="Baixar Aplicativo para Android (.APK Direto)">
+    <img src="./assets/badges/badge-android.svg" height="54" alt="Download para Android (.APK Direto)" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.1.0.0.msi" title="Download para Windows">
+    <img src="./assets/badges/badge-microsoft.svg" height="46" alt="Disponível na Microsoft" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.apk" title="Download para Android">
+    <img src="./assets/badges/badge-google-play.svg" height="46" alt="Disponível no Google Play" />
+  </a>
+</p>
+
+<br />
+
 <p align="center">
   <img src="./Captura%20de%20Tela.png" width="100%" alt="Interface do EbookFinder" style="border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.25);" />
 </p>
@@ -32,14 +55,16 @@
 
 ---
 
-## 📦 Downloads & Releases Oficiais (Windows & Android)
+## 📦 Downloads & Instalação Direta (Windows & Android)
 
-Você pode baixar os executáveis prontos para uso direto na página de **[GitHub Releases](https://github.com/JoadsonRocha/EbookFinder/releases)**:
+Baixe os instaladores oficiais prontos para uso com **download direto em 1 clique**:
 
-| Plataforma | Pacote | Descrição | Download |
-| :--- | :--- | :--- | :--- |
-| **Windows Desktop** | **`EbookFinder.1.0.0.msi`** | Instalador oficial para Windows com atalhos, suporte offline e chave de IA integrada | [⬇️ Baixar .MSI Direto](https://github.com/JoadsonRocha/EbookFinder/releases/download/1.0.0/EbookFinder.1.0.0.msi) |
-| **Android Mobile** | **`EbookFinder.apk`** | Aplicativo móvel para celulares e tablets Android com leitor touch (zoom/tela cheia) e IndexedDB | [📦 Baixar no Releases](https://github.com/JoadsonRocha/EbookFinder/releases) |
+| Plataforma | Pacote | Versão | Arquitetura | Download Direto (1 Clique) |
+| :--- | :--- | :--- | :--- | :--- |
+| 🪟 **Windows Desktop** | **`EbookFinder.1.0.0.msi`** | v1.1.0 | 64-bit (Win 10/11) | [⬇️ **Baixar .MSI Direto**](https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.1.0.0.msi) |
+| 🤖 **Android Mobile** | **`EbookFinder.apk`** | v1.1.0 | ARM64 / Universal | [⬇️ **Baixar .APK Direto**](https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.apk) |
+
+> 💡 **Nota de Instalação no Android:** Ao baixar o arquivo `.apk` no seu celular ou tablet, basta abrir a notificação de download ou o gerenciador de arquivos e confirmar a instalação (habilite "Instalar fontes desconhecidas" caso o navegador solicite).
 
 ---
 

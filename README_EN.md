@@ -24,6 +24,29 @@
   <strong>EbookFinder</strong> is a modern ecosystem for <strong>Windows Desktop and Android Mobile</strong> crafted for book lovers, researchers, and builders to organize, explore, study, and transform personal libraries into modular AI skills. Featuring instant cover extraction, virtual reading shelves, high-contrast Dark & Light themes, seamless <strong>Google Drive / OneDrive</strong> auto-detection, and the market-grade <strong>SkillBook AI</strong> workspace.
 </p>
 
+<!-- MAIN DOWNLOAD BUTTONS (1-CLICK DIRECT) -->
+<p align="center">
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.1.0.0.msi" title="Download Official Windows Installer (.MSI Direct)">
+    <img src="./assets/badges/badge-windows-en.svg" height="54" alt="Download for Windows (.MSI Direct)" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.apk" title="Download Android Application (.APK Direct)">
+    <img src="./assets/badges/badge-android-en.svg" height="54" alt="Download for Android (.APK Direct)" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.1.0.0.msi" title="Download for Windows">
+    <img src="./assets/badges/badge-microsoft.svg" height="46" alt="Available on Microsoft" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.apk" title="Download for Android">
+    <img src="./assets/badges/badge-google-play.svg" height="46" alt="Available on Google Play" />
+  </a>
+</p>
+
+<br />
+
 <p align="center">
   <img src="./Captura%20de%20Tela.png" width="100%" alt="EbookFinder Interface" style="border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.25);" />
 </p>
@@ -32,14 +55,16 @@
 
 ---
 
-## 📦 Official Downloads & Releases (Windows & Android)
+## 📦 Official Downloads & Direct Installation (Windows & Android)
 
-Ready-to-use release binaries can be downloaded directly from the **[GitHub Releases](https://github.com/JoadsonRocha/EbookFinder/releases)** page:
+Download official binaries with **1-click direct download**:
 
-| Platform | Package | Description | Download |
-| :--- | :--- | :--- | :--- |
-| **Windows Desktop** | **`EbookFinder.1.0.0.msi`** | Official Windows installer with Start menu integration, offline support & bundled AI key | [⬇️ Direct .MSI Download](https://github.com/JoadsonRocha/EbookFinder/releases/download/1.0.0/EbookFinder.1.0.0.msi) |
-| **Android Mobile** | **`EbookFinder.apk`** | Mobile application for Android phones and tablets with swipe touch gestures and IndexedDB | [📦 Download on Releases](https://github.com/JoadsonRocha/EbookFinder/releases) |
+| Platform | Package | Version | Architecture | Direct Download (1-Click) |
+| :--- | :--- | :--- | :--- | :--- |
+| 🪟 **Windows Desktop** | **`EbookFinder.1.0.0.msi`** | v1.1.0 | 64-bit (Win 10/11) | [⬇️ **Direct .MSI Download**](https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.1.0.0.msi) |
+| 🤖 **Android Mobile** | **`EbookFinder.apk`** | v1.1.0 | ARM64 / Universal | [⬇️ **Direct .APK Download**](https://github.com/JoadsonRocha/EbookFinder/releases/download/mobile/EbookFinder.apk) |
+
+> 💡 **Android Installation Note:** When downloading `.apk` on your phone or tablet, simply tap the download notification or open your file manager to install (enable "Install unknown apps" if prompted by your browser).
 
 ---
 
