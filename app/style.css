@@ -1280,6 +1280,14 @@ main#mainContent {
   margin-top: 4px;
 }
 
+body.is-mobile-app .book-card .meta-size {
+  display: none !important;
+}
+
+body.is-mobile-app .card-reading-meta-bar {
+  justify-content: flex-start !important;
+}
+
 .card-status-pill {
   font-size: 0.66rem;
   font-weight: 700;
@@ -4831,6 +4839,15 @@ body[data-theme="light"] .about-footer {
 
   .book-meta {
     font-size: 0.72rem !important;
+  }
+
+  /* No mobile, retira os MBs do PDF nos cards para maior clareza visual */
+  .book-card .meta-size {
+    display: none !important;
+  }
+
+  .card-reading-meta-bar {
+    justify-content: flex-start !important;
   }
 
   .fav-btn {
