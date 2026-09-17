@@ -3932,6 +3932,7 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 }
 
 /* Viewport do PDF */
+/* Viewport do PDF */
 .reader-pdf-viewport {
   flex: 1;
   overflow-y: auto;
@@ -3939,6 +3940,8 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  text-align: center;
   padding: 24px 20px 80px 20px;
   background: #13101d;
   position: relative;
@@ -3950,6 +3953,8 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
   position: relative;
   display: inline-flex;
   justify-content: center;
+  align-items: center;
+  margin: auto !important; /* Centraliza perfeitamente tanto horizontal quanto verticalmente */
   box-shadow: 0 14px 50px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
   border-radius: 4px;
   background: #ffffff;
@@ -3959,6 +3964,7 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 
 .reader-pdf-canvas {
   display: block;
+  margin: 0 auto !important;
   border-radius: 4px;
 }
 
