@@ -38,8 +38,8 @@ Você pode baixar os executáveis prontos para uso direto na página de **[GitHu
 
 | Plataforma | Pacote | Descrição | Download |
 | :--- | :--- | :--- | :--- |
-| **Windows Desktop** | **`EbookFinder.msi`** | Instalador oficial para Windows com atalhos, suporte offline e chave de IA integrada | [Baixar .MSI](https://github.com/JoadsonRocha/EbookFinder/releases) |
-| **Android Mobile** | **`EbookFinder.apk`** | Aplicativo móvel para celulares e tablets Android com leitor touch (swipe) e IndexedDB | [Baixar .APK](https://github.com/JoadsonRocha/EbookFinder/releases) |
+| **Windows Desktop** | **`EbookFinder.1.0.0.msi`** | Instalador oficial para Windows com atalhos, suporte offline e chave de IA integrada | [⬇️ Baixar .MSI Direto](https://github.com/JoadsonRocha/EbookFinder/releases/download/1.0.0/EbookFinder.1.0.0.msi) |
+| **Android Mobile** | **`EbookFinder.apk`** | Aplicativo móvel para celulares e tablets Android com leitor touch (zoom/tela cheia) e IndexedDB | [📦 Baixar no Releases](https://github.com/JoadsonRocha/EbookFinder/releases) |
 
 ---
 

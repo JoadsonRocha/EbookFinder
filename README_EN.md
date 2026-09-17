@@ -38,8 +38,8 @@ Ready-to-use release binaries can be downloaded directly from the **[GitHub Rele
 
 | Platform | Package | Description | Download |
 | :--- | :--- | :--- | :--- |
-| **Windows Desktop** | **`EbookFinder.msi`** | Official Windows installer with Start menu integration, offline support & bundled AI key | [Download .MSI](https://github.com/JoadsonRocha/EbookFinder/releases) |
-| **Android Mobile** | **`EbookFinder.apk`** | Mobile application for Android phones and tablets with swipe touch gestures and IndexedDB | [Download .APK](https://github.com/JoadsonRocha/EbookFinder/releases) |
+| **Windows Desktop** | **`EbookFinder.1.0.0.msi`** | Official Windows installer with Start menu integration, offline support & bundled AI key | [⬇️ Direct .MSI Download](https://github.com/JoadsonRocha/EbookFinder/releases/download/1.0.0/EbookFinder.1.0.0.msi) |
+| **Android Mobile** | **`EbookFinder.apk`** | Mobile application for Android phones and tablets with swipe touch gestures and IndexedDB | [📦 Download on Releases](https://github.com/JoadsonRocha/EbookFinder/releases) |
 
 ---
 
