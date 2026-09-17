@@ -126,16 +126,19 @@ In EbookFinder's main book catalog, you can trigger distillation with a single c
 
 ```text
 EbookFinder/
-├── app/                      # User interface (Frontend)
+├── android/                  # Native Android project (Gradle, Manifest, Assets)
+├── app/                      # Shared user interface (Desktop & Mobile frontend)
 │   ├── index.html            # Main layout and SkillBook workspace
-│   ├── renderer.js           # Shelf management, search, AI and cloud drive logic
-│   ├── style.css             # Light/Dark design system, book cards & modal styling
-│   ├── pdf.min.js            # PDF.js library for cover thumbnail rendering
+│   ├── renderer.js           # Shelf management, search, AI and internal reader logic
+│   ├── mobile-bridge.js      # Native Capacitor bridge (IndexedDB, FilePicker, Groq Mobile)
+│   ├── style.css             # Light/Dark design system, book cards & mobile responsiveness
+│   ├── pdf.min.js            # PDF.js library for cover thumbnails & page rendering
 │   ├── pdf.worker.min.js     # Web Worker for asynchronous PDF processing
-│   └── ebookFinder.ico       # Application icon
-├── main.js                   # Electron main process, EPUB/CBZ parsers, IPC & Groq API
-├── preload.js                # Secure ContextBridge IPC bridge
-├── package.json              # Project manifest and scripts
+│   └── ebookFinder.ico       # Desktop application icon
+├── capacitor.config.json     # Capacitor 8 configuration for Android
+├── main.js                   # Electron main process, EPUB/CBZ parsers & IPC
+├── preload.js                # Secure ContextBridge IPC bridge for Desktop
+├── package.json              # Project manifest, dependencies and scripts (npm start, npm run apk)
 ├── .gitignore                # Git ignore patterns
 ├── LICENSE.md                # GNU General Public License v3.0
 ├── README.md                 # Documentation in Portuguese
@@ -197,6 +200,15 @@ EbookFinder features first-class mobile support powered by **Capacitor 8**, adap
 - 💾 **IndexedDB Binary Storage**: PDF documents and high-resolution covers are securely stored in the device's local database without hitting browser 5MB storage limits.
 - ⚡ **Direct Groq AI Inference**: Chat with SkillBook and generate Book-to-Skill extractions directly on your smartphone.
 - 🎨 **Complete Visual Identity**: Adaptive launcher icons for all Android densities (`mdpi` to `xxxhdpi`) and custom branding splash screens.
+
+### 🌿 About the `feature/mobile-capacitor` Branch
+- **Purpose**: This branch serves as the dedicated development branch for the **Capacitor 8** and **Android Native** ecosystem.
+- **What was built here**:
+  - Full native Android Studio project scaffolding (`android/`).
+  - Web-to-native compatibility bridge ([`app/mobile-bridge.js`](file:///d:/FULLSTARK/EbookFinder/app/mobile-bridge.js)) replacing Electron desktop IPC when running in Android webviews (IndexedDB file/cover storage, native document picking, and direct Groq API streaming).
+  - Mobile-responsive reading canvas with touch swipe navigation.
+  - Adaptive app icons and launch splash screens.
+- **Status & Integration**: All features from `feature/mobile-capacitor` have been merged into the `main` branch, delivering a unified hybrid codebase that powers both Windows Desktop (Electron) and Android Mobile (Capacitor). This branch remains active on GitHub for ongoing mobile features and experimentations.
 
 ---
 

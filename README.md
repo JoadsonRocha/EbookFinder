@@ -126,16 +126,19 @@ No catálogo de livros do EbookFinder, você pode acionar a destilação de qual
 
 ```text
 EbookFinder/
-├── app/                      # Interface gráfica (Frontend)
+├── android/                  # Projeto nativo Android (Gradle, Manifest, Recursos)
+├── app/                      # Interface gráfica (Frontend compartilhado Desktop & Mobile)
 │   ├── index.html            # Estrutura das estantes e workspace SkillBook
-│   ├── renderer.js           # Gerenciamento de estantes, busca, IA e drives
-│   ├── style.css             # Tema Dark/Light, cards e modal do SkillBook
-│   ├── pdf.min.js            # Biblioteca PDF.js para renderização de capas
+│   ├── renderer.js           # Gerenciamento de estantes, busca, IA e leitor interno
+│   ├── mobile-bridge.js      # Ponte nativa Capacitor (IndexedDB, FilePicker, Groq Mobile)
+│   ├── style.css             # Tema Dark/Light, cards e responsividade mobile
+│   ├── pdf.min.js            # Biblioteca PDF.js para renderização de capas e páginas
 │   ├── pdf.worker.min.js     # Web Worker para processamento assíncrono de PDFs
-│   └── ebookFinder.ico       # Ícone do aplicativo
-├── main.js                   # Processo principal, parsers EPUB/CBZ, IPC e Groq API
-├── preload.js                # Ponte ContextBridge segura entre main e renderer
-├── package.json              # Manifesto e scripts do projeto
+│   └── ebookFinder.ico       # Ícone do aplicativo Desktop
+├── capacitor.config.json     # Configurações do Capacitor 8 para Android
+├── main.js                   # Processo principal Electron, parsers EPUB/CBZ e IPC
+├── preload.js                # Ponte ContextBridge segura entre main e renderer no Desktop
+├── package.json              # Manifesto, dependências e scripts (npm start, npm run apk)
 ├── .gitignore                # Regras de exclusão do Git
 ├── LICENSE.md                # Licença GNU General Public License v3.0
 ├── README.md                 # Documentação em Português
@@ -197,6 +200,17 @@ O EbookFinder conta com suporte mobile de primeira linha via **Capacitor 8**, tr
 - 💾 **Armazenamento com IndexedDB**: Os arquivos binários de PDF e as capas em alta resolução são mantidos no banco de dados local do aplicativo sem sofrer com os limites de 5MB do `localStorage`.
 - ⚡ **IA Groq Integrada**: Todas as chamadas de chat e geração de Skills funcionam diretamente pelo celular através de requisições nativas de alta velocidade.
 - 🎨 **Identidade Visual Completa**: Ícones adaptativos em todas as densidades Android (`mdpi` a `xxxhdpi`) e telas de abertura (*Splash Screen*) personalizadas com a logo oficial do projeto.
+
+### 🌿 Sobre a Branch `feature/mobile-capacitor`
+- **Finalidade**: Esta branch é a ramificação dedicada a todo o ecossistema móvel com **Capacitor 8** e **Android Nativo**.
+- **O que foi desenvolvido nela**:
+  - Toda a estrutura nativa do Android Studio (`android/`).
+  - A ponte de comunicação web-to-native ([`app/mobile-bridge.js`](file:///d:/FULLSTARK/EbookFinder/app/mobile-bridge.js)) que emula os recursos do Electron no navegador do celular (IndexedDB para capas e arquivos, FilePicker nativo e chamadas diretas à API Groq).
+  - Adaptação responsiva do leitor interno com gestos de toque (*touch swipe*).
+  - Ícones adaptativos e Splash Screens em alta resolução.
+- **Status & Integração**: As implementações da `feature/mobile-capacitor` foram integradas à branch principal (`main`), tornando o repositório **híbrido e universal**: você pode rodar tanto no Windows Desktop (Electron) quanto compilar para Android (Capacitor) a partir de uma única base de código. A branch permanece ativa no GitHub para novas evoluções do app mobile.
+
+---
 
 ## 🔑 Configuração da Chave da Groq (Opcional)
 
