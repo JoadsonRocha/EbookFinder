@@ -249,6 +249,7 @@
     salvarStatusLeitura: async (caminho, status) => {
       const livro = livrosSalvos.find(l => l.caminho === caminho);
       if (livro) {
+        livro.status = status;
         livro.statusLeitura = status;
         persistirMetadadosLivros();
       }
@@ -262,10 +263,20 @@
       const livro = livrosSalvos.find(l => l.caminho === caminho);
       if (livro) {
         livro.progresso = { ...(livro.progresso || {}), ...dados };
+        if (dados.porcentagem >= 100) {
+          livro.status = "concluidos";
+          livro.statusLeitura = "concluidos";
+        } else if (dados.paginaAtual > 1 && (!livro.status || livro.status === "nenhum")) {
+          livro.status = "lendo";
+          livro.statusLeitura = "lendo";
+        }
         persistirMetadadosLivros();
       }
       try {
         localStorage.setItem("ef_progresso_" + caminho, JSON.stringify(dados));
+        if (livro?.status) {
+          localStorage.setItem("ef_status_" + caminho, livro.status);
+        }
       } catch (e) {}
       return dados;
     },
@@ -280,8 +291,17 @@
     },
 
     buscarEbooks: async (termo = "") => {
-      // Garante que cada livro recupera sua capa do IndexedDB
+      // Garante que cada livro recupera seu status, progresso e capa do IndexedDB
       for (const l of livrosSalvos) {
+        if (!l.status || l.status === "nenhum") {
+          l.status = l.statusLeitura || localStorage.getItem("ef_status_" + l.caminho) || "nenhum";
+        }
+        if (!l.progresso) {
+          try {
+            const rawP = localStorage.getItem("ef_progresso_" + l.caminho);
+            if (rawP) l.progresso = JSON.parse(rawP);
+          } catch (e) {}
+        }
         if (!l.thumbnail || typeof l.thumbnail !== "string" || l.thumbnail === "true" || l.thumbnail === "false" || l.thumbnail.length < 15) {
           const capaDB = await obterCapaDoDB(l.caminho);
           if (capaDB) {
