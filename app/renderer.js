@@ -715,7 +715,6 @@ function renderizarGrade(lista) {
         ` : ''}
       </div>
     `;
-    `;
 
     // Ação do Botão SkillBook no Card (Badge Direto e Hover)
     card.querySelector(".card-copilot-badge")?.addEventListener("click", (e) => {

@@ -1230,18 +1230,121 @@ main#mainContent {
 
 .badge-reading-status {
   position: absolute;
-  bottom: 6px;
-  left: 6px;
-  font-size: 0.64rem;
+  top: 8px;
+  left: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.badge-reading-status.concluido,
+.badge-reading-status.concluidos {
+  background: rgba(16, 185, 129, 0.92);
+  color: #ffffff;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.badge-reading-status.lendo {
+  background: rgba(229, 169, 59, 0.92);
+  color: #1a1200;
+  border-color: rgba(229, 169, 59, 0.5);
+}
+
+.badge-reading-status.quero-ler {
+  background: rgba(139, 92, 246, 0.92);
+  color: #ffffff;
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.badge-reading-status.nao-lido {
+  background: rgba(22, 19, 36, 0.85);
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Meta Bar de Status no Corpo do Card */
+.card-reading-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.card-status-pill {
+  font-size: 0.66rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
-  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
 }
 
-.badge-reading-status.lendo { background: rgba(16, 185, 129, 0.92); color: #fff; }
-.badge-reading-status.concluidos { background: rgba(229, 169, 59, 0.92); color: #1a1200; }
-.badge-reading-status.quero-ler { background: rgba(147, 51, 234, 0.92); color: #fff; }
+.card-status-pill.concluido,
+.card-status-pill.concluidos {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.card-status-pill.lendo {
+  background: rgba(229, 169, 59, 0.15);
+  color: var(--amber);
+}
+
+.card-status-pill.quero-ler {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+.card-status-pill.nao-lido {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* Indicador de Progresso com Barra */
+.card-progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.card-progress-indicator .progress-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.card-progress-indicator .progress-fill {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.card-progress-indicator .progress-fill.concluido {
+  background: #10b981;
+}
+
+.card-progress-indicator .progress-text {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
 
 .fav-btn {
   position: absolute;
@@ -4979,6 +5082,7 @@ body[data-theme="light"] .about-footer {
     border-radius: 2px;
   }
 
+  /* 6. CHAT DO SKILLBOOK NO LEITOR INTERNO (MOBILE) */
   .reader-quick-actions {
     display: flex !important;
     overflow-x: auto !important;
@@ -4986,19 +5090,281 @@ body[data-theme="light"] .about-footer {
     padding: 8px 12px !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
+    flex-wrap: nowrap !important;
   }
 
   .reader-quick-actions::-webkit-scrollbar {
     display: none !important;
   }
 
-  .btn-quick-chip {
+  .reader-quick-chip {
     flex-shrink: 0 !important;
-    font-size: 0.78rem !important;
+    font-size: 0.74rem !important;
+    padding: 6px 12px !important;
+    white-space: nowrap !important;
+    border-radius: 20px !important;
+  }
+
+  .reader-chat-input-bar {
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 8px)) 12px !important;
+    gap: 6px !important;
+  }
+
+  .reader-chat-textarea {
+    font-size: 16px !important; /* Evita zoom forçado no teclado Android */
+    min-height: 40px !important;
+  }
+
+  /* 7. WORKSPACE COPILOTO IA DEDICADO (100% RESPONSIVO NO CELULAR) */
+  .copilot-workspace {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  .copilot-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    position: relative !important;
+  }
+
+  .copilot-header-book {
+    padding-right: 40px !important; /* Espaço para o botão fechar */
+    gap: 10px !important;
+  }
+
+  .copilot-cover-thumb {
+    width: 32px !important;
+    height: 46px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .copilot-book-title {
+    font-size: 0.88rem !important;
+    max-width: 220px !important;
+  }
+
+  .copilot-book-author {
+    font-size: 0.70rem !important;
+  }
+
+  .copilot-header-actions {
+    display: flex !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    padding: 2px 0 4px 0 !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .copilot-header-actions::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .copilot-header-actions .btn-close-modal {
+    position: absolute !important;
+    top: 10px !important;
+    right: 12px !important;
+    margin: 0 !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .btn-copilot-header-tool {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 6px 10px !important;
+    font-size: 0.74rem !important;
+    gap: 4px !important;
+  }
+
+  .copilot-model-pill {
+    flex-shrink: 0 !important;
+    padding: 5px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .copilot-hero-state {
+    padding: 18px 12px !important;
+  }
+
+  .copilot-hero-title {
+    font-size: 1.2rem !important;
+  }
+
+  .copilot-hero-subtitle {
+    font-size: 0.80rem !important;
+    margin-bottom: 14px !important;
+  }
+
+  .copilot-prompt-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .copilot-hero-action-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px 12px !important;
+  }
+
+  .btn-hero-action {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+  }
+
+  .copilot-footer {
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 10px)) 12px !important;
+    gap: 6px !important;
+  }
+
+  .copilot-quick-chips-bar {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .copilot-quick-chips-bar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .copilot-mini-chip {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    font-size: 0.72rem !important;
     padding: 5px 10px !important;
   }
 
-  .reader-chat-input-row input {
+  .copilot-textarea {
     font-size: 16px !important;
+    min-height: 42px !important;
+  }
+
+  /* 8. ABA TUTOR IA NOS DETALHES DO LIVRO (MOBILE) */
+  .skill-status-box {
+    padding: 10px !important;
+  }
+
+  .skill-status-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+  }
+
+  .btn-action-skill {
+    flex-shrink: 0 !important;
+    font-size: 0.76rem !important;
+    padding: 6px 12px !important;
+  }
+
+  .chat-chips-row {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .chat-chips-row::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .chat-chip {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    font-size: 0.72rem !important;
+  }
+
+  .chat-input-bar input {
+    font-size: 16px !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVIDADE PARA TABLETS (769px até 1200px - 10", 11", 12"+)
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1200px) {
+  /* Estante em Tablets: 3 a 5 colunas perfeitamente fluidas */
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)) !important;
+    gap: 16px !important;
+    padding: 18px !important;
+  }
+
+  /* Header em Tablets */
+  header#appHeader {
+    padding: 12px 20px !important;
+    gap: 12px !important;
+  }
+
+  .search-group {
+    max-width: 320px !important;
+  }
+
+  /* Modais em Tablets: elegante e centralizado */
+  .modal-backdrop {
+    padding: 20px !important;
+  }
+
+  .copilot-workspace {
+    width: 94vw !important;
+    max-width: 920px !important;
+    height: 88vh !important;
+    border-radius: 18px !important;
+  }
+
+  .copilot-header {
+    padding: 12px 20px !important;
+    gap: 14px !important;
+  }
+
+  .copilot-header-actions {
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+  }
+
+  .btn-copilot-header-tool {
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .copilot-prompt-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .book-dialog {
+    max-width: 620px !important;
+  }
+
+  /* Leitor Interno no Tablet (Excelente aproveitamento de tela 11") */
+  .reader-skill-sidebar {
+    width: 350px !important;
+    min-width: 350px !important;
+  }
+
+  .reader-skill-sidebar.collapsed {
+    margin-right: -350px !important;
+  }
+
+  #viewLeitorIntegrado.sidebar-fechada .reader-float-nav.next {
+    right: 18px !important;
   }
 }
