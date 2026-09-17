@@ -596,15 +596,36 @@ function renderizarGrade(lista) {
     const tituloExibicao = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
     const paleta = obterPaletaCapa(livro.titulo || livro.nome);
 
-    // Label do status de leitura
-    let statusBadge = "";
-    if (livro.status === "lendo") {
-      statusBadge = `<span class="badge-reading-status lendo">📖 Lendo</span>`;
-    } else if (livro.status === "concluidos") {
-      statusBadge = `<span class="badge-reading-status concluidos">✅ Concluído</span>`;
+    // Progresso de Leitura no Card (sincronizado para Windows e Celular)
+    const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0 };
+    const paginaAtual = prog.paginaAtual || 0;
+    const totalPaginas = prog.totalPaginas || 0;
+    const porcentagem = totalPaginas > 0
+      ? Math.min(100, Math.round((paginaAtual / totalPaginas) * 100))
+      : (prog.porcentagem || 0);
+
+    // Determinação robusta de status de leitura
+    let statusClass = "nao-lido";
+    let statusLabel = "Não Lido";
+    let statusIcon = "⚪";
+
+    if (livro.status === "concluidos" || porcentagem >= 100) {
+      statusClass = "concluido";
+      statusLabel = "Lido";
+      statusIcon = "✅";
+      if (livro.status !== "concluidos") livro.status = "concluidos";
+    } else if (livro.status === "lendo" || paginaAtual > 1 || porcentagem > 0) {
+      statusClass = "lendo";
+      statusLabel = porcentagem > 0 ? `Lendo ${porcentagem}%` : "Lendo";
+      statusIcon = "📖";
+      if (!livro.status || livro.status === "nenhum") livro.status = "lendo";
     } else if (livro.status === "quero-ler") {
-      statusBadge = `<span class="badge-reading-status quero-ler">📌 Quero Ler</span>`;
+      statusClass = "quero-ler";
+      statusLabel = "Quero Ler";
+      statusIcon = "📌";
     }
+
+    const statusBadge = `<span class="badge-reading-status ${statusClass}" title="Status: ${statusLabel}">${statusIcon} ${statusLabel}</span>`;
 
     // Capa Extraída ou Fallback Estilo Capa Dura Clássica
     const temCapaValida = typeof livro.thumbnail === "string" && livro.thumbnail.length > 15 && livro.thumbnail !== "true" && livro.thumbnail !== "false";
@@ -624,14 +645,6 @@ function renderizarGrade(lista) {
           <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : ""}</p>
         </div>
       `;
-
-    // Progresso de Leitura no Card (apenas para obras que já foram iniciadas)
-    const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0 };
-    const paginaAtual = prog.paginaAtual || 0;
-    const totalPaginas = prog.totalPaginas || 0;
-    const porcentagem = totalPaginas > 0
-      ? Math.min(100, Math.round((paginaAtual / totalPaginas) * 100))
-      : (prog.porcentagem || 0);
 
     let progressHtml = "";
     if (paginaAtual > 0) {
@@ -670,7 +683,7 @@ function renderizarGrade(lista) {
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
           </button>
-          <button class="btn-cover-read" title="Abrir e ler no Windows">
+          <button class="btn-cover-read" title="Abrir e ler no leitor">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>Ler</span>
           </button>
@@ -688,11 +701,20 @@ function renderizarGrade(lista) {
 
       <div class="book-card-body">
         <h3 class="book-title" title="${livro.titulo} (${livro.nome})">${tituloExibicao}</h3>
-        <div class="book-meta">
+        <div class="card-reading-meta-bar">
+          <span class="card-status-pill ${statusClass}">${statusIcon} ${statusLabel}</span>
           <span class="meta-size">${tamanho}</span>
-          ${paginaAtual > 0 ? `<span class="meta-prog">${porcentagem}%</span>` : `<span class="meta-ext">${formato}</span>`}
         </div>
+        ${paginaAtual > 0 ? `
+          <div class="card-progress-indicator" title="Página ${paginaAtual} de ${totalPaginas || '?'} (${porcentagem}%)">
+            <div class="progress-track">
+              <div class="progress-fill ${statusClass === 'concluido' ? 'concluido' : ''}" style="width: ${porcentagem}%"></div>
+            </div>
+            <span class="progress-text">${paginaAtual}${totalPaginas ? `/${totalPaginas} pág` : ' pág'}</span>
+          </div>
+        ` : ''}
       </div>
+    `;
     `;
 
     // Ação do Botão SkillBook no Card (Badge Direto e Hover)
