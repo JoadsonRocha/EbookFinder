@@ -1001,6 +1001,7 @@ async function abrirLeitorInterno(livro) {
 }
 
 function fecharLeitorInterno() {
+  alternarTelaCheiaLeitor(false);
   const overlay = document.getElementById("viewLeitorIntegrado");
   if (overlay) overlay.hidden = true;
 
@@ -1021,37 +1022,141 @@ function fecharLeitorInterno() {
 }
 
 /**
- * Adiciona suporte nativo a gestos de arrasto (Swipe) no celular para passar páginas
+ * Gestos de toque aprimorados para celular (Padrão Kindle / Google Play Livros):
+ * - Pinça (Pinch-to-zoom com 2 dedos em tempo real)
+ * - Toque duplo para zoom rápido (1.8x ou Ajustar à tela)
+ * - Toque único: laterais mudam de página, centro alterna Tela Cheia / Modo Imersivo
+ * - Swipe horizontal para passar páginas quando sem zoom
  */
 function configurarGestosTouchLeitor() {
   const viewport = document.getElementById("readerPdfViewport");
+  const container = document.getElementById("readerPdfContainer");
   if (!viewport || viewport._touchAtivo) return;
   viewport._touchAtivo = true;
 
   let startX = 0;
   let startY = 0;
   let startTime = 0;
+  let lastTapTime = 0;
+  let singleTapTimer = null;
+
+  // Variáveis para Pinça (Pinch)
+  let isPinching = false;
+  let startDist = 0;
+  let baseScale = 1.0;
+  let currentPinchScale = 1.0;
 
   viewport.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
+    // Não intercepta se o toque foi em botões flutuantes, inputs, textarea ou dock
+    if (e.target.closest("button, input, textarea, .reader-quick-dock, .leitor-toolbar")) {
+      return;
+    }
+
+    if (e.touches.length === 2) {
+      if (singleTapTimer) {
+        clearTimeout(singleTapTimer);
+        singleTapTimer = null;
+      }
+      isPinching = true;
+      startDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      baseScale = state.leitor.escala || 1.0;
+      currentPinchScale = baseScale;
+    } else if (e.touches.length === 1) {
+      isPinching = false;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       startTime = Date.now();
     }
   }, { passive: true });
 
+  viewport.addEventListener("touchmove", (e) => {
+    if (isPinching && e.touches.length === 2 && startDist > 0) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = currentDist / startDist;
+      currentPinchScale = Math.max(0.35, Math.min(3.5, baseScale * ratio));
+
+      // Efeito visual imediato e fluido a 60 FPS
+      if (container) {
+        container.style.transform = `scale(${ratio})`;
+      }
+    }
+  }, { passive: true });
+
   viewport.addEventListener("touchend", (e) => {
+    if (isPinching) {
+      isPinching = false;
+      startDist = 0;
+      if (container) container.style.transform = "";
+      if (Math.abs(currentPinchScale - baseScale) > 0.06) {
+        ajustarZoom(0, currentPinchScale);
+      }
+      return;
+    }
+
     if (e.changedTouches.length === 1) {
       const diffX = e.changedTouches[0].clientX - startX;
       const diffY = e.changedTouches[0].clientY - startY;
       const timeElapsed = Date.now() - startTime;
+      const dist = Math.hypot(diffX, diffY);
+      const tapX = e.changedTouches[0].clientX;
+      const screenW = window.innerWidth;
 
-      // Deslize horizontal nítido de mais de 45px em menos de 450ms
-      if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.4 && timeElapsed < 450) {
-        if (diffX < 0) {
-          mudarPaginaLeitor(1); // Deslizar para esquerda -> próxima página
+      // 1. SWIPE HORIZONTAL (Passar página caso não esteja com super zoom)
+      if (dist > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.3 && timeElapsed < 450) {
+        if (state.leitor.escala <= 1.25) {
+          if (diffX < 0) {
+            mudarPaginaLeitor(1); // Deslizar para esquerda -> próxima página
+          } else {
+            mudarPaginaLeitor(-1); // Deslizar para direita -> página anterior
+          }
+          return;
+        }
+      }
+
+      // 2. TOQUE NA TELA (TAP): Toque Duplo ou Toque Único
+      if (dist < 12 && timeElapsed < 280) {
+        const now = Date.now();
+        const interval = now - lastTapTime;
+
+        if (interval < 300) {
+          // TOQUE DUPLO DETECTADO: Alterna entre Ajustar à Tela e 180% Zoom
+          if (singleTapTimer) {
+            clearTimeout(singleTapTimer);
+            singleTapTimer = null;
+          }
+          lastTapTime = 0;
+
+          if (state.leitor.escala > 1.25) {
+            ajustarLarguraLeitor();
+            showToast("Zoom: Ajustado à tela", 1500);
+          } else {
+            ajustarZoom(0, 1.8);
+            showToast("Zoom: 180%", 1500);
+          }
         } else {
-          mudarPaginaLeitor(-1); // Deslizar para direita -> página anterior
+          // PODE SER TOQUE ÚNICO: Aguarda 240ms para descartar segundo toque
+          lastTapTime = now;
+          singleTapTimer = setTimeout(() => {
+            singleTapTimer = null;
+
+            // Zonas de toque inteligentes:
+            // Esquerda (15%): Página anterior
+            // Direita (15%): Próxima página
+            // Centro (70%): Alternar Tela Cheia / Modo Imersivo
+            if (tapX < screenW * 0.15) {
+              mudarPaginaLeitor(-1);
+            } else if (tapX > screenW * 0.85) {
+              mudarPaginaLeitor(1);
+            } else {
+              alternarTelaCheiaLeitor();
+            }
+          }, 240);
         }
       }
     }
@@ -1081,7 +1186,7 @@ async function renderizarPaginaLeitor(num) {
     canvas.height = Math.floor(viewport.height * dpr);
     canvas.style.width = Math.floor(viewport.width) + "px";
     canvas.style.height = Math.floor(viewport.height) + "px";
-    canvas.style.maxWidth = "100%";
+    canvas.style.maxWidth = "none"; // Permite que o zoom expanda além da largura da tela
 
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1098,8 +1203,12 @@ async function renderizarPaginaLeitor(num) {
     state.leitor.currentRenderTask = page.render(renderContext);
     await state.leitor.currentRenderTask.promise;
 
+    const pct = `${Math.round(state.leitor.escala * 100)}%`;
     const lblZoom = document.getElementById("lblLeitorZoom");
-    if (lblZoom) lblZoom.textContent = `${Math.round(state.leitor.escala * 100)}%`;
+    if (lblZoom) lblZoom.textContent = pct;
+
+    const lblDockZoom = document.getElementById("lblDockZoom");
+    if (lblDockZoom) lblDockZoom.textContent = pct;
 
     salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
 
@@ -1130,11 +1239,19 @@ function irParaPaginaLeitor(num) {
 }
 
 function ajustarZoom(delta, definirFixo) {
-  if (definirFixo) {
-    state.leitor.escala = Math.max(0.2, Math.min(3.0, definirFixo));
+  if (definirFixo !== undefined) {
+    state.leitor.escala = Math.max(0.35, Math.min(3.5, definirFixo));
   } else {
-    state.leitor.escala = Math.max(0.2, Math.min(3.0, state.leitor.escala + delta));
+    state.leitor.escala = Math.max(0.35, Math.min(3.5, state.leitor.escala + delta));
   }
+
+  const pct = `${Math.round(state.leitor.escala * 100)}%`;
+  const lblZoom = document.getElementById("lblLeitorZoom");
+  if (lblZoom) lblZoom.textContent = pct;
+
+  const lblDockZoom = document.getElementById("lblDockZoom");
+  if (lblDockZoom) lblDockZoom.textContent = pct;
+
   if (state.leitor.paginaAtual) {
     renderizarPaginaLeitor(state.leitor.paginaAtual);
   }
@@ -1146,11 +1263,48 @@ function ajustarLarguraLeitor() {
 
   const unscaled = state.leitor.paginaObj.getViewport({ scale: 1 });
   const isMobile = window.innerWidth <= 768 || document.body.classList.contains("is-mobile-app");
-  const margem = isMobile ? 8 : 48;
+  const margem = isMobile ? 0 : 40; // 0px no mobile para 100% de largura
   const larguraDisponivel = (viewport.clientWidth || window.innerWidth) - margem;
   if (larguraDisponivel > 50 && unscaled.width > 0) {
-    const novaEscala = Math.max(0.2, Math.min(3.0, larguraDisponivel / unscaled.width));
+    const novaEscala = Math.max(0.35, Math.min(3.5, larguraDisponivel / unscaled.width));
     ajustarZoom(0, novaEscala);
+
+    const lblDockZoom = document.getElementById("lblDockZoom");
+    if (lblDockZoom) lblDockZoom.textContent = "Ajustado";
+  }
+}
+
+function alternarTelaCheiaLeitor(forcarEstado) {
+  const overlay = document.getElementById("viewLeitorIntegrado");
+  const btnFullscreen = document.getElementById("btnLeitorTelaCheia");
+  const btnDockFullscreen = document.getElementById("btnDockTelaCheia");
+  if (!overlay) return;
+
+  const estaImersivo = overlay.classList.contains("modo-imersivo");
+  const novoEstado = forcarEstado !== undefined ? forcarEstado : !estaImersivo;
+
+  if (novoEstado) {
+    overlay.classList.add("modo-imersivo");
+    btnFullscreen?.classList.add("active");
+    btnDockFullscreen?.classList.add("active");
+
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+
+    showToast("Modo Tela Cheia: toque no meio da tela para ver os controles.", 2500);
+  } else {
+    overlay.classList.remove("modo-imersivo");
+    btnFullscreen?.classList.remove("active");
+    btnDockFullscreen?.classList.remove("active");
+
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } catch (e) {}
   }
 }
 
@@ -2786,6 +2940,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnLeitorZoomMenos")?.addEventListener("click", () => ajustarZoom(-0.15));
   document.getElementById("btnLeitorZoomMais")?.addEventListener("click", () => ajustarZoom(0.15));
   document.getElementById("btnLeitorAjustarLargura")?.addEventListener("click", ajustarLarguraLeitor);
+  document.getElementById("btnLeitorTelaCheia")?.addEventListener("click", () => alternarTelaCheiaLeitor());
+
+  // Eventos do Dock Flutuante de Leitura & Zoom
+  document.getElementById("btnDockZoomOut")?.addEventListener("click", () => ajustarZoom(-0.2));
+  document.getElementById("btnDockAjustar")?.addEventListener("click", () => ajustarLarguraLeitor());
+  document.getElementById("btnDockZoomIn")?.addEventListener("click", () => ajustarZoom(0.2));
+  document.getElementById("btnDockTelaCheia")?.addEventListener("click", () => alternarTelaCheiaLeitor());
 
   document.getElementById("btnToggleSkillSidebar")?.addEventListener("click", () => toggleSkillSidebar());
   document.getElementById("btnFecharSkillSidebar")?.addEventListener("click", () => toggleSkillSidebar(false));
@@ -2873,6 +3034,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.abrirSkillBook = abrirCopilotoIA;
   window.abrirLeitorInterno = abrirLeitorInterno;
   window.fecharLeitorInterno = fecharLeitorInterno;
+  window.alternarTelaCheiaLeitor = alternarTelaCheiaLeitor;
   window.abrirModalSobre = abrirModalSobre;
   window.fecharModalSobre = fecharModalSobre;
   window.criarSkillDiretoDoCard = criarSkillDiretoDoCard;
