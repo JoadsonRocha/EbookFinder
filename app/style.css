@@ -3952,9 +3952,13 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 .reader-pdf-container {
   position: relative;
   display: inline-flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: auto !important; /* Centraliza perfeitamente tanto horizontal quanto verticalmente */
+  align-self: center !important;
+  margin: auto !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
   box-shadow: 0 14px 50px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
   border-radius: 4px;
   background: #ffffff;
@@ -4943,19 +4947,26 @@ body[data-theme="light"] .about-footer {
 
   .reader-pdf-container {
     max-width: none !important;
-    margin: auto !important; /* Centralização automática horizontal e vertical */
+    margin: 8px auto 36px auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55) !important;
     border-radius: 4px !important;
     display: inline-flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     transform-origin: center center !important;
+    background: #ffffff !important;
   }
 
   .reader-pdf-canvas {
     max-width: none !important;
     height: auto !important;
     display: block !important;
+    margin: 0 auto !important;
+    border-radius: 4px !important;
   }
 
   .reader-float-nav {
