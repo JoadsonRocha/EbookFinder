@@ -205,7 +205,10 @@ async function extrairCapaPdf(livro) {
 
     const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
     const caminhoCache = await window.api?.salvarCapaCache?.(livro.caminho, dataUrl);
-    return caminhoCache || dataUrl;
+    if (typeof caminhoCache === "string" && caminhoCache.length > 15 && caminhoCache !== "true") {
+      return caminhoCache;
+    }
+    return dataUrl;
   } catch (err) {
     console.error("Falha ao renderizar capa do PDF:", livro.caminho, err);
     return null;
@@ -216,12 +219,14 @@ async function extrairCapaPdf(livro) {
  * Atualiza o elemento no DOM em tempo real com fade-in suave assim que a capa é extraída.
  */
 function atualizarCapaNoDom(caminho, thumbUrl, titulo) {
+  if (typeof thumbUrl !== "string" || !thumbUrl || thumbUrl === "true" || thumbUrl === "false" || thumbUrl.length < 15) {
+    return;
+  }
   const card = document.querySelector(`.book-card[data-caminho="${CSS.escape(caminho)}"]`);
   if (card) {
     const wrapper = card.querySelector(".book-cover-wrapper");
     if (wrapper) {
       const fallback = wrapper.querySelector(".book-cover-fallback");
-      if (fallback) fallback.remove();
 
       let img = wrapper.querySelector(".book-cover-image");
       if (!img) {
@@ -229,16 +234,21 @@ function atualizarCapaNoDom(caminho, thumbUrl, titulo) {
         img.className = "book-cover-image cover-fade-in";
         img.alt = titulo;
         img.loading = "lazy";
+        img.onerror = () => {
+          img.remove();
+          if (fallback) fallback.style.display = "";
+        };
         wrapper.prepend(img);
       }
       img.src = thumbUrl;
+      if (fallback) fallback.style.display = "none";
     }
   }
 
   if (state.livroSelecionado && state.livroSelecionado.caminho === caminho) {
     const modalCapa = document.getElementById("modalCapaContainer");
     if (modalCapa) {
-      modalCapa.innerHTML = `<img src="${thumbUrl}" alt="${titulo}" class="cover-fade-in">`;
+      modalCapa.innerHTML = `<img src="${thumbUrl}" alt="${titulo}" class="cover-fade-in" onerror="this.style.display='none'">`;
     }
   }
 }
@@ -597,8 +607,16 @@ function renderizarGrade(lista) {
     }
 
     // Capa Extraída ou Fallback Estilo Capa Dura Clássica
-    const capaConteudo = livro.thumbnail
-      ? `<img class="book-cover-image" src="${livro.thumbnail}" alt="${tituloExibicao}" loading="lazy" />`
+    const temCapaValida = typeof livro.thumbnail === "string" && livro.thumbnail.length > 15 && livro.thumbnail !== "true" && livro.thumbnail !== "false";
+    const capaConteudo = temCapaValida
+      ? `
+        <img class="book-cover-image" src="${livro.thumbnail}" alt="${tituloExibicao}" loading="lazy" onerror="this.remove();" />
+        <div class="book-cover-fallback theme-${paleta.tema}" style="background: ${paleta.bg}; border-left-color: ${paleta.borda};">
+          <div class="fallback-book-ribbon" style="background: ${paleta.borda};"></div>
+          <h4 class="fallback-book-title">${tituloExibicao}</h4>
+          <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : ""}</p>
+        </div>
+      `
       : `
         <div class="book-cover-fallback theme-${paleta.tema}" style="background: ${paleta.bg}; border-left-color: ${paleta.borda};">
           <div class="fallback-book-ribbon" style="background: ${paleta.borda};"></div>
@@ -799,8 +817,9 @@ function abrirModalLivro(livro) {
 
   const coverContainer = document.getElementById("modalCapaContainer");
   if (coverContainer) {
-    if (livro.thumbnail) {
-      coverContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${tituloLimpo}" class="cover-fade-in">`;
+    const temCapaModal = typeof livro.thumbnail === "string" && livro.thumbnail.length > 15 && livro.thumbnail !== "true" && livro.thumbnail !== "false";
+    if (temCapaModal) {
+      coverContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${tituloLimpo}" class="cover-fade-in" onerror="this.remove()">`;
     } else {
       coverContainer.innerHTML = `
         <div class="book-cover-fallback theme-${paleta.tema}" style="height:100%; background:${paleta.bg}; border-left-color:${paleta.borda};">
@@ -912,7 +931,13 @@ async function abrirLeitorInterno(livro) {
   state.leitor.paginaObj = null;
   state.leitor.paginaAtual = Math.max(1, livro.progresso?.paginaAtual || 1);
   state.leitor.totalPaginas = livro.progresso?.totalPaginas || 1;
-  state.leitor.escala = 1.2;
+  state.leitor.escala = 1.0;
+
+  // No mobile, a barra lateral do SkillBook inicia recolhida para dar 100% de visão ao livro
+  const isMobile = window.innerWidth <= 768 || document.body.classList.contains("is-mobile-app");
+  if (isMobile) {
+    toggleSkillSidebar(false);
+  }
 
   // Atualiza indicador do modelo na barra lateral do leitor
   const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
@@ -960,11 +985,16 @@ async function abrirLeitorInterno(livro) {
 
     await renderizarPaginaLeitor(state.leitor.paginaAtual);
     ajustarLarguraLeitor();
+    configurarGestosTouchLeitor();
   } catch (err) {
     console.error("Erro ao abrir PDF no leitor interno:", err);
-    showToast("Abrindo no leitor do Windows...");
+    if (isMobile) {
+      showToast("Erro ao abrir este documento no aparelho.");
+    } else {
+      showToast("Abrindo no leitor do Windows...");
+      window.api?.abrirNoWindows?.(livro.caminho);
+    }
     fecharLeitorInterno();
-    window.api?.abrirNoWindows?.(livro.caminho);
   } finally {
     if (loading) loading.hidden = true;
   }
@@ -990,6 +1020,44 @@ function fecharLeitorInterno() {
   carregarBiblioteca();
 }
 
+/**
+ * Adiciona suporte nativo a gestos de arrasto (Swipe) no celular para passar páginas
+ */
+function configurarGestosTouchLeitor() {
+  const viewport = document.getElementById("readerPdfViewport");
+  if (!viewport || viewport._touchAtivo) return;
+  viewport._touchAtivo = true;
+
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+
+  viewport.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+    }
+  }, { passive: true });
+
+  viewport.addEventListener("touchend", (e) => {
+    if (e.changedTouches.length === 1) {
+      const diffX = e.changedTouches[0].clientX - startX;
+      const diffY = e.changedTouches[0].clientY - startY;
+      const timeElapsed = Date.now() - startTime;
+
+      // Deslize horizontal nítido de mais de 45px em menos de 450ms
+      if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.4 && timeElapsed < 450) {
+        if (diffX < 0) {
+          mudarPaginaLeitor(1); // Deslizar para esquerda -> próxima página
+        } else {
+          mudarPaginaLeitor(-1); // Deslizar para direita -> página anterior
+        }
+      }
+    }
+  }, { passive: true });
+}
+
 async function renderizarPaginaLeitor(num) {
   if (!state.leitor.pdfDoc || state.leitor.renderizando) return;
   state.leitor.renderizando = true;
@@ -1006,13 +1074,14 @@ async function renderizarPaginaLeitor(num) {
     const inputPag = document.getElementById("inputLeitorPagina");
     if (inputPag) inputPag.value = num;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     const viewport = page.getViewport({ scale: state.leitor.escala });
 
     canvas.width = Math.floor(viewport.width * dpr);
     canvas.height = Math.floor(viewport.height * dpr);
     canvas.style.width = Math.floor(viewport.width) + "px";
     canvas.style.height = Math.floor(viewport.height) + "px";
+    canvas.style.maxWidth = "100%";
 
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1062,9 +1131,9 @@ function irParaPaginaLeitor(num) {
 
 function ajustarZoom(delta, definirFixo) {
   if (definirFixo) {
-    state.leitor.escala = Math.max(0.5, Math.min(3.0, definirFixo));
+    state.leitor.escala = Math.max(0.2, Math.min(3.0, definirFixo));
   } else {
-    state.leitor.escala = Math.max(0.5, Math.min(3.0, state.leitor.escala + delta));
+    state.leitor.escala = Math.max(0.2, Math.min(3.0, state.leitor.escala + delta));
   }
   if (state.leitor.paginaAtual) {
     renderizarPaginaLeitor(state.leitor.paginaAtual);
@@ -1076,9 +1145,11 @@ function ajustarLarguraLeitor() {
   if (!viewport || !state.leitor.paginaObj) return;
 
   const unscaled = state.leitor.paginaObj.getViewport({ scale: 1 });
-  const larguraDisponivel = viewport.clientWidth - 56;
-  if (larguraDisponivel > 200 && unscaled.width > 0) {
-    const novaEscala = Math.max(0.6, Math.min(2.5, larguraDisponivel / unscaled.width));
+  const isMobile = window.innerWidth <= 768 || document.body.classList.contains("is-mobile-app");
+  const margem = isMobile ? 8 : 48;
+  const larguraDisponivel = (viewport.clientWidth || window.innerWidth) - margem;
+  if (larguraDisponivel > 50 && unscaled.width > 0) {
+    const novaEscala = Math.max(0.2, Math.min(3.0, larguraDisponivel / unscaled.width));
     ajustarZoom(0, novaEscala);
   }
 }
@@ -1746,8 +1817,9 @@ async function abrirCopilotoIA(livro) {
   if (greeting) greeting.textContent = `Como posso te ajudar com "${tituloLimpo}"?`;
 
   if (thumbContainer) {
-    if (livro.thumbnail) {
-      thumbContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${tituloLimpo}">`;
+    const temThumbCopilot = typeof livro.thumbnail === "string" && livro.thumbnail.length > 15 && livro.thumbnail !== "true" && livro.thumbnail !== "false";
+    if (temThumbCopilot) {
+      thumbContainer.innerHTML = `<img src="${livro.thumbnail}" alt="${tituloLimpo}" onerror="this.remove()">`;
     } else {
       thumbContainer.innerHTML = `
         <div class="theme-${paleta.tema}" style="width:100%;height:100%;background:${paleta.bg};border-left:2px solid ${paleta.borda};display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#fff;">
@@ -2275,6 +2347,18 @@ function fecharPopupPasta() {
 // 8. INICIALIZAÇÃO
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // Adaptações automáticas de texto e visibilidade no mobile
+  const isMobile = window.isMobileEnvironment || !!window.Capacitor || window.innerWidth <= 768 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (isMobile) {
+    document.body.classList.add("is-mobile-app");
+    const lblAbrir = document.getElementById("lblBtnAbrirExterno");
+    if (lblAbrir) lblAbrir.textContent = "Abrir no Celular";
+    const btnAbrir = document.getElementById("btnAbrirLeitorWindows");
+    if (btnAbrir) btnAbrir.title = "Abrir leitor no celular";
+    const btnExplorer = document.getElementById("btnRevelarExplorer");
+    if (btnExplorer) btnExplorer.style.display = "none";
+  }
+
   // Atalho para recarregar a interface em desenvolvimento
   window.addEventListener("keydown", (e) => {
     if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
@@ -2465,13 +2549,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Abrir no Windows
+  // Abrir no Leitor (Windows ou Celular)
   document.getElementById("btnAbrirLeitorWindows")?.addEventListener("click", () => {
-    if (state.livroSelecionado?.caminho) {
-      window.api?.abrirNoWindows?.(state.livroSelecionado.caminho);
-      showToast("Abrindo no leitor do Windows... Boas leituras!");
-      // Registra timestamp de última leitura
-      salvarProgressoModal(false);
+    if (state.livroSelecionado) {
+      const isMobile = window.isMobileEnvironment || !!window.Capacitor || window.innerWidth <= 768;
+      if (isMobile) {
+        abrirLeitorInterno(state.livroSelecionado);
+      } else {
+        window.api?.abrirNoWindows?.(state.livroSelecionado.caminho);
+        showToast("Abrindo no leitor... Boas leituras!");
+        salvarProgressoModal(false);
+      }
     }
   });
 

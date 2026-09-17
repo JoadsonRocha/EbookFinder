@@ -22,10 +22,14 @@
 
   const NOME_PASTA_MOBILE = "📱 Armazenamento Local";
   const DB_NAME = "EbookFinderMobileDB";
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const STORE_BUFFERS = "pdf_buffers";
+  const STORE_COVERS = "pdf_covers";
 
-  // Inicializa o banco IndexedDB para armazenar PDFs binários
+  // Flag global para o frontend reconhecer ambiente mobile
+  window.isMobileEnvironment = true;
+
+  // Inicializa o banco IndexedDB para armazenar PDFs binários e capas em alta resolução
   function abrirIndexedDB() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -33,6 +37,9 @@
         const db = e.target.result;
         if (!db.objectStoreNames.contains(STORE_BUFFERS)) {
           db.createObjectStore(STORE_BUFFERS);
+        }
+        if (!db.objectStoreNames.contains(STORE_COVERS)) {
+          db.createObjectStore(STORE_COVERS);
         }
       };
       request.onsuccess = () => resolve(request.result);
@@ -72,18 +79,64 @@
     }
   }
 
+  async function salvarCapaNoDB(id, dataUrl) {
+    try {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE_COVERS, "readwrite");
+        const store = tx.objectStore(STORE_COVERS);
+        store.put(dataUrl, id);
+        tx.oncomplete = () => resolve(dataUrl);
+        tx.onerror = () => resolve(dataUrl);
+      });
+    } catch (e) {
+      return dataUrl;
+    }
+  }
+
+  async function obterCapaDoDB(id) {
+    try {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE_COVERS, "readonly");
+        const store = tx.objectStore(STORE_COVERS);
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Cache em memória de livros para acesso síncrono rápido
   let livrosSalvos = [];
   try {
     const raw = localStorage.getItem("ef_mobile_biblioteca");
-    if (raw) livrosSalvos = JSON.parse(raw);
+    if (raw) {
+      livrosSalvos = JSON.parse(raw);
+      // Sanitiza livros com thumbnails booleanas antigas
+      livrosSalvos.forEach(l => {
+        if (typeof l.thumbnail !== "string" || l.thumbnail === "true" || l.thumbnail === "false" || l.thumbnail.length < 15) {
+          l.thumbnail = null;
+        }
+      });
+    }
   } catch (e) {
     livrosSalvos = [];
   }
 
   function persistirMetadadosLivros() {
     try {
-      localStorage.setItem("ef_mobile_biblioteca", JSON.stringify(livrosSalvos));
+      // Salva metadados leves no localStorage para não estourar os 5MB com base64
+      const metadadosLeves = livrosSalvos.map(l => {
+        const clone = { ...l };
+        if (clone.thumbnail && clone.thumbnail.length > 500) {
+          delete clone.thumbnail;
+        }
+        return clone;
+      });
+      localStorage.setItem("ef_mobile_biblioteca", JSON.stringify(metadadosLeves));
     } catch (e) {
       console.warn("Aviso ao salvar metadados dos livros:", e);
     }
@@ -170,11 +223,16 @@
     },
 
     salvarCapaCache: async (caminho, dataUrl) => {
+      if (!caminho || !dataUrl) return null;
       try {
-        localStorage.setItem("ef_cover_" + caminho, dataUrl);
-        return true;
+        await salvarCapaNoDB(caminho, dataUrl);
+        const livro = livrosSalvos.find(l => l.caminho === caminho);
+        if (livro) {
+          livro.thumbnail = dataUrl;
+        }
+        return dataUrl;
       } catch (e) {
-        return false;
+        return dataUrl;
       }
     },
 
@@ -222,6 +280,18 @@
     },
 
     buscarEbooks: async (termo = "") => {
+      // Garante que cada livro recupera sua capa do IndexedDB
+      for (const l of livrosSalvos) {
+        if (!l.thumbnail || typeof l.thumbnail !== "string" || l.thumbnail === "true" || l.thumbnail === "false" || l.thumbnail.length < 15) {
+          const capaDB = await obterCapaDoDB(l.caminho);
+          if (capaDB) {
+            l.thumbnail = capaDB;
+          } else {
+            l.thumbnail = null;
+          }
+        }
+      }
+
       const termoLower = (termo || "").toLowerCase().trim();
       if (!termoLower) return livrosSalvos;
       return livrosSalvos.filter(l => 
