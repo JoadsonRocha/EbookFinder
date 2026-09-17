@@ -11,15 +11,17 @@
 [![Node.js](https://img.shields.io/badge/Node.js-v24%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Groq LPU](https://img.shields.io/badge/Groq-LPU%20Inference-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
 [![Book to Skill](https://img.shields.io/badge/Architecture-Book--to--Skill-10B981?style=for-the-badge)](https://github.com/virgiliojr94/book-to-skill)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/)
-[![Version](https://img.shields.io/badge/Version-1.1.0-E5A93B?style=for-the-badge)](./package.json)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/JoadsonRocha/EbookFinder/releases)
+[![Capacitor](https://img.shields.io/badge/Capacitor-8.x-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)](https://capacitorjs.com/)
+[![Releases](https://img.shields.io/badge/Releases-MSI%20%7C%20APK-E5A93B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JoadsonRocha/EbookFinder/releases)
+[![Version](https://img.shields.io/badge/Version-1.1.0-10B981?style=for-the-badge)](./package.json)
 
 <br />
 
 **[🇧🇷 Português](./README.md)** &nbsp;|&nbsp; **[🇺🇸 English](./README_EN.md)**
 
 <p align="center">
-  O <strong>EbookFinder</strong> é um ecossistema desktop moderno para gerenciar, explorar, estudar e transformar suas coleções de e-books, histórias em quadrinhos e documentos digitais em habilidades modulares de IA. Com extração instantânea de capas, organização por estantes de leitura, modos Claro & Escuro de alto contraste, integração com <strong>Google Drive / OneDrive</strong> e o poderoso assistente <strong>SkillBook IA</strong>.
+  O <strong>EbookFinder</strong> é um ecossistema moderno para <strong>Windows Desktop e Android Mobile</strong> projetado para gerenciar, explorar, estudar e transformar suas coleções de e-books, histórias em quadrinhos e documentos digitais em habilidades modulares de IA. Com extração instantânea de capas, organização por estantes de leitura, modos Claro & Escuro de alto contraste, integração com <strong>Google Drive / OneDrive</strong> e o poderoso assistente <strong>SkillBook IA</strong>.
 </p>
 
 <p align="center">
@@ -27,6 +29,17 @@
 </p>
 
 </div>
+
+---
+
+## 📦 Downloads & Releases Oficiais (Windows & Android)
+
+Você pode baixar os executáveis prontos para uso direto na página de **[GitHub Releases](https://github.com/JoadsonRocha/EbookFinder/releases)**:
+
+| Plataforma | Pacote | Descrição | Download |
+| :--- | :--- | :--- | :--- |
+| **Windows Desktop** | **`EbookFinder.msi`** | Instalador oficial para Windows com atalhos, suporte offline e chave de IA integrada | [Baixar .MSI](https://github.com/JoadsonRocha/EbookFinder/releases) |
+| **Android Mobile** | **`EbookFinder.apk`** | Aplicativo móvel para celulares e tablets Android com leitor touch (swipe) e IndexedDB | [Baixar .APK](https://github.com/JoadsonRocha/EbookFinder/releases) |
 
 ---
 
@@ -155,12 +168,35 @@ EbookFinder/
    npm start
    ```
 
-4. **Gerar instalador para Windows (.exe / .msi):**
+4. **Gerar instalador para Windows (.msi e instalador completo):**
    ```bash
+   npm run build:msi
+   # ou para todos os formatos Windows (NSIS, MSI, Portable):
    npm run dist
    ```
 
+5. **Gerar aplicativo Android (.apk):**
+   ```bash
+   npm run apk
+   ```
+   *O arquivo `EbookFinder.apk` será gerado automaticamente na raiz do projeto pronto para instalar no celular.*
+
+6. **Abrir projeto Android no Android Studio:**
+   ```bash
+   npm run cap:open
+   ```
+
 ---
+
+## 📱 Versão Mobile (Capacitor & Android)
+
+O EbookFinder conta com suporte mobile de primeira linha via **Capacitor 8**, transformando a mesma interface refinada em um aplicativo Android autônomo:
+
+- 📖 **Leitor Otimizado para Telas Verticais**: O layout se auto-ajusta à largura exata do celular, eliminando qualquer barra de rolagem horizontal.
+- 👆 **Navegação por Gestos (Swipe)**: Deslize o dedo para a esquerda para avançar de página ou para a direita para voltar, exatamente como nos leitores nativos de e-books.
+- 💾 **Armazenamento com IndexedDB**: Os arquivos binários de PDF e as capas em alta resolução são mantidos no banco de dados local do aplicativo sem sofrer com os limites de 5MB do `localStorage`.
+- ⚡ **IA Groq Integrada**: Todas as chamadas de chat e geração de Skills funcionam diretamente pelo celular através de requisições nativas de alta velocidade.
+- 🎨 **Identidade Visual Completa**: Ícones adaptativos em todas as densidades Android (`mdpi` a `xxxhdpi`) e telas de abertura (*Splash Screen*) personalizadas com a logo oficial do projeto.
 
 ## 🔑 Configuração da Chave da Groq (Opcional)
 

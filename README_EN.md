@@ -11,15 +11,17 @@
 [![Node.js](https://img.shields.io/badge/Node.js-v24%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Groq LPU](https://img.shields.io/badge/Groq-LPU%20Inference-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
 [![Book to Skill](https://img.shields.io/badge/Architecture-Book--to--Skill-10B981?style=for-the-badge)](https://github.com/virgiliojr94/book-to-skill)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/)
-[![Version](https://img.shields.io/badge/Version-1.1.0-E5A93B?style=for-the-badge)](./package.json)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/JoadsonRocha/EbookFinder/releases)
+[![Capacitor](https://img.shields.io/badge/Capacitor-8.x-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)](https://capacitorjs.com/)
+[![Releases](https://img.shields.io/badge/Releases-MSI%20%7C%20APK-E5A93B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JoadsonRocha/EbookFinder/releases)
+[![Version](https://img.shields.io/badge/Version-1.1.0-10B981?style=for-the-badge)](./package.json)
 
 <br />
 
 **[🇧🇷 Português](./README.md)** &nbsp;|&nbsp; **[🇺🇸 English](./README_EN.md)**
 
 <p align="center">
-  <strong>EbookFinder</strong> is a modern desktop ecosystem crafted for book lovers, researchers, and builders to organize, explore, study, and transform personal libraries into modular AI skills. Featuring instant cover extraction, virtual reading shelves, high-contrast Dark & Light themes, seamless <strong>Google Drive / OneDrive</strong> auto-detection, and the market-grade <strong>SkillBook AI</strong> workspace.
+  <strong>EbookFinder</strong> is a modern ecosystem for <strong>Windows Desktop and Android Mobile</strong> crafted for book lovers, researchers, and builders to organize, explore, study, and transform personal libraries into modular AI skills. Featuring instant cover extraction, virtual reading shelves, high-contrast Dark & Light themes, seamless <strong>Google Drive / OneDrive</strong> auto-detection, and the market-grade <strong>SkillBook AI</strong> workspace.
 </p>
 
 <p align="center">
@@ -27,6 +29,17 @@
 </p>
 
 </div>
+
+---
+
+## 📦 Official Downloads & Releases (Windows & Android)
+
+Ready-to-use release binaries can be downloaded directly from the **[GitHub Releases](https://github.com/JoadsonRocha/EbookFinder/releases)** page:
+
+| Platform | Package | Description | Download |
+| :--- | :--- | :--- | :--- |
+| **Windows Desktop** | **`EbookFinder.msi`** | Official Windows installer with Start menu integration, offline support & bundled AI key | [Download .MSI](https://github.com/JoadsonRocha/EbookFinder/releases) |
+| **Android Mobile** | **`EbookFinder.apk`** | Mobile application for Android phones and tablets with swipe touch gestures and IndexedDB | [Download .APK](https://github.com/JoadsonRocha/EbookFinder/releases) |
 
 ---
 
@@ -155,10 +168,35 @@ EbookFinder/
    npm start
    ```
 
-4. **Build Windows executable release (.exe / .msi):**
+4. **Build Windows installer (.msi and full distribution):**
    ```bash
+   npm run build:msi
+   # or for all Windows targets (NSIS, MSI, Portable):
    npm run dist
    ```
+
+5. **Build Android Application (.apk):**
+   ```bash
+   npm run apk
+   ```
+   *The `EbookFinder.apk` package will be automatically generated at the project root ready for mobile installation.*
+
+6. **Open Android Studio project:**
+   ```bash
+   npm run cap:open
+   ```
+
+---
+
+## 📱 Mobile Version (Capacitor & Android)
+
+EbookFinder features first-class mobile support powered by **Capacitor 8**, adapting the entire reading experience for handheld devices:
+
+- 📖 **Mobile-Optimized PDF Reader**: Layout automatically fits the viewport width with no awkward horizontal scrolling.
+- 👆 **Natural Touch Gestures (Swipe)**: Swipe left to turn to the next page or swipe right to turn back, mirroring native e-reader apps.
+- 💾 **IndexedDB Binary Storage**: PDF documents and high-resolution covers are securely stored in the device's local database without hitting browser 5MB storage limits.
+- ⚡ **Direct Groq AI Inference**: Chat with SkillBook and generate Book-to-Skill extractions directly on your smartphone.
+- 🎨 **Complete Visual Identity**: Adaptive launcher icons for all Android densities (`mdpi` to `xxxhdpi`) and custom branding splash screens.
 
 ---
 
