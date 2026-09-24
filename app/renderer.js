@@ -44,7 +44,15 @@ const state = {
     escala: 1.2,
     renderizando: false,
     currentRenderTask: null,
-    sidebarAberta: true
+    sidebarAberta: true,
+    tabSidebar: "chat",
+    busca: {
+      ativa: false,
+      termo: "",
+      ocorrencias: [],
+      indiceAtual: -1,
+      cacheTexto: new Map()
+    }
   }
 };
 
@@ -969,8 +977,18 @@ function registrarEstadoHistorico() {
 }
 
 function tratarVoltarNativo() {
+  const barraBusca = document.getElementById("leitorBarraBusca");
+  if (state.leitor.ativo && barraBusca && !barraBusca.hidden) {
+    alternarBarraBuscaLeitor(false);
+    return true;
+  }
   if (state.leitor.ativo) {
     fecharLeitorInterno();
+    return true;
+  }
+  const modalMetricas = document.getElementById("modalMetricasBiblioteca");
+  if (modalMetricas && !modalMetricas.hidden) {
+    fecharModalMetricas();
     return true;
   }
   const modalCopiloto = document.getElementById("modalCopilotoIA");
@@ -1075,6 +1093,18 @@ async function abrirLeitorInterno(livro) {
   state.leitor.paginaAtual = Math.max(1, livro.progresso?.paginaAtual || 1);
   state.leitor.totalPaginas = livro.progresso?.totalPaginas || 1;
   state.leitor.escala = 1.0;
+  state.leitor.tabSidebar = "chat";
+  state.leitor.busca = {
+    ativa: false,
+    termo: "",
+    ocorrencias: [],
+    indiceAtual: -1,
+    cacheTexto: new Map()
+  };
+
+  alternarBarraBuscaLeitor(false);
+  alternarTabSidebarLeitor("chat");
+  atualizarIndicadorMarcadorToolbar();
 
   // No mobile, a barra lateral do SkillBook inicia recolhida para dar 100% de visão ao livro
   const isMobile = window.innerWidth <= 768 || document.body.classList.contains("is-mobile-app");
@@ -1159,6 +1189,7 @@ async function abrirLeitorInterno(livro) {
 
 function fecharLeitorInterno() {
   alternarTelaCheiaLeitor(false);
+  alternarBarraBuscaLeitor(false);
   const overlay = document.getElementById("viewLeitorIntegrado");
   if (overlay) overlay.hidden = true;
 
@@ -1368,6 +1399,7 @@ async function renderizarPaginaLeitor(num) {
     if (lblDockZoom) lblDockZoom.textContent = pct;
 
     salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
+    atualizarIndicadorMarcadorToolbar();
 
     const viewportElem = document.getElementById("readerPdfViewport");
     if (viewportElem) viewportElem.scrollTop = 0;
@@ -1492,7 +1524,8 @@ async function salvarProgressoLeitor(livro, paginaAtual, totalPaginas) {
     paginaAtual,
     totalPaginas,
     porcentagem,
-    anotacoes: livro.progresso?.anotacoes || ""
+    anotacoes: livro.progresso?.anotacoes || "",
+    marcadores: livro.progresso?.marcadores || []
   };
   const resultado = await window.api?.salvarProgressoLeitura?.(livro.caminho, dados);
   if (resultado) {
@@ -1678,6 +1711,343 @@ async function extrairConceitosPaginaAtual() {
     enviarPerguntaChatLeitor(`Quais são os conceitos centrais da página ${state.leitor.paginaAtual}?`);
   }
 }
+
+// ============================================================================
+// 4.9 FASE 2: BUSCA TEXTUAL, MARCADORES, EXPORTAÇÃO E ESTATÍSTICAS
+// ============================================================================
+
+function alternarBarraBuscaLeitor(mostrar) {
+  const bar = document.getElementById("leitorBarraBusca");
+  const input = document.getElementById("inputLeitorBusca");
+  if (!bar) return;
+  const novoEstado = mostrar !== undefined ? mostrar : bar.hidden;
+  bar.hidden = !novoEstado;
+  state.leitor.busca.ativa = novoEstado;
+  if (novoEstado && input) {
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 50);
+  }
+}
+
+async function obterTextoPaginaPdf(numPagina) {
+  if (state.leitor.busca.cacheTexto.has(numPagina)) {
+    return state.leitor.busca.cacheTexto.get(numPagina);
+  }
+  try {
+    const page = await state.leitor.pdfDoc.getPage(numPagina);
+    const content = await page.getTextContent();
+    const texto = content.items.map(item => item.str).join(" ").toLowerCase();
+    state.leitor.busca.cacheTexto.set(numPagina, texto);
+    return texto;
+  } catch (e) {
+    return "";
+  }
+}
+
+async function executarBuscaNoLivro(direcao = 1) {
+  const input = document.getElementById("inputLeitorBusca");
+  const lblContador = document.getElementById("lblLeitorBuscaContador");
+  const termo = (input?.value || "").trim().toLowerCase();
+
+  if (!termo || !state.leitor.pdfDoc) {
+    if (lblContador) lblContador.textContent = "0/0";
+    state.leitor.busca.ocorrencias = [];
+    state.leitor.busca.indiceAtual = -1;
+    return;
+  }
+
+  if (termo !== state.leitor.busca.termo) {
+    state.leitor.busca.termo = termo;
+    state.leitor.busca.ocorrencias = [];
+    state.leitor.busca.indiceAtual = -1;
+    if (lblContador) lblContador.textContent = "...";
+
+    const total = state.leitor.totalPaginas;
+    const encontradas = [];
+    for (let p = 1; p <= total; p++) {
+      const texto = await obterTextoPaginaPdf(p);
+      if (texto.includes(termo)) {
+        encontradas.push(p);
+      }
+    }
+    state.leitor.busca.ocorrencias = encontradas;
+
+    if (encontradas.length === 0) {
+      if (lblContador) lblContador.textContent = "0/0";
+      showToast(`Nenhuma ocorrência encontrada para "${termo}".`);
+      return;
+    }
+
+    let idxMaisProximo = encontradas.findIndex(p => p >= state.leitor.paginaAtual);
+    if (idxMaisProximo === -1) idxMaisProximo = 0;
+    state.leitor.busca.indiceAtual = idxMaisProximo;
+  } else {
+    if (state.leitor.busca.ocorrencias.length > 0) {
+      const total = state.leitor.busca.ocorrencias.length;
+      state.leitor.busca.indiceAtual = (state.leitor.busca.indiceAtual + direcao + total) % total;
+    }
+  }
+
+  const ocorrencias = state.leitor.busca.ocorrencias;
+  const idx = state.leitor.busca.indiceAtual;
+
+  if (ocorrencias.length > 0 && idx >= 0) {
+    const pagAlvo = ocorrencias[idx];
+    if (lblContador) lblContador.textContent = `${idx + 1}/${ocorrencias.length}`;
+    if (pagAlvo !== state.leitor.paginaAtual) {
+      renderizarPaginaLeitor(pagAlvo);
+    }
+  } else {
+    if (lblContador) lblContador.textContent = "0/0";
+  }
+}
+
+function alternarTabSidebarLeitor(tab) {
+  state.leitor.tabSidebar = tab;
+  const tabIA = document.getElementById("tabBtnReaderIA");
+  const tabMarcadores = document.getElementById("tabBtnReaderMarcadores");
+  const panelChat = document.getElementById("panelReaderChat");
+  const panelMarcadores = document.getElementById("panelReaderMarcadores");
+
+  if (tabIA) tabIA.classList.toggle("active", tab === "chat");
+  if (tabMarcadores) tabMarcadores.classList.toggle("active", tab === "marcadores");
+  if (panelChat) panelChat.hidden = tab !== "chat";
+  if (panelMarcadores) panelMarcadores.hidden = tab !== "marcadores";
+
+  if (tab === "marcadores") {
+    renderizarListaMarcadores();
+  }
+}
+
+function obterMarcadoresObraAtual() {
+  const l = state.leitor.livro;
+  if (!l || !l.progresso) return [];
+  if (!Array.isArray(l.progresso.marcadores)) {
+    l.progresso.marcadores = [];
+  }
+  return l.progresso.marcadores;
+}
+
+function atualizarIndicadorMarcadorToolbar() {
+  const btnMarcador = document.getElementById("btnLeitorMarcador");
+  const lblPag = document.getElementById("lblMarcadorPagAtual");
+  const pag = state.leitor.paginaAtual || 1;
+  if (lblPag) lblPag.textContent = `Pág. ${pag}`;
+
+  const marcadores = obterMarcadoresObraAtual();
+  const jaMarcada = marcadores.some(m => m.pagina === pag);
+
+  if (btnMarcador) {
+    btnMarcador.classList.toggle("marcador-ativo", jaMarcada);
+    btnMarcador.title = jaMarcada
+      ? `Página ${pag} marcada! Clique para remover marcador.`
+      : `Fixar marcador na página ${pag}`;
+  }
+
+  const badgeCount = document.getElementById("badgeCountMarcadores");
+  if (badgeCount) badgeCount.textContent = marcadores.length;
+}
+
+async function alternarMarcadorPaginaAtual(nota = "") {
+  const l = state.leitor.livro;
+  if (!l) return;
+  const pag = state.leitor.paginaAtual;
+  const marcadores = obterMarcadoresObraAtual();
+  const idx = marcadores.findIndex(m => m.pagina === pag);
+
+  if (idx !== -1) {
+    marcadores.splice(idx, 1);
+    showToast(`Marcador da página ${pag} removido.`);
+  } else {
+    marcadores.push({
+      id: "mk_" + Date.now(),
+      pagina: pag,
+      nota: (nota || "").trim() || `Página ${pag}`,
+      data: new Date().toLocaleDateString("pt-BR")
+    });
+    showToast(`Página ${pag} fixada nos Marcadores!`);
+  }
+
+  marcadores.sort((a, b) => a.pagina - b.pagina);
+  l.progresso.marcadores = marcadores;
+
+  await window.api?.salvarProgressoLeitura?.(l.caminho, {
+    ...(l.progresso || {}),
+    marcadores
+  });
+
+  atualizarIndicadorMarcadorToolbar();
+  renderizarListaMarcadores();
+}
+
+async function removerMarcadorPorId(id) {
+  const l = state.leitor.livro;
+  if (!l) return;
+  const marcadores = obterMarcadoresObraAtual();
+  const idx = marcadores.findIndex(m => m.id === id);
+  if (idx !== -1) {
+    const pag = marcadores[idx].pagina;
+    marcadores.splice(idx, 1);
+    l.progresso.marcadores = marcadores;
+    await window.api?.salvarProgressoLeitura?.(l.caminho, {
+      ...(l.progresso || {}),
+      marcadores
+    });
+    atualizarIndicadorMarcadorToolbar();
+    renderizarListaMarcadores();
+    showToast(`Marcador da página ${pag} removido.`);
+  }
+}
+
+function renderizarListaMarcadores() {
+  const lista = document.getElementById("listaMarcadoresLeitor");
+  if (!lista) return;
+  const marcadores = obterMarcadoresObraAtual();
+
+  if (marcadores.length === 0) {
+    lista.innerHTML = `
+      <div class="marcador-empty">
+        <span style="font-size: 2rem; display:block; margin-bottom:8px;">🔖</span>
+        Nenhum marcador salvo ainda.<br>
+        Clique em <strong>+ Fixar</strong> acima para salvar páginas importantes desta obra.
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = marcadores.map(m => `
+    <div class="marcador-item" data-pagina="${m.pagina}">
+      <div class="marcador-info" onclick="window.irParaPaginaLeitor(${m.pagina})">
+        <span class="marcador-pag-badge">📖 Página ${m.pagina}</span>
+        <span class="marcador-texto">${m.nota || "Sem anotação"}</span>
+        <span class="marcador-data">Salvo em ${m.data}</span>
+      </div>
+      <button class="btn-remover-marcador" title="Excluir marcador" onclick="event.stopPropagation(); window.removerMarcadorPorId('${m.id}')">&times;</button>
+    </div>
+  `).join("");
+}
+
+async function exportarConversaIA(origem = "copiloto") {
+  const isCopiloto = origem === "copiloto";
+  const livro = isCopiloto ? state.livroSelecionado : state.leitor.livro;
+  const historico = isCopiloto ? state.chatHistorico : obterHistoricoChatStorage(livro?.caminho);
+
+  if (!historico || historico.length === 0) {
+    showToast("Nenhuma conversa com o SkillBook para exportar.");
+    return;
+  }
+
+  const tituloObra = livro ? (livro.tituloHumanizado || livro.titulo || livro.nome) : "EbookFinder";
+  const autorObra = livro && livro.autor !== "Desconhecido" ? livro.autor : "Biblioteca Digital";
+  const dataHoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  let md = `# 📚 Análise & Mentor SkillBook\n\n`;
+  md += `**Obra:** ${tituloObra}  \n`;
+  md += `**Autor:** ${autorObra}  \n`;
+  md += `**Data da Consulta:** ${dataHoje}  \n`;
+  md += `**Exportado via:** EbookFinder AI  \n\n`;
+  md += `---\n\n`;
+
+  historico.forEach((msg) => {
+    if (msg.role === "user") {
+      md += `### 👤 Pergunta:\n${msg.content}\n\n`;
+    } else {
+      md += `### ✨ SkillBook:\n${msg.content}\n\n---\n\n`;
+    }
+  });
+
+  const nomeArquivo = `Analise_${tituloObra.replace(/[^a-zA-Z0-9_-]/g, "_")}.md`;
+
+  const res = await window.api?.exportarArquivoTexto?.({
+    nomeSugerido: nomeArquivo,
+    conteudo: md,
+    extensao: "md"
+  });
+
+  if (res?.success) {
+    showToast("Análise exportada com sucesso!");
+  } else if (!res?.canceled) {
+    try {
+      await navigator.clipboard.writeText(md);
+      showToast("Análise copiada para a área de transferência!");
+    } catch (e) {
+      showToast("Não foi possível exportar a análise.");
+    }
+  }
+}
+
+function abrirModalMetricas() {
+  const modal = document.getElementById("modalMetricasBiblioteca");
+  if (!modal) return;
+
+  const totalLivros = state.todosLivros.length;
+  const concluidos = state.todosLivros.filter(l => l.status === "concluidos").length;
+  const lendo = state.todosLivros.filter(l => l.status === "lendo").length;
+  const queroLer = state.todosLivros.filter(l => l.status === "quero-ler").length;
+  const naoLidos = Math.max(0, totalLivros - concluidos - lendo - queroLer);
+
+  let paginasLidas = 0;
+  let totalPaginasEstante = 0;
+
+  state.todosLivros.forEach(l => {
+    const pag = l.progresso?.paginaAtual || 0;
+    const tot = l.progresso?.totalPaginas || 0;
+    paginasLidas += pag;
+    totalPaginasEstante += tot;
+  });
+
+  const percGlobal = totalPaginasEstante > 0 
+    ? Math.min(100, Math.round((paginasLidas / totalPaginasEstante) * 100))
+    : (totalLivros > 0 ? Math.round((concluidos / totalLivros) * 100) : 0);
+
+  const elTotalLivros = document.getElementById("statTotalLivros");
+  const elPaginasLidas = document.getElementById("statPaginasLidas");
+  const elLivrosLidos = document.getElementById("statLivrosLidos");
+  const elPercGlobal = document.getElementById("statPercentualGlobal");
+
+  if (elTotalLivros) elTotalLivros.textContent = totalLivros;
+  if (elPaginasLidas) elPaginasLidas.textContent = paginasLidas.toLocaleString("pt-BR");
+  if (elLivrosLidos) elLivrosLidos.textContent = concluidos;
+  if (elPercGlobal) elPercGlobal.textContent = `${percGlobal}%`;
+
+  const pctConcl = totalLivros > 0 ? (concluidos / totalLivros) * 100 : 0;
+  const pctLendo = totalLivros > 0 ? (lendo / totalLivros) * 100 : 0;
+  const pctQuero = totalLivros > 0 ? (queroLer / totalLivros) * 100 : 0;
+  const pctNaoLido = totalLivros > 0 ? (naoLidos / totalLivros) * 100 : 100;
+
+  const barConcluidos = document.getElementById("barConcluidos");
+  const barLendo = document.getElementById("barLendo");
+  const barQueroLer = document.getElementById("barQueroLer");
+  const barNaoLido = document.getElementById("barNaoLido");
+
+  if (barConcluidos) barConcluidos.style.width = `${pctConcl}%`;
+  if (barLendo) barLendo.style.width = `${pctLendo}%`;
+  if (barQueroLer) barQueroLer.style.width = `${pctQuero}%`;
+  if (barNaoLido) barNaoLido.style.width = `${pctNaoLido}%`;
+
+  const legConcl = document.getElementById("lblLegendaConcluidos");
+  const legLendo = document.getElementById("lblLegendaLendo");
+  const legQuero = document.getElementById("lblLegendaQueroLer");
+  const legNao = document.getElementById("lblLegendaNaoLidos");
+
+  if (legConcl) legConcl.textContent = concluidos;
+  if (legLendo) legLendo.textContent = lendo;
+  if (legQuero) legQuero.textContent = queroLer;
+  if (legNao) legNao.textContent = naoLidos;
+
+  registrarEstadoHistorico();
+  modal.hidden = false;
+}
+
+function fecharModalMetricas() {
+  const modal = document.getElementById("modalMetricasBiblioteca");
+  if (modal) modal.hidden = true;
+}
+
+window.irParaPaginaLeitor = irParaPaginaLeitor;
+window.removerMarcadorPorId = removerMarcadorPorId;
 
 // ============================================================================
 // 5.1 TEMA CLARO / ESCURO & CONFIGURAÇÃO DA IA (GROQ)
@@ -2940,6 +3310,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (action === "lendo") { alternarAba("lendo"); fecharMenu(); }
     else if (action === "concluidos") { alternarAba("concluidos"); fecharMenu(); }
     else if (action === "quero-ler") { alternarAba("quero-ler"); fecharMenu(); }
+    else if (action === "metricas") { fecharMenu(); abrirModalMetricas(); }
     else if (action === "config-ia") { fecharMenu(); abrirModalConfigIA(); }
     else if (action === "trocar-pasta") { acaoTrocarPasta(); }
     else if (action === "recarregar") { fecharMenu(); carregarBiblioteca(); showToast("Biblioteca recarregada!"); }
