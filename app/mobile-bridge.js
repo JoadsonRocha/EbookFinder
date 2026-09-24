@@ -236,6 +236,10 @@
             return;
           }
 
+          if (window.showToast) {
+            window.showToast(`Importando ${files.length} obra(s) para a biblioteca...`);
+          }
+
           for (const file of files) {
             // Cria um identificador único e consistente para o arquivo
             const id = "mobile_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_") + "_" + file.size;
@@ -271,6 +275,9 @@
 
           persistirMetadadosLivros();
           input.value = "";
+          if (window.showToast) {
+            window.showToast(`${files.length} obra(s) importada(s) com sucesso!`);
+          }
           // Retorna o nome da pasta para o renderer.js atualizar o estado
           resolve(NOME_PASTA_MOBILE);
         };

@@ -807,24 +807,43 @@ async function criarSkillDiretoDoCard(livro) {
 function renderizarEstadoSemPasta() {
   const grid = document.getElementById("grid");
   const resultsCount = document.getElementById("resultsCount");
-  if (resultsCount) resultsCount.textContent = "Nenhuma pasta selecionada";
+  const isMobile = window.isMobileEnvironment || window.innerWidth <= 768;
+
+  if (resultsCount) {
+    resultsCount.textContent = isMobile ? "Sua estante móvel" : "Nenhuma pasta selecionada";
+  }
   if (!grid) return;
-  grid.innerHTML = `
-    <div class="empty-state">
-      <div class="empty-icon">📁</div>
-      <h3 class="empty-title">Nenhuma pasta selecionada</h3>
-      <p class="empty-desc">Escolha a pasta do seu computador onde seus e-books (.pdf, .epub, etc.) estão localizados ou selecione arquivos diretamente.</p>
-      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px;">
-        <button class="btn-empty-action" onclick="abrirPopupPasta()">📁 Selecionar Pasta</button>
-        <button class="btn-empty-action" id="btnEscolherArquivosVazio" style="background: rgba(229, 169, 59, 0.15); border: 1px solid rgba(229, 169, 59, 0.4); color: #e5a93b;">📄 Selecionar Arquivos PDF</button>
+
+  if (isMobile) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <h3 class="empty-title">Sua Biblioteca Digital</h3>
+        <p class="empty-desc">Adicione seus e-books (.pdf, .epub) do seu celular ou tablet para começar a ler com o leitor inteligente e o SkillBook IA.</p>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px;">
+          <button class="btn-empty-action" id="btnEscolherArquivosVazio" style="background: linear-gradient(135deg, #e5a93b, #d97706); border: none; color: #12101c; font-weight: 700; font-size: 0.95rem; padding: 12px 24px; border-radius: 10px; box-shadow: 0 4px 15px rgba(229,169,59,0.35); cursor: pointer;">📲 Adicionar Livros / PDFs</button>
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  } else {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📁</div>
+        <h3 class="empty-title">Nenhuma pasta selecionada</h3>
+        <p class="empty-desc">Escolha a pasta do seu computador onde seus e-books (.pdf, .epub, etc.) estão localizados ou selecione arquivos diretamente.</p>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px;">
+          <button class="btn-empty-action" onclick="abrirPopupPasta()">📁 Selecionar Pasta</button>
+          <button class="btn-empty-action" id="btnEscolherArquivosVazio" style="background: rgba(229, 169, 59, 0.15); border: 1px solid rgba(229, 169, 59, 0.4); color: #e5a93b;">📄 Selecionar Arquivos PDF</button>
+        </div>
+      </div>
+    `;
+  }
+
   document.getElementById("btnEscolherArquivosVazio")?.addEventListener("click", () => {
     window.api?.escolherArquivos?.().then(novaPasta => {
       if (novaPasta) {
         state.pastaAtual = novaPasta;
-        showToast("Pasta de e-books selecionada!");
+        showToast("Livros adicionados à biblioteca!");
         carregarBiblioteca();
       }
     });
