@@ -699,6 +699,49 @@ ${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : 
       return { success: true };
     },
 
-    abrirPastaSkill: async () => false
+    abrirPastaSkill: async () => false,
+
+    exportarArquivoTexto: async ({ nomeSugerido, conteudo, extensao = "md" }) => {
+      if (!conteudo) return { success: false, error: "Conteúdo vazio" };
+      const nomeFinal = nomeSugerido || `Analise_SkillBook.${extensao || "md"}`;
+
+      if (navigator.share) {
+        try {
+          const file = new File([conteudo], nomeFinal, { type: "text/markdown;charset=utf-8" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: nomeFinal,
+              text: `Exportação de Análise EbookFinder: ${nomeFinal}`
+            });
+            return { success: true, compartilhado: true };
+          } else {
+            await navigator.share({
+              title: nomeFinal,
+              text: conteudo
+            });
+            return { success: true, compartilhado: true };
+          }
+        } catch (shareErr) {
+          if (shareErr.name === "AbortError") {
+            return { success: false, canceled: true };
+          }
+        }
+      }
+
+      try {
+        const blob = new Blob([conteudo], { type: "text/markdown;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = nomeFinal;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+        return { success: true, download: true };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
   };
 })();
