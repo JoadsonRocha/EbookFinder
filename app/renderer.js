@@ -3671,13 +3671,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (e.key === "Escape") {
       e.preventDefault();
-      fecharLeitorInterno();
+      const barraBusca = document.getElementById("leitorBarraBusca");
+      if (barraBusca && !barraBusca.hidden) {
+        alternarBarraBuscaLeitor(false);
+      } else {
+        fecharLeitorInterno();
+      }
     } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
       e.preventDefault();
       mudarPaginaLeitor(-1);
     } else if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && tag !== "INPUT")) {
       e.preventDefault();
       mudarPaginaLeitor(1);
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+      e.preventDefault();
+      alternarBarraBuscaLeitor(true);
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
       e.preventDefault();
       toggleSkillSidebar();
@@ -3691,6 +3699,64 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       ajustarZoom(0, 1.2);
     }
+  });
+
+  // ============================================================
+  // EVENTOS DA FASE 2: BUSCA NO LEITOR, MARCADORES, EXPORTAÇÃO E MÉTRICAS
+  // ============================================================
+  // 1. Busca Textual no Leitor
+  document.getElementById("btnLeitorAbrirBusca")?.addEventListener("click", () => alternarBarraBuscaLeitor());
+  document.getElementById("btnDockBusca")?.addEventListener("click", () => alternarBarraBuscaLeitor());
+  document.getElementById("btnLeitorFecharBusca")?.addEventListener("click", () => alternarBarraBuscaLeitor(false));
+  document.getElementById("btnLeitorBuscaProxima")?.addEventListener("click", () => executarBuscaNoLivro(1));
+  document.getElementById("btnLeitorBuscaAnterior")?.addEventListener("click", () => executarBuscaNoLivro(-1));
+  document.getElementById("inputLeitorBusca")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      executarBuscaNoLivro(e.shiftKey ? -1 : 1);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      alternarBarraBuscaLeitor(false);
+    }
+  });
+
+  // 2. Marcadores & Anotações
+  document.getElementById("btnLeitorMarcador")?.addEventListener("click", () => alternarMarcadorPaginaAtual());
+  document.getElementById("btnDockMarcador")?.addEventListener("click", () => {
+    const sidebar = document.getElementById("readerSkillSidebar");
+    if (sidebar && sidebar.classList.contains("collapsed")) {
+      toggleSkillSidebar(true);
+      alternarTabSidebarLeitor("marcadores");
+    } else {
+      alternarMarcadorPaginaAtual();
+    }
+  });
+  document.getElementById("tabBtnReaderIA")?.addEventListener("click", () => alternarTabSidebarLeitor("chat"));
+  document.getElementById("tabBtnReaderMarcadores")?.addEventListener("click", () => alternarTabSidebarLeitor("marcadores"));
+
+  const adicionarMarcadorComNota = () => {
+    const input = document.getElementById("inputNotaMarcador");
+    const nota = input?.value || "";
+    alternarMarcadorPaginaAtual(nota);
+    if (input) input.value = "";
+  };
+  document.getElementById("btnAdicionarMarcador")?.addEventListener("click", adicionarMarcadorComNota);
+  document.getElementById("inputNotaMarcador")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      adicionarMarcadorComNota();
+    }
+  });
+
+  // 3. Exportação de Conversas com o SkillBook
+  document.getElementById("btnCopilotExportarChat")?.addEventListener("click", () => exportarConversaIA("copiloto"));
+  document.getElementById("btnExportarChatLeitor")?.addEventListener("click", () => exportarConversaIA("leitor"));
+
+  // 4. Modal de Métricas da Biblioteca
+  document.getElementById("btnAbrirMetricasTab")?.addEventListener("click", abrirModalMetricas);
+  document.getElementById("btnFecharModalMetricas")?.addEventListener("click", fecharModalMetricas);
+  document.getElementById("modalMetricasBiblioteca")?.addEventListener("click", (e) => {
+    if (e.target.id === "modalMetricasBiblioteca") fecharModalMetricas();
   });
 
   // ============================================================
@@ -3736,6 +3802,13 @@ document.addEventListener("DOMContentLoaded", () => {
   window.criarSkillDiretoDoCard = criarSkillDiretoDoCard;
   window.alternarFiltroLeitura = alternarFiltroLeitura;
   window.removerLivroSelecionado = removerLivroSelecionado;
+  window.abrirModalMetricas = abrirModalMetricas;
+  window.fecharModalMetricas = fecharModalMetricas;
+  window.exportarConversaIA = exportarConversaIA;
+  window.alternarBarraBuscaLeitor = alternarBarraBuscaLeitor;
+  window.executarBuscaNoLivro = executarBuscaNoLivro;
+  window.alternarTabSidebarLeitor = alternarTabSidebarLeitor;
+  window.alternarMarcadorPaginaAtual = alternarMarcadorPaginaAtual;
 
   carregarBiblioteca();
 });
