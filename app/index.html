@@ -909,8 +909,17 @@
         </div>
       </div>
 
-      <!-- LADO DIREITO: BOTÃO TOGGLE SKILLBOOK E TELA CHEIA -->
+      <!-- LADO DIREITO: FERRAMENTAS DO LEITOR -->
       <div class="leitor-toolbar-right">
+        <button id="btnLeitorAbrirBusca" class="leitor-btn-tool" title="Pesquisar texto no livro (Ctrl+F)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        <button id="btnLeitorMarcador" class="leitor-btn-tool" title="Fixar / Remover Marcador nesta página">
+          <span id="iconLeitorMarcador" style="font-size: 15px;">🔖</span>
+        </button>
         <button id="btnLeitorFiltroCor" class="leitor-btn-tool" title="Modo de Cor da Leitura (Normal / Sépia / Noturno)">
           <span id="iconFiltroLeitor" style="font-size: 15px;">☀️</span>
         </button>
@@ -929,6 +938,23 @@
         </button>
       </div>
     </header>
+
+    <!-- BARRA FLUTUANTE DE BUSCA TEXTUAL NO LIVRO -->
+    <div id="leitorBarraBusca" class="leitor-search-bar" hidden>
+      <div class="search-input-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="inputLeitorBusca" placeholder="Pesquisar no livro... (Enter busca)" autocomplete="off" spellcheck="false" />
+        <span id="lblLeitorBuscaContador" class="search-match-count">0/0</span>
+      </div>
+      <div class="search-nav-buttons">
+        <button id="btnLeitorBuscaAnterior" class="btn-search-nav" title="Ocorrência anterior (Shift+Enter)">▲</button>
+        <button id="btnLeitorBuscaProxima" class="btn-search-nav" title="Próxima ocorrência (Enter)">▼</button>
+        <button id="btnLeitorFecharBusca" class="btn-search-close" title="Fechar busca (Esc)">&times;</button>
+      </div>
+    </div>
 
     <!-- LAYOUT PRINCIPAL DIVIDIDO (SPLIT VIEW) -->
     <main class="reader-split-layout">
@@ -959,56 +985,96 @@
       <aside id="readerSkillSidebar" class="reader-skill-sidebar">
         <div class="reader-sidebar-header">
           <div class="reader-sidebar-title-wrap">
-            <span class="reader-sidebar-badge">✨ SkillBook</span>
+            <span class="reader-sidebar-badge">✨ Leitor Pro</span>
             <span id="lblReaderModeloIA" class="reader-sidebar-model">Turbo</span>
           </div>
-          <button id="btnFecharSkillSidebar" class="reader-sidebar-close" title="Ocultar Painel Lateral (Ctrl+B)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <!-- SUGESTÕES RÁPIDAS DE AÇÕES CONTEXTUAIS DA PÁGINA ATIVA -->
-        <div class="reader-quick-actions">
-          <button id="btnQuickExplicarPagina" class="reader-quick-chip" title="Explicar o conteúdo e as lições desta página">
-            🔍 Explicar esta página
-          </button>
-          <button id="btnQuickResumirPagina" class="reader-quick-chip" title="Resumo das lições práticas desta página">
-            📝 Resumir página
-          </button>
-          <button id="btnQuickConceitosChave" class="reader-quick-chip" title="Quais os principais conceitos aqui?">
-            💡 Conceitos-chave
-          </button>
-        </div>
-
-        <!-- MENSAGENS DO CHAT DO LEITOR -->
-        <div id="readerChatFeed" class="reader-chat-feed">
-          <div class="copilot-msg assistente">
-            <div class="copilot-avatar">✨</div>
-            <div class="copilot-msg-content">
-              <p>Olá! Sou o <strong>SkillBook</strong>, sua inteligência nativa nesta leitura.</p>
-              <p>Estou acompanhando sua página em tempo real. Você pode fazer perguntas diretas ou clicar nos atalhos acima para análises instantâneas desta página!</p>
-            </div>
+          <div class="reader-sidebar-header-actions">
+            <button id="btnExportarChatLeitor" class="reader-sidebar-tool-btn" title="Exportar Análise do SkillBook (.md)">
+              <span>📄 Exportar</span>
+            </button>
+            <button id="btnFecharSkillSidebar" class="reader-sidebar-close" title="Ocultar Painel Lateral (Ctrl+B)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- ENTRADA DO CHAT DO LEITOR -->
-        <div class="reader-chat-input-bar">
-          <textarea id="inputReaderChat" class="reader-chat-textarea" rows="2" placeholder="Pergunte ao SkillBook sobre esta página... (Enter envia)"></textarea>
-          <button id="btnEnviarReaderChat" class="reader-btn-send" title="Enviar Mensagem">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
+        <!-- ABAS DA BARRA LATERAL (MENTOR IA vs MARCADORES) -->
+        <div class="reader-sidebar-tabs">
+          <button id="tabBtnReaderIA" class="reader-tab-btn active">⚡ Mentor IA</button>
+          <button id="tabBtnReaderMarcadores" class="reader-tab-btn">🔖 Marcadores <span id="badgeCountMarcadores" class="reader-tab-badge">0</span></button>
+        </div>
+
+        <!-- PAINEL 1: CHAT DO MENTOR IA -->
+        <div id="panelReaderChat" class="reader-sidebar-panel active">
+          <!-- SUGESTÕES RÁPIDAS DE AÇÕES CONTEXTUAIS DA PÁGINA ATIVA -->
+          <div class="reader-quick-actions">
+            <button id="btnQuickExplicarPagina" class="reader-quick-chip" title="Explicar o conteúdo e as lições desta página">
+              🔍 Explicar página
+            </button>
+            <button id="btnQuickResumirPagina" class="reader-quick-chip" title="Resumo das lições práticas desta página">
+              📝 Resumir página
+            </button>
+            <button id="btnQuickConceitosChave" class="reader-quick-chip" title="Quais os principais conceitos aqui?">
+              💡 Conceitos-chave
+            </button>
+          </div>
+
+          <!-- MENSAGENS DO CHAT DO LEITOR -->
+          <div id="readerChatFeed" class="reader-chat-feed">
+            <div class="copilot-msg assistente">
+              <div class="copilot-avatar">✨</div>
+              <div class="copilot-msg-content">
+                <p>Olá! Sou o <strong>SkillBook</strong>, sua inteligência nativa nesta leitura.</p>
+                <p>Estou acompanhando sua página em tempo real. Você pode fazer perguntas diretas ou clicar nos atalhos acima para análises instantâneas desta página!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ENTRADA DO CHAT DO LEITOR -->
+          <div class="reader-chat-input-bar">
+            <textarea id="inputReaderChat" class="reader-chat-textarea" rows="2" placeholder="Pergunte ao SkillBook sobre esta página... (Enter envia)"></textarea>
+            <button id="btnEnviarReaderChat" class="reader-btn-send" title="Enviar Mensagem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- PAINEL 2: MARCADORES E ANOTAÇÕES -->
+        <div id="panelReaderMarcadores" class="reader-sidebar-panel" hidden>
+          <div class="marcadores-quick-add">
+            <div class="marcadores-add-header">
+              <span>Fixar Marcador (<b id="lblMarcadorPagAtual">Pág. 1</b>)</span>
+            </div>
+            <div class="marcadores-input-row">
+              <input type="text" id="inputNotaMarcador" placeholder="Nota curta (opcional)..." maxlength="120" />
+              <button id="btnAdicionarMarcador" class="btn-adicionar-marcador">+ Fixar</button>
+            </div>
+          </div>
+          <div id="listaMarcadoresLeitor" class="marcadores-lista">
+            <!-- Injetado dinamicamente -->
+          </div>
         </div>
       </aside>
     </main>
 
     <!-- DOCK FLUTUANTE DE LEITURA & ZOOM (MODERNO / MOBILE FRIENDLY) -->
     <div id="readerQuickDock" class="reader-quick-dock">
+      <button id="btnDockBusca" class="dock-btn" title="Pesquisar no Livro">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="btnDockMarcador" class="dock-btn" title="Fixar / Ver Marcadores">
+        <span style="font-size: 13px;">🔖</span>
+      </button>
+      <div class="dock-divider"></div>
       <button id="btnDockZoomOut" class="dock-btn" title="Diminuir Zoom">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -1064,6 +1130,62 @@
       <p style="font-size: 0.78rem; color: #aba5cd; margin-top: 14px; line-height: 1.4;">
         💡 <em>Dica: No seletor de pastas do Windows, os arquivos PDF ficam ocultos pelo próprio sistema (são mostradas apenas as pastas). Basta selecionar a pasta principal e clicar em "Selecionar Pasta"! Você também pode arrastar e soltar PDFs diretamente nesta janela.</em>
       </p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL DE ESTATÍSTICAS DA BIBLIOTECA (READING ANALYTICS)
+       ============================================================ -->
+  <div id="modalMetricasBiblioteca" class="modal-backdrop" hidden>
+    <div class="config-dialog modal-metricas-dialog">
+      <div class="config-dialog-header">
+        <div class="config-header-title">
+          <span style="font-size: 1.2rem;">📊</span>
+          <h3>Estatísticas da Biblioteca</h3>
+        </div>
+        <button id="btnFecharModalMetricas" class="btn-close-modal" aria-label="Fechar estatísticas">&times;</button>
+      </div>
+
+      <div class="config-dialog-body">
+        <div class="metricas-grid">
+          <div class="stat-card">
+            <span class="stat-icon">📚</span>
+            <span class="stat-val" id="statTotalLivros">0</span>
+            <span class="stat-label">Obras na Estante</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">📖</span>
+            <span class="stat-val" id="statPaginasLidas">0</span>
+            <span class="stat-label">Páginas Lidas</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">✅</span>
+            <span class="stat-val" id="statLivrosLidos">0</span>
+            <span class="stat-label">Obras Concluídas</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">⚡</span>
+            <span class="stat-val" id="statPercentualGlobal">0%</span>
+            <span class="stat-label">Conclusão Global</span>
+          </div>
+        </div>
+
+        <div class="metricas-shelf-progress">
+          <h4 class="metricas-section-title">Distribuição da Sua Estante</h4>
+          <div class="shelf-progress-bar">
+            <div id="barConcluidos" class="shelf-bar-part concluidos" style="width: 0%" title="Concluídos"></div>
+            <div id="barLendo" class="shelf-bar-part lendo" style="width: 0%" title="Lendo"></div>
+            <div id="barQueroLer" class="shelf-bar-part quero-ler" style="width: 0%" title="Quero Ler"></div>
+            <div id="barNaoLido" class="shelf-bar-part nao-lido" style="width: 100%" title="Não Lido"></div>
+          </div>
+          <div class="shelf-legend">
+            <span><i class="dot concluidos"></i> Concluídos (<b id="lblLegendaConcluidos">0</b>)</span>
+            <span><i class="dot lendo"></i> Lendo (<b id="lblLegendaLendo">0</b>)</span>
+            <span><i class="dot quero-ler"></i> Quero Ler (<b id="lblLegendaQueroLer">0</b>)</span>
+            <span><i class="dot nao-lido"></i> Não Lidos (<b id="lblLegendaNaoLidos">0</b>)</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

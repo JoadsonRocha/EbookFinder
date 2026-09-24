@@ -5491,3 +5491,365 @@ body[data-theme="light"] .about-footer {
     right: 18px !important;
   }
 }
+
+/* ============================================================
+   FASE 2: RECURSOS AVANÇADOS DE LEITURA & ESTATÍSTICAS
+   ============================================================ */
+
+/* 1. Botão de Estatísticas na Barra de Controle */
+.btn-metricas-tab {
+  margin-left: auto;
+  border-color: rgba(229, 169, 59, 0.3) !important;
+  color: #e5a93b !important;
+  background: rgba(229, 169, 59, 0.08) !important;
+}
+.btn-metricas-tab:hover {
+  background: rgba(229, 169, 59, 0.2) !important;
+  border-color: #e5a93b !important;
+}
+
+/* 2. Barra de Busca Textual Flutuante no Leitor */
+.leitor-search-bar {
+  position: absolute;
+  top: 52px;
+  right: 20px;
+  z-index: 105;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 16, 28, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 169, 59, 0.35);
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  animation: slideDownSearch 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownSearch {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-input-wrap svg {
+  color: #e5a93b;
+  flex-shrink: 0;
+}
+.search-input-wrap input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 0.82rem;
+  width: 190px;
+}
+.search-match-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #aba5cd;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+.search-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  padding-left: 6px;
+}
+.btn-search-nav {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #e2e8f0;
+  cursor: pointer;
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  transition: all 0.15s;
+}
+.btn-search-nav:hover {
+  background: rgba(229, 169, 59, 0.2);
+  color: #e5a93b;
+  border-color: #e5a93b;
+}
+.btn-search-close {
+  background: transparent;
+  border: none;
+  color: #aba5cd;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.btn-search-close:hover { color: #f43f5e; }
+
+/* 3. Abas e Ferramentas na Barra Lateral do Leitor */
+.reader-sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.reader-sidebar-tool-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #aba5cd;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+.reader-sidebar-tool-btn:hover {
+  background: rgba(229, 169, 59, 0.15);
+  border-color: rgba(229, 169, 59, 0.35);
+  color: #e5a93b;
+}
+
+.reader-sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+.reader-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #aba5cd;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.reader-tab-btn:hover { color: #fff; }
+.reader-tab-btn.active {
+  color: #e5a93b;
+  border-bottom-color: #e5a93b;
+  background: rgba(229, 169, 59, 0.05);
+}
+.reader-tab-badge {
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(229, 169, 59, 0.2);
+  color: #e5a93b;
+}
+
+.reader-sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+.reader-sidebar-panel[hidden] { display: none !important; }
+
+/* 4. Painel de Marcadores */
+.marcadores-quick-add {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.marcadores-add-header {
+  font-size: 0.78rem;
+  color: #aba5cd;
+  margin-bottom: 6px;
+}
+.marcadores-add-header b { color: #e5a93b; }
+.marcadores-input-row {
+  display: flex;
+  gap: 6px;
+}
+.marcadores-input-row input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 0.76rem;
+  outline: none;
+}
+.marcadores-input-row input:focus {
+  border-color: #e5a93b;
+}
+.btn-adicionar-marcador {
+  background: linear-gradient(135deg, #e5a93b, #d97706);
+  border: none;
+  border-radius: 6px;
+  color: #12101c;
+  font-weight: 700;
+  font-size: 0.76rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.btn-adicionar-marcador:hover { opacity: 0.9; }
+
+.marcadores-lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.marcador-empty {
+  text-align: center;
+  padding: 30px 15px;
+  color: #aba5cd;
+  font-size: 0.8rem;
+}
+.marcador-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.marcador-item:hover {
+  background: rgba(229, 169, 59, 0.1);
+  border-color: rgba(229, 169, 59, 0.3);
+}
+.marcador-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.marcador-pag-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #e5a93b;
+}
+.marcador-texto {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+}
+.marcador-data {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+.btn-remover-marcador {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+.btn-remover-marcador:hover {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.1);
+}
+
+/* 5. Modal de Estatísticas da Biblioteca */
+.modal-metricas-dialog {
+  max-width: 520px !important;
+}
+.metricas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  text-align: center;
+}
+.stat-icon {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+.stat-val {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #e5a93b;
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: #aba5cd;
+  margin-top: 2px;
+}
+
+.metricas-shelf-progress {
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.metricas-section-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+.shelf-progress-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 10px;
+}
+.shelf-bar-part {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.shelf-bar-part.concluidos { background: #10b981; }
+.shelf-bar-part.lendo { background: #3b82f6; }
+.shelf-bar-part.quero-ler { background: #f59e0b; }
+.shelf-bar-part.nao-lido { background: #475569; }
+
+.shelf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+.shelf-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.shelf-legend .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.shelf-legend .dot.concluidos { background: #10b981; }
+.shelf-legend .dot.lendo { background: #3b82f6; }
+.shelf-legend .dot.quero-ler { background: #f59e0b; }
+.shelf-legend .dot.nao-lido { background: #475569; }
+
+/* Botão de Marcador Ativo na Toolbar */
+.leitor-btn-tool.marcador-ativo {
+  background: rgba(229, 169, 59, 0.25) !important;
+  color: #e5a93b !important;
+  border-color: #e5a93b !important;
+}
