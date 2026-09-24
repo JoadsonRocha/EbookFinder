@@ -2318,6 +2318,24 @@ body[data-theme="light"] .config-header-title h3 { color: var(--text-primary); }
   font-size: 0.65rem;
   color: var(--text-muted);
 }
+
+.chave-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 999px;
+  color: #10b981;
+  font-size: 0.72rem;
+  font-weight: 500;
+  width: fit-content;
+}
+.chave-status-pill .lock-icon {
+  font-size: 0.76rem;
+}
+
 .gold-link {
   color: var(--amber);
   text-decoration: none;
@@ -4004,6 +4022,70 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
   border-top-color: var(--amber);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+}
+
+/* ============================================================
+   FILTROS DE LEITURA (NORMAL, SÉPIA, NOTURNO)
+   ============================================================ */
+/* 1. MODO SÉPIA (CONFORTO TÉRMICO / PAPEL NOBRE) */
+.reader-pdf-viewport[data-reader-filter="sepia"] {
+  background: #dfd5be !important;
+}
+.reader-pdf-viewport[data-reader-filter="sepia"] .reader-pdf-container {
+  background: #f7f1e1 !important;
+  box-shadow: 0 10px 35px rgba(84, 60, 24, 0.22) !important;
+}
+.reader-pdf-viewport[data-reader-filter="sepia"] .reader-pdf-canvas {
+  filter: sepia(0.38) contrast(0.96) brightness(0.98) !important;
+}
+
+/* 2. MODO NOTURNO (ALTO CONTRASTE ESCURO) */
+.reader-pdf-viewport[data-reader-filter="night"] {
+  background: #08070d !important;
+}
+.reader-pdf-viewport[data-reader-filter="night"] .reader-pdf-container {
+  background: #110f1a !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9) !important;
+}
+.reader-pdf-viewport[data-reader-filter="night"] .reader-pdf-canvas {
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.96) contrast(1.08) !important;
+}
+
+/* 3. MODO NORMAL (PADRÃO) */
+.reader-pdf-viewport[data-reader-filter="normal"] .reader-pdf-canvas {
+  filter: none !important;
+}
+
+/* CURSOR DE STREAMING DE IA (TYPING CURSOR) */
+.typing-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 15px;
+  margin-left: 4px;
+  vertical-align: middle;
+  background-color: var(--amber);
+  border-radius: 2px;
+  animation: typingBlink 0.75s infinite ease-in-out;
+}
+
+@keyframes typingBlink {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.15; transform: scaleY(0.7); }
+}
+
+/* BOTÃO DE EXCLUIR / REMOVER DA ESTANTE */
+.btn-delete-action {
+  border-color: rgba(244, 63, 94, 0.35) !important;
+  color: var(--rose) !important;
+  background: rgba(244, 63, 94, 0.08) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.btn-delete-action:hover {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: var(--rose) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
 }
 
 /* Botões Flutuantes de Próxima/Anterior Página */

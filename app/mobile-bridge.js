@@ -109,16 +109,60 @@
     }
   }
 
+  async function removerBufferDoDB(id) {
+    try {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE_BUFFERS, "readwrite");
+        const store = tx.objectStore(STORE_BUFFERS);
+        store.delete(id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function removerCapaDoDB(id) {
+    try {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE_COVERS, "readwrite");
+        const store = tx.objectStore(STORE_COVERS);
+        store.delete(id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Cache em memória de livros para acesso síncrono rápido
   let livrosSalvos = [];
   try {
     const raw = localStorage.getItem("ef_mobile_biblioteca");
     if (raw) {
       livrosSalvos = JSON.parse(raw);
-      // Sanitiza livros com thumbnails booleanas antigas
+      // Sanitiza livros com thumbnails booleanas antigas e corrige status preso por bug de totalPaginas fictício
       livrosSalvos.forEach(l => {
         if (typeof l.thumbnail !== "string" || l.thumbnail === "true" || l.thumbnail === "false" || l.thumbnail.length < 15) {
           l.thumbnail = null;
+        }
+        // Cura livros que foram importados com totalPaginas: 1 e ficaram presos em "concluidos"
+        if (l.progresso && l.progresso.totalPaginas <= 1 && l.progresso.paginaAtual <= 1) {
+          l.progresso.paginaAtual = 0;
+          l.progresso.totalPaginas = 0;
+          l.progresso.porcentagem = 0;
+          if (l.status === "concluidos" || l.statusLeitura === "concluidos") {
+            const statusManual = localStorage.getItem("ef_status_" + l.caminho);
+            if (!statusManual || statusManual === "concluidos") {
+              l.status = "nenhum";
+              l.statusLeitura = "nenhum";
+              try { localStorage.removeItem("ef_status_" + l.caminho); } catch (e) {}
+            }
+          }
         }
       });
     }
@@ -154,6 +198,26 @@
       document.body.appendChild(fileInput);
     }
     return fileInput;
+  }
+
+  // Função privada para recuperar as credenciais reais da IA sem expor à camada DOM
+  async function obterConfigIAPrivada() {
+    try {
+      const raw = localStorage.getItem("ef_ia_config");
+      if (raw) return JSON.parse(raw);
+      const res = await fetch("ia_config_bundle.json").catch(() => null);
+      if (res && res.ok) {
+        const bundle = await res.json().catch(() => null);
+        if (bundle && bundle.apiKey) {
+          return { apiKey: bundle.apiKey.trim(), model: bundle.model || "openai/gpt-oss-20b", isBundled: true };
+        }
+      }
+    } catch (e) {}
+    return {
+      apiKey: "",
+      model: "openai/gpt-oss-20b",
+      isBundled: false
+    };
   }
 
   // API COMPLETA COMPATÍVEL COM O RENDERER.JS
@@ -192,8 +256,9 @@
               tamanho: file.size,
               dataModificacao: new Date(file.lastModified || Date.now()).toISOString(),
               extensao: ext,
+              status: "nenhum",
               statusLeitura: "nenhum",
-              progresso: { paginaAtual: 1, totalPaginas: 1, porcentagem: 0, anotacoes: "" }
+              progresso: { paginaAtual: 0, totalPaginas: 0, porcentagem: 0, anotacoes: "" }
             };
 
             const idx = livrosSalvos.findIndex(l => l.caminho === id);
@@ -251,6 +316,23 @@
       if (livro) {
         livro.status = status;
         livro.statusLeitura = status;
+
+        // Se o usuário desmarcar de "concluidos", reseta o progresso para evitar travamento em 100%
+        if (status !== "concluidos" && livro.progresso) {
+          if (livro.progresso.totalPaginas <= 1 || livro.progresso.porcentagem >= 100) {
+            if (livro.progresso.totalPaginas <= 1) {
+              livro.progresso.paginaAtual = 0;
+              livro.progresso.totalPaginas = 0;
+              livro.progresso.porcentagem = 0;
+            } else {
+              livro.progresso.paginaAtual = 1;
+              livro.progresso.porcentagem = Math.round((1 / livro.progresso.totalPaginas) * 100);
+            }
+            try {
+              localStorage.setItem("ef_progresso_" + caminho, JSON.stringify(livro.progresso));
+            } catch (e) {}
+          }
+        }
         persistirMetadadosLivros();
       }
       try {
@@ -263,10 +345,11 @@
       const livro = livrosSalvos.find(l => l.caminho === caminho);
       if (livro) {
         livro.progresso = { ...(livro.progresso || {}), ...dados };
-        if (dados.porcentagem >= 100) {
+        // SÓ marca como concluído automaticamente se o livro tiver mais de 1 página e atingir o fim
+        if (dados.totalPaginas > 1 && dados.paginaAtual >= dados.totalPaginas && dados.porcentagem >= 100) {
           livro.status = "concluidos";
           livro.statusLeitura = "concluidos";
-        } else if (dados.paginaAtual > 1 && (!livro.status || livro.status === "nenhum")) {
+        } else if (dados.paginaAtual > 1 && dados.totalPaginas > 1 && (!livro.status || livro.status === "nenhum")) {
           livro.status = "lendo";
           livro.statusLeitura = "lendo";
         }
@@ -278,7 +361,10 @@
           localStorage.setItem("ef_status_" + caminho, livro.status);
         }
       } catch (e) {}
-      return dados;
+      return {
+        ...dados,
+        status: livro?.status || "nenhum"
+      };
     },
 
     obterProgressoLeitura: async (caminho) => {
@@ -302,6 +388,14 @@
             if (rawP) l.progresso = JSON.parse(rawP);
           } catch (e) {}
         }
+        if (!l.progresso) {
+          l.progresso = { paginaAtual: 0, totalPaginas: 0, porcentagem: 0, anotacoes: "" };
+        } else if (l.progresso.totalPaginas <= 1 && l.progresso.paginaAtual <= 1 && l.status !== "concluidos") {
+          l.progresso.paginaAtual = 0;
+          l.progresso.totalPaginas = 0;
+          l.progresso.porcentagem = 0;
+        }
+
         if (!l.thumbnail || typeof l.thumbnail !== "string" || l.thumbnail === "true" || l.thumbnail === "false" || l.thumbnail.length < 15) {
           const capaDB = await obterCapaDoDB(l.caminho);
           if (capaDB) {
@@ -334,28 +428,59 @@
       if (url) window.open(url, "_blank");
     },
 
-    obterConfigIA: async () => {
+    exportarArquivoTexto: async ({ nomeSugerido = "analise.md", conteudo = "" }) => {
       try {
-        const raw = localStorage.getItem("ef_ia_config");
-        if (raw) return JSON.parse(raw);
-        const res = await fetch("ia_config_bundle.json").catch(() => null);
-        if (res && res.ok) {
-          const bundle = await res.json().catch(() => null);
-          if (bundle && bundle.apiKey) {
-            return { apiKey: bundle.apiKey.trim(), model: bundle.model || "openai/gpt-oss-20b", isBundled: true };
-          }
+        if (navigator.share) {
+          await navigator.share({
+            title: nomeSugerido,
+            text: conteudo
+          });
+          return { success: true };
         }
       } catch (e) {}
+
+      try {
+        const blob = new Blob([conteudo], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nomeSugerido;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    obterConfigIA: async () => {
+      const privada = await obterConfigIAPrivada();
+      const hasKey = Boolean(privada.apiKey && privada.apiKey.trim());
       return {
-        apiKey: "",
-        model: "openai/gpt-oss-20b",
-        isBundled: false
+        ...privada,
+        hasKey,
+        apiKey: hasKey ? "••••••••" : "" // Proteção absoluta: nunca envia a chave em texto plano para a tela
       };
     },
 
     salvarConfigIA: async (config) => {
       try {
-        localStorage.setItem("ef_ia_config", JSON.stringify(config));
+        let configAtual = {};
+        try {
+          const raw = localStorage.getItem("ef_ia_config");
+          if (raw) configAtual = JSON.parse(raw) || {};
+        } catch (e) {}
+
+        const novaChave = (config.apiKey || "").trim();
+        const chaveFinal = (novaChave && !novaChave.includes("•")) ? novaChave : (configAtual.apiKey || "");
+
+        const cfgFinal = {
+          apiKey: chaveFinal,
+          model: config.model || configAtual.model || "openai/gpt-oss-20b"
+        };
+        localStorage.setItem("ef_ia_config", JSON.stringify(cfgFinal));
         return true;
       } catch (e) {
         return false;
@@ -364,8 +489,9 @@
 
     testarConexaoGroq: async (apiKey) => {
       try {
-        const cfg = await window.api.obterConfigIA();
-        const key = (apiKey || cfg.apiKey || "").trim();
+        const inputKey = (apiKey || "").trim();
+        const cfg = await obterConfigIAPrivada();
+        const key = (inputKey && !inputKey.includes("•") ? inputKey : cfg.apiKey || "").trim();
         if (!key) return { success: false, error: "Chave de API não informada." };
 
         const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -394,7 +520,7 @@
 
     perguntarGroq: async ({ pergunta, contexto, historico = [], modelo = null }) => {
       try {
-        const cfg = await window.api.obterConfigIA();
+        const cfg = await obterConfigIAPrivada();
         const key = (cfg.apiKey || "").trim();
         if (!key) return { success: false, error: "Chave da API não configurada." };
 
@@ -435,6 +561,108 @@ ${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : 
         return { success: true, resposta };
       } catch (err) {
         return { success: false, error: err.message || "Erro ao consultar a API." };
+      }
+    },
+
+    perguntarGroqStream: async ({ pergunta, contexto, historico = [], modelo = null, onChunk, onDone, onError }) => {
+      try {
+        const cfg = await obterConfigIAPrivada();
+        const key = (cfg.apiKey || "").trim();
+        if (!key) {
+          if (onError) onError("Chave da API não configurada.");
+          return;
+        }
+
+        const modelToUse = modelo || cfg.model || "openai/gpt-oss-20b";
+        const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
+Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
+Responda sempre em Português do Brasil com primorosa formatação Markdown.
+
+${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : ""}`;
+
+        const messages = [
+          { role: "system", content: systemPrompt },
+          ...historico.slice(-6).map(h => ({ role: h.role, content: h.content })),
+          { role: "user", content: pergunta }
+        ];
+
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${key}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages,
+            temperature: 0.35,
+            max_tokens: 1800,
+            stream: true
+          })
+        });
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          const errMsg = errBody.error?.message || `Erro HTTP ${res.status}`;
+          if (onError) onError(errMsg);
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let fullText = "";
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith(":")) continue;
+            if (trimmed === "data: [DONE]") {
+              break;
+            }
+            if (trimmed.startsWith("data: ")) {
+              try {
+                const json = JSON.parse(trimmed.slice(6));
+                const delta = json.choices?.[0]?.delta?.content || "";
+                if (delta) {
+                  fullText += delta;
+                  if (onChunk) onChunk(delta);
+                }
+              } catch (e) {
+                // Fragmento incompleto
+              }
+            }
+          }
+        }
+
+        if (onDone) onDone(fullText);
+      } catch (err) {
+        if (onError) onError(err.message || "Erro de conexão ao transmitir resposta.");
+      }
+    },
+
+    removerLivro: async (caminho) => {
+      if (!caminho) return false;
+      try {
+        await removerBufferDoDB(caminho);
+        await removerCapaDoDB(caminho);
+        localStorage.removeItem("ef_status_" + caminho);
+        localStorage.removeItem("ef_progresso_" + caminho);
+        localStorage.removeItem("ef_skill_" + caminho);
+        localStorage.removeItem("ef_chat_" + caminho);
+
+        livrosSalvos = livrosSalvos.filter(l => l.caminho !== caminho);
+        persistirMetadadosLivros();
+        return true;
+      } catch (e) {
+        console.error("Erro ao remover livro mobile:", e);
+        return false;
       }
     },
 

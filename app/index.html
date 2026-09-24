@@ -134,6 +134,12 @@
       <span class="menu-section-title">Opções</span>
       <ul>
         <li>
+          <button data-action="metricas" class="menu-item" id="menuItemMetricas">
+            <span class="item-icon">📊</span>
+            <span class="item-text">Estatísticas de Leitura</span>
+          </button>
+        </li>
+        <li>
           <button data-action="config-ia" class="menu-item" id="menuItemConfigIA">
             <span class="item-icon">⚡</span>
             <span class="item-text">Configurações do SkillBook</span>
@@ -199,6 +205,9 @@
         </button>
         <button class="tab-btn" data-tab="quero-ler" id="tabQueroLer">
           📌 Quero Ler <span class="tab-badge" id="tabCountQueroLer">0</span>
+        </button>
+        <button class="tab-btn btn-metricas-tab" id="btnAbrirMetricasTab" title="Estatísticas e Métricas da Biblioteca">
+          📊 Estatísticas
         </button>
       </div>
 
@@ -271,19 +280,23 @@
         </p>
 
         <div class="form-group">
-          <label for="inputGroqKey" class="form-label">Sua Chave de API do SkillBook:</label>
+          <label for="inputGroqKey" class="form-label">Chave de API do SkillBook:</label>
           <div class="input-password-wrap">
             <input 
               type="password" 
               id="inputGroqKey" 
-              placeholder="gsk_..." 
+              placeholder="🔒 Chave ativa e oculta por segurança" 
               autocomplete="off"
               spellcheck="false"
             />
-            <button type="button" id="btnToggleShowKey" class="btn-toggle-eye" title="Mostrar/ocultar chave">👁️</button>
+            <button type="button" id="btnToggleShowKey" class="btn-toggle-eye" title="Mostrar/ocultar digitação">👁️</button>
+          </div>
+          <div id="boxStatusChaveSegura" class="chave-status-pill" style="display:none;">
+            <span class="lock-icon">🔒</span>
+            <span id="txtChaveSegura">Chave protegida e oculta por segurança</span>
           </div>
           <span class="form-hint">
-            Sua chave fica protegida na sua máquina. 
+            Por privacidade, sua chave não é exibida na tela. Para trocá-la, basta colar uma nova no campo acima.
             <a href="#" id="linkObterChaveGroq" class="gold-link">Pegar chave gratuita no console.groq.com &rarr;</a>
           </span>
         </div>
@@ -597,6 +610,13 @@
               </svg>
               Mostrar na Pasta
             </button>
+            <button id="btnRemoverLivroModal" class="btn-secondary-action btn-delete-action" title="Remover da biblioteca">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Remover</span>
+            </button>
           </div>
         </div>
 
@@ -887,6 +907,9 @@
 
       <!-- LADO DIREITO: BOTÃO TOGGLE SKILLBOOK E TELA CHEIA -->
       <div class="leitor-toolbar-right">
+        <button id="btnLeitorFiltroCor" class="leitor-btn-tool" title="Modo de Cor da Leitura (Normal / Sépia / Noturno)">
+          <span id="iconFiltroLeitor" style="font-size: 15px;">☀️</span>
+        </button>
         <button id="btnLeitorTelaCheia" class="leitor-btn-tool btn-fullscreen-toggle" title="Modo Tela Cheia / Leitura Imersiva">
           <svg class="icon-expand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
@@ -997,6 +1020,9 @@
         </svg>
       </button>
       <div class="dock-divider"></div>
+      <button id="btnDockFiltroCor" class="dock-btn" title="Modo de Leitura (Normal / Sépia / Noturno)">
+        <span id="lblDockFiltro" style="font-size: 14px;">☀️</span>
+      </button>
       <button id="btnDockTelaCheia" class="dock-btn" title="Modo Imersivo (Ocultar Barras)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>

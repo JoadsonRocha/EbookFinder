@@ -806,18 +806,33 @@ ipcMain.handle("open-external", (e, url) => {
 // ============================================================================
 
 ipcMain.handle("obter-config-ia", () => {
-  return obterConfigIA();
+  const cfg = obterConfigIA();
+  const hasKey = Boolean(cfg.apiKey && cfg.apiKey.trim());
+  return {
+    ...cfg,
+    hasKey,
+    apiKey: hasKey ? "••••••••" : "" // Proteção absoluta: nunca envia a chave em texto plano para a tela
+  };
 });
 
 ipcMain.handle("salvar-config-ia", (e, cfg) => {
   if (cfg && typeof cfg === "object") {
-    return salvarConfigIA(cfg);
+    const configAtual = obterConfigIA();
+    const novaChave = (cfg.apiKey || "").trim();
+    // Se o usuário não digitou uma nova chave ou enviou a máscara de proteção, preserva a chave salva existente
+    const chaveFinal = (novaChave && !novaChave.includes("•")) ? novaChave : (configAtual.apiKey || "");
+    const cfgParaSalvar = {
+      apiKey: chaveFinal,
+      model: normalizarModeloIA(cfg.model || configAtual.model)
+    };
+    return salvarConfigIA(cfgParaSalvar);
   }
   return false;
 });
 
 ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
-  const key = (apiKey || obterConfigIA().apiKey || "").trim();
+  const inputKey = (apiKey || "").trim();
+  const key = (inputKey && !inputKey.includes("•") ? inputKey : obterConfigIA().apiKey || "").trim();
   if (!key) return { success: false, error: "Chave de API não informada." };
 
   try {
@@ -900,6 +915,109 @@ ${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : 
     return { success: true, resposta };
   } catch (err) {
     return { success: false, error: err.message || "Erro ao consultar a API do Groq." };
+  }
+});
+
+// Manipulador de Streaming em Tempo Real (Server-Sent Events) via IPC
+ipcMain.on("iniciar-groq-stream", async (event, { streamId, pergunta, contexto, historico = [], modelo = null }) => {
+  const canal = `groq-stream-chunk-${streamId}`;
+  const cfg = obterConfigIA();
+  const key = (cfg.apiKey || "").trim();
+  if (!key) {
+    event.sender.send(canal, { error: "Chave da API Groq não configurada. Configure no menu de opções.", done: true });
+    return;
+  }
+
+  const modelToUse = normalizarModeloIA(modelo || cfg.model || "openai/gpt-oss-20b");
+
+  const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
+Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
+Responda sempre em Português do Brasil com primorosa formatação Markdown (títulos temáticos, tabelas comparativas quando pertinente, listas limpas, citações elegantes em blockquote e negrito em termos centrais).
+
+DIRETRIZES FUNDAMENTAIS:
+1. Se houver notas ou dados extraídos da obra no contexto abaixo, priorize-os.
+2. Se a obra for um livro consagrado e o contexto trouxer apenas metadados iniciais, NUNCA responda dizendo que "o arquivo está vazio", que "o progresso é 0/0" ou que "não há conteúdo textual". Em vez disso, identifique a obra pelo título e autor e entregue imediatamente uma análise rica, profunda e brilhante sobre o livro real: seus conceitos essenciais, capítulos, lições práticas, modelos de pensamento e impacto.
+
+${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : ""}`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...historico.slice(-6).map(h => ({ role: h.role, content: h.content })),
+    { role: "user", content: pergunta }
+  ];
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: modelToUse,
+        messages,
+        temperature: 0.35,
+        max_tokens: 1800,
+        stream: true
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const msg = errBody.error?.message || `Erro HTTP ${res.status}`;
+      event.sender.send(canal, { error: msg, done: true });
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith(":")) continue;
+        if (trimmed === "data: [DONE]") {
+          break;
+        }
+        if (trimmed.startsWith("data: ")) {
+          try {
+            const json = JSON.parse(trimmed.slice(6));
+            const delta = json.choices?.[0]?.delta?.content || "";
+            if (delta) {
+              fullText += delta;
+              event.sender.send(canal, { chunk: delta, done: false });
+            }
+          } catch (e) {
+            // Buffer incompleto, aguarda próximo chunk
+          }
+        }
+      }
+    }
+
+    event.sender.send(canal, { done: true, fullText });
+  } catch (err) {
+    event.sender.send(canal, { error: err.message || "Erro na conexão com api.groq.com", done: true });
+  }
+});
+
+ipcMain.handle("remover-livro", (e, caminho) => {
+  if (!caminho) return false;
+  try {
+    delete progressoLeitura[caminho];
+    delete statusLeitura[caminho];
+    salvarProgressoPersistente();
+    salvarStatusPersistente();
+    return true;
+  } catch (err) {
+    return false;
   }
 });
 
@@ -1006,4 +1124,30 @@ ipcMain.handle("abrir-pasta-skill", (e, caminho) => {
     return true;
   }
   return false;
+});
+
+ipcMain.handle("exportar-arquivo-texto", async (e, { nomeSugerido, conteudo, extensao = "md" }) => {
+  if (!conteudo) return { success: false, error: "Conteúdo vazio" };
+  const extLimpa = (extensao || "md").replace(/^\./, "");
+  const res = await dialog.showSaveDialog({
+    title: "Exportar Análise / Conversa",
+    defaultPath: nomeSugerido || `Analise_SkillBook.${extLimpa}`,
+    filters: [
+      { name: "Documento Markdown (*.md)", extensions: ["md"] },
+      { name: "Arquivo de Texto (*.txt)", extensions: ["txt"] },
+      { name: "Todos os Arquivos (*.*)", extensions: ["*"] }
+    ]
+  });
+
+  if (res.canceled || !res.filePath) {
+    return { success: false, canceled: true };
+  }
+
+  try {
+    fs.writeFileSync(res.filePath, conteudo, "utf8");
+    return { success: true, filePath: res.filePath };
+  } catch (err) {
+    console.error("Erro ao exportar arquivo de texto:", err);
+    return { success: false, error: err.message };
+  }
 });

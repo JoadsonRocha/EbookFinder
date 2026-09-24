@@ -135,7 +135,40 @@ contextBridge.exposeInMainWorld("api", {
   exportarSkillLivro: (dados) => safeInvoke("exportar-skill-livro", dados),
 
   /**
+   * Envia uma pergunta ao Tutor IA com o contexto do livro em modo Streaming progressivo.
+   */
+  perguntarGroqStream: ({ pergunta, contexto, historico = [], modelo = null, onChunk, onDone, onError }) => {
+    const streamId = Math.random().toString(36).substring(2, 10);
+    const canal = `groq-stream-chunk-${streamId}`;
+
+    const listener = (event, data) => {
+      if (data.error) {
+        ipcRenderer.removeListener(canal, listener);
+        if (onError) onError(data.error);
+      } else if (data.done) {
+        ipcRenderer.removeListener(canal, listener);
+        if (onDone) onDone(data.fullText || "");
+      } else if (data.chunk) {
+        if (onChunk) onChunk(data.chunk);
+      }
+    };
+
+    ipcRenderer.on(canal, listener);
+    ipcRenderer.send("iniciar-groq-stream", { streamId, pergunta, contexto, historico, modelo });
+  },
+
+  /**
+   * Remove registro do livro da biblioteca.
+   */
+  removerLivro: (caminho) => safeInvoke("remover-livro", caminho),
+
+  /**
    * Revela a pasta da Skill no Windows Explorer.
    */
-  abrirPastaSkill: (caminho) => safeInvoke("abrir-pasta-skill", caminho)
+  abrirPastaSkill: (caminho) => safeInvoke("abrir-pasta-skill", caminho),
+
+  /**
+   * Exporta conteúdo de texto ou Markdown para arquivo local.
+   */
+  exportarArquivoTexto: (dados) => safeInvoke("exportar-arquivo-texto", dados)
 });

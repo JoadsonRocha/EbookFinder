@@ -30,6 +30,7 @@ const state = {
   favoritos: new Set(JSON.parse(localStorage.getItem("ef_favoritos") || "[]")),
   livroSelecionado: null,
   tema: localStorage.getItem("ef_theme") || "dark",
+  filtroLeitura: localStorage.getItem("ef_reader_filter") || "normal",
   tabModalAtiva: "detalhes",
   skillAtual: null,
   chatHistorico: [],
@@ -600,29 +601,45 @@ function renderizarGrade(lista) {
     const prog = livro.progresso || { paginaAtual: 0, totalPaginas: 0, porcentagem: 0 };
     const paginaAtual = prog.paginaAtual || 0;
     const totalPaginas = prog.totalPaginas || 0;
-    const porcentagem = totalPaginas > 0
+    const porcentagem = (totalPaginas > 1)
       ? Math.min(100, Math.round((paginaAtual / totalPaginas) * 100))
       : (prog.porcentagem || 0);
 
-    // Determinação robusta de status de leitura
+    // Determinação robusta de status de leitura (respeita a escolha soberana do usuário)
     let statusClass = "nao-lido";
     let statusLabel = "Não Lido";
     let statusIcon = "⚪";
 
-    if (livro.status === "concluidos" || porcentagem >= 100) {
+    const statusAtual = livro.status || livro.statusLeitura || "nenhum";
+
+    if (statusAtual === "concluidos") {
       statusClass = "concluido";
       statusLabel = "Lido";
       statusIcon = "✅";
-      if (livro.status !== "concluidos") livro.status = "concluidos";
-    } else if (livro.status === "lendo" || paginaAtual > 1 || porcentagem > 0) {
+    } else if (statusAtual === "lendo") {
       statusClass = "lendo";
       statusLabel = porcentagem > 0 ? `Lendo ${porcentagem}%` : "Lendo";
       statusIcon = "📖";
-      if (!livro.status || livro.status === "nenhum") livro.status = "lendo";
-    } else if (livro.status === "quero-ler") {
+    } else if (statusAtual === "quero-ler") {
       statusClass = "quero-ler";
       statusLabel = "Quero Ler";
       statusIcon = "📌";
+    } else {
+      // Nenhum status explicitamente marcado pelo usuário:
+      // Só deduz se o livro tiver contagem real de páginas (> 1)
+      if (totalPaginas > 1 && paginaAtual >= totalPaginas && porcentagem >= 100) {
+        statusClass = "concluido";
+        statusLabel = "Lido";
+        statusIcon = "✅";
+      } else if (totalPaginas > 1 && paginaAtual > 1) {
+        statusClass = "lendo";
+        statusLabel = porcentagem > 0 ? `Lendo ${porcentagem}%` : "Lendo";
+        statusIcon = "📖";
+      } else {
+        statusClass = "nao-lido";
+        statusLabel = "Não Lido";
+        statusIcon = "⚪";
+      }
     }
 
     const statusBadge = `<span class="badge-reading-status ${statusClass}" title="Status: ${statusLabel}">${statusIcon} ${statusLabel}</span>`;
@@ -877,6 +894,7 @@ function abrirModalLivro(livro) {
   alternarTabModal("detalhes");
 
   modal.hidden = false;
+  registrarEstadoHistorico();
   document.addEventListener("keydown", lidarTeclasModal);
 }
 
@@ -887,10 +905,112 @@ function fecharModalLivro() {
   document.removeEventListener("keydown", lidarTeclasModal);
 }
 
+async function removerLivroSelecionado() {
+  if (!state.livroSelecionado) return;
+  const livro = state.livroSelecionado;
+  const tit = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
+
+  const confirmar = confirm(`Tem certeza que deseja remover "${tit}" da sua estante?`);
+  if (!confirmar) return;
+
+  fecharModalLivro();
+  try {
+    const ok = await window.api?.removerLivro?.(livro.caminho);
+    if (ok !== false) {
+      state.todosLivros = state.todosLivros.filter(l => l.caminho !== livro.caminho);
+      state.livrosFiltrados = state.livrosFiltrados.filter(l => l.caminho !== livro.caminho);
+      state.favoritos.delete(livro.caminho);
+      localStorage.setItem("ef_favoritos", JSON.stringify([...state.favoritos]));
+      aplicarFiltrosEOrdenacao();
+      showToast(`"${tit}" foi removido da estante.`);
+    } else {
+      showToast("Não foi possível remover a obra.");
+    }
+  } catch (e) {
+    showToast("Erro ao remover obra.");
+  }
+}
+
+function aplicarFiltroLeitura(filtro) {
+  const f = filtro || state.filtroLeitura || "normal";
+  state.filtroLeitura = f;
+  localStorage.setItem("ef_reader_filter", f);
+
+  const viewport = document.getElementById("readerPdfViewport");
+  if (viewport) {
+    viewport.setAttribute("data-reader-filter", f);
+  }
+
+  const icone = f === "night" ? "🌙" : (f === "sepia" ? "📜" : "☀️");
+  const iconEl = document.getElementById("iconFiltroLeitor");
+  const dockIconEl = document.getElementById("lblDockFiltro");
+  if (iconEl) iconEl.textContent = icone;
+  if (dockIconEl) dockIconEl.textContent = icone;
+}
+
+function alternarFiltroLeitura() {
+  const modos = ["normal", "sepia", "night"];
+  const atualIdx = modos.indexOf(state.filtroLeitura || "normal");
+  const prox = modos[(atualIdx + 1) % modos.length];
+  aplicarFiltroLeitura(prox);
+
+  const rotulos = {
+    normal: "Normal (Padrão) ☀️",
+    sepia: "Sépia (Conforto Térmico) 📜",
+    night: "Noturno Invertido 🌙"
+  };
+  showToast(`Modo de Leitura: ${rotulos[prox]}`, 1600);
+}
+
+function registrarEstadoHistorico() {
+  try {
+    window.history.pushState({ modalAtivo: true }, "");
+  } catch (e) {}
+}
+
+function tratarVoltarNativo() {
+  if (state.leitor.ativo) {
+    fecharLeitorInterno();
+    return true;
+  }
+  const modalCopiloto = document.getElementById("modalCopilotoIA");
+  if (modalCopiloto && !modalCopiloto.hidden) {
+    fecharCopilotoIA();
+    return true;
+  }
+  const modalLivro = document.getElementById("modalLivro");
+  if (modalLivro && !modalLivro.hidden) {
+    fecharModalLivro();
+    return true;
+  }
+  const modalConfig = document.getElementById("modalConfigIA");
+  if (modalConfig && !modalConfig.hidden) {
+    fecharModalConfigIA();
+    return true;
+  }
+  const modalSobre = document.getElementById("modalSobre");
+  if (modalSobre && !modalSobre.hidden) {
+    fecharModalSobre();
+    return true;
+  }
+  const popupPasta = document.getElementById("popupPasta");
+  if (popupPasta && !popupPasta.hidden) {
+    fecharPopupPasta();
+    return true;
+  }
+  const menuDropdown = document.getElementById("menuDropdown");
+  if (menuDropdown && !menuDropdown.hidden) {
+    fecharMenu();
+    return true;
+  }
+  return false;
+}
+
 function abrirModalSobre() {
   const modal = document.getElementById("modalSobre");
   if (!modal) return;
   modal.hidden = false;
+  registrarEstadoHistorico();
   document.addEventListener("keydown", lidarTeclasModal);
 }
 
@@ -945,6 +1065,8 @@ async function abrirLeitorInterno(livro) {
 
   overlay.hidden = false;
   if (loading) loading.hidden = false;
+  registrarEstadoHistorico();
+  aplicarFiltroLeitura(state.filtroLeitura);
 
   state.leitor.ativo = true;
   state.leitor.livro = livro;
@@ -1375,8 +1497,12 @@ async function salvarProgressoLeitor(livro, paginaAtual, totalPaginas) {
   const resultado = await window.api?.salvarProgressoLeitura?.(livro.caminho, dados);
   if (resultado) {
     livro.progresso = resultado;
+    if (resultado.status) livro.status = resultado.status;
     const idx = state.todosLivros.findIndex(l => l.caminho === livro.caminho);
-    if (idx !== -1) state.todosLivros[idx].progresso = resultado;
+    if (idx !== -1) {
+      state.todosLivros[idx].progresso = resultado;
+      if (resultado.status) state.todosLivros[idx].status = resultado.status;
+    }
   }
 }
 
@@ -1446,50 +1572,62 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
     `;
     feed.appendChild(userMsg);
 
-    const loadingMsg = document.createElement("div");
-    loadingMsg.className = "copilot-msg assistente loading-msg";
-    loadingMsg.innerHTML = `
+    const respMsg = document.createElement("div");
+    respMsg.className = "copilot-msg assistente";
+    respMsg.innerHTML = `
       <div class="copilot-avatar">✨</div>
-      <div class="copilot-msg-content"><span class="copilot-typing">Consultando o SkillBook na pág. ${state.leitor.paginaAtual}...</span></div>
+      <div class="copilot-msg-content"><span class="typing-cursor"></span></div>
     `;
-    feed.appendChild(loadingMsg);
+    feed.appendChild(respMsg);
     feed.scrollTop = feed.scrollHeight;
 
+    const contentEl = respMsg.querySelector(".copilot-msg-content");
     const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
     const historicoAtual = obterHistoricoChatStorage(state.leitor.livro.caminho) || [];
 
-    const res = await window.api?.perguntarGroq?.({
-      pergunta,
-      contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
-      historico: historicoAtual,
-      modelo: cfg.model || "openai/gpt-oss-20b"
-    });
-
-    loadingMsg.remove();
-
-    if (res?.success && res.resposta) {
-      const respMsg = document.createElement("div");
-      respMsg.className = "copilot-msg assistente";
-      respMsg.innerHTML = `
-        <div class="copilot-avatar">✨</div>
-        <div class="copilot-msg-content">${formatarMarkdownSimples(res.resposta)}</div>
-      `;
-      feed.appendChild(respMsg);
-
-      historicoAtual.push({ role: "user", content: pergunta });
-      historicoAtual.push({ role: "assistant", content: res.resposta });
-      salvarHistoricoChatStorage(state.leitor.livro.caminho, historicoAtual);
+    let streamedText = "";
+    if (window.api?.perguntarGroqStream) {
+      window.api.perguntarGroqStream({
+        pergunta,
+        contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
+        historico: historicoAtual,
+        modelo: cfg.model || "openai/gpt-oss-20b",
+        onChunk: (chunk) => {
+          streamedText += chunk;
+          contentEl.innerHTML = formatarMarkdownSimples(streamedText) + `<span class="typing-cursor"></span>`;
+          feed.scrollTop = feed.scrollHeight;
+        },
+        onDone: (full) => {
+          const finalTxt = full || streamedText;
+          contentEl.innerHTML = formatarMarkdownSimples(finalTxt);
+          feed.scrollTop = feed.scrollHeight;
+          historicoAtual.push({ role: "user", content: pergunta });
+          historicoAtual.push({ role: "assistant", content: finalTxt });
+          salvarHistoricoChatStorage(state.leitor.livro.caminho, historicoAtual);
+        },
+        onError: (err) => {
+          contentEl.innerHTML = `<p style="color: #fb7185;">${err || "Não foi possível obter resposta do SkillBook."}</p>`;
+          feed.scrollTop = feed.scrollHeight;
+        }
+      });
     } else {
-      const errMsg = document.createElement("div");
-      errMsg.className = "copilot-msg assistente";
-      errMsg.innerHTML = `
-        <div class="copilot-avatar">⚠️</div>
-        <div class="copilot-msg-content"><p style="color: #fb7185;">${res?.error || "Não foi possível obter resposta do SkillBook."}</p></div>
-      `;
-      feed.appendChild(errMsg);
-    }
+      const res = await window.api?.perguntarGroq?.({
+        pergunta,
+        contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
+        historico: historicoAtual,
+        modelo: cfg.model || "openai/gpt-oss-20b"
+      });
 
-    feed.scrollTop = feed.scrollHeight;
+      if (res?.success && res.resposta) {
+        contentEl.innerHTML = formatarMarkdownSimples(res.resposta);
+        historicoAtual.push({ role: "user", content: pergunta });
+        historicoAtual.push({ role: "assistant", content: res.resposta });
+        salvarHistoricoChatStorage(state.leitor.livro.caminho, historicoAtual);
+      } else {
+        contentEl.innerHTML = `<p style="color: #fb7185;">${res?.error || "Não foi possível obter resposta do SkillBook."}</p>`;
+      }
+      feed.scrollTop = feed.scrollHeight;
+    }
   }
 }
 
@@ -1562,28 +1700,46 @@ async function abrirModalConfigIA() {
   const modal = document.getElementById("modalConfigIA");
   if (!modal) return;
 
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b", isBundled: false };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b", isBundled: false, hasKey: false };
   const inputKey = document.getElementById("inputGroqKey");
   const selectModel = document.getElementById("selectModeloIA");
   const lblStatus = document.getElementById("lblStatusConexao");
+  const boxStatusChave = document.getElementById("boxStatusChaveSegura");
+  const txtChaveSegura = document.getElementById("txtChaveSegura");
+
+  const temChaveAtiva = Boolean(cfg.hasKey || (cfg.apiKey && cfg.apiKey.trim()));
 
   if (inputKey) {
-    inputKey.value = cfg.apiKey || "";
-    if (cfg.isBundled) {
-      inputKey.placeholder = "Chave integrada no Instalador MSI (Ativa)";
+    // NUNCA expõe a chave real no valor do input (proteção total da privacidade)
+    inputKey.value = "";
+    inputKey.type = "password";
+    if (temChaveAtiva) {
+      inputKey.placeholder = "🔒 Chave ativa e oculta por segurança (digite apenas para trocar)";
     } else {
       inputKey.placeholder = "gsk_...";
+    }
+  }
+
+  if (boxStatusChave) {
+    if (temChaveAtiva) {
+      boxStatusChave.style.display = "inline-flex";
+      if (txtChaveSegura) {
+        txtChaveSegura.textContent = cfg.isBundled
+          ? "Chave oficial do SkillBook ativa e protegida"
+          : "Chave configurada e oculta por segurança";
+      }
+    } else {
+      boxStatusChave.style.display = "none";
     }
   }
 
   if (selectModel) selectModel.value = cfg.model || "openai/gpt-oss-20b";
 
   if (lblStatus) {
-    if (cfg.isBundled) {
-      lblStatus.textContent = "🟢 Chave de IA ativa via Instalador MSI";
-      lblStatus.className = "status-indicator ok";
-    } else if (cfg.apiKey) {
-      lblStatus.textContent = "🟢 Chave configurada no perfil do usuário";
+    if (temChaveAtiva) {
+      lblStatus.textContent = cfg.isBundled
+        ? "🟢 Chave de IA ativa via Instalador MSI"
+        : "🟢 Chave configurada no perfil do usuário";
       lblStatus.className = "status-indicator ok";
     } else {
       lblStatus.textContent = "⚪ Nenhuma chave configurada";
@@ -1591,6 +1747,7 @@ async function abrirModalConfigIA() {
     }
   }
 
+  registrarEstadoHistorico();
   modal.hidden = false;
 }
 
@@ -1823,12 +1980,12 @@ async function enviarPerguntaChat(textoPergunta = null) {
   `;
   messagesArea.appendChild(userMsgEl);
 
-  // Adiciona balão de carregamento do Tutor
+  // Adiciona balão do Tutor com cursor de digitação em streaming
   const tutorMsgEl = document.createElement("div");
   tutorMsgEl.className = "chat-msg tutor";
   tutorMsgEl.innerHTML = `
     <div class="msg-avatar">🤖</div>
-    <div class="msg-content"><p><em>Pensando...</em></p></div>
+    <div class="msg-content"><span class="typing-cursor"></span></div>
   `;
   messagesArea.appendChild(tutorMsgEl);
   messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -1843,20 +2000,46 @@ async function enviarPerguntaChat(textoPergunta = null) {
     contexto = `Obra: ${state.livroSelecionado.tituloHumanizado || state.livroSelecionado.titulo}\nAutor: ${state.livroSelecionado.autor}\nProgresso: Pág. ${state.livroSelecionado.progresso?.paginaAtual || 0}/${state.livroSelecionado.progresso?.totalPaginas || 0}\nAnotações: ${state.livroSelecionado.progresso?.anotacoes || "Nenhuma"}`;
   }
 
-  const res = await window.api?.perguntarGroq?.({
-    pergunta,
-    contexto,
-    historico: state.chatHistorico
-  });
+  const contentEl = tutorMsgEl.querySelector(".msg-content");
+  let streamedText = "";
 
-  if (res?.success && res.resposta) {
-    state.chatHistorico.push({ role: "assistant", content: res.resposta });
-    tutorMsgEl.querySelector(".msg-content").innerHTML = formatarMarkdownSimples(res.resposta);
+  if (window.api?.perguntarGroqStream) {
+    window.api.perguntarGroqStream({
+      pergunta,
+      contexto,
+      historico: state.chatHistorico.slice(0, -1),
+      modelo: cfg.model || "openai/gpt-oss-20b",
+      onChunk: (chunk) => {
+        streamedText += chunk;
+        contentEl.innerHTML = formatarMarkdownSimples(streamedText) + `<span class="typing-cursor"></span>`;
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      },
+      onDone: (full) => {
+        const finalTxt = full || streamedText;
+        state.chatHistorico.push({ role: "assistant", content: finalTxt });
+        contentEl.innerHTML = formatarMarkdownSimples(finalTxt);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      },
+      onError: (err) => {
+        contentEl.innerHTML = `<p style="color:#f43f5e;">⚠️ ${err || "Não foi possível obter resposta da IA."}</p>`;
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      }
+    });
   } else {
-    tutorMsgEl.querySelector(".msg-content").innerHTML = `<p style="color:#f43f5e;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>`;
-  }
+    const res = await window.api?.perguntarGroq?.({
+      pergunta,
+      contexto,
+      historico: state.chatHistorico
+    });
 
-  messagesArea.scrollTop = messagesArea.scrollHeight;
+    if (res?.success && res.resposta) {
+      state.chatHistorico.push({ role: "assistant", content: res.resposta });
+      contentEl.innerHTML = formatarMarkdownSimples(res.resposta);
+    } else {
+      contentEl.innerHTML = `<p style="color:#f43f5e;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>`;
+    }
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
 }
 
 function formatarMarkdownSimples(md) {
@@ -1984,6 +2167,7 @@ async function abrirCopilotoIA(livro) {
 
   const modal = document.getElementById("modalCopilotoIA");
   if (!modal) return;
+  registrarEstadoHistorico();
 
   const tituloLimpo = livro.tituloHumanizado || formatarTituloHumanizado(livro.titulo, livro.nome);
   const autorLimpo = livro.autor !== "Desconhecido" ? livro.autor : "Autor Não Informado";
@@ -2161,18 +2345,13 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
   `;
   messagesList.appendChild(userRow);
 
-  // 2. Balão de Pensando do Copiloto IA
+  // 2. Balão de Resposta do Copiloto IA (com cursor de streaming em tempo real)
   const assistantRow = document.createElement("div");
   assistantRow.className = "copilot-msg-row assistant";
   assistantRow.innerHTML = `
     <div class="copilot-msg-avatar">✨</div>
     <div class="copilot-msg-bubble">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <div class="copilot-thinking-dots">
-          <span></span><span></span><span></span>
-        </div>
-        <span style="font-size:0.78rem; color:var(--text-secondary);">Consultando o conteúdo da obra...</span>
-      </div>
+      <div class="copilot-msg-content"><span class="typing-cursor"></span></div>
     </div>
   `;
   messagesList.appendChild(assistantRow);
@@ -2190,37 +2369,69 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
     contexto = `Obra: ${tit}\nAutor: ${aut}\nFormato: ${state.livroSelecionado.extensao}\nInstrução: Entregue uma síntese executiva rica, técnica e completa sobre esta obra consagrada, explicando seus princípios fundamentais, métodos e aplicações práticas.`;
   }
 
-  const res = await window.api?.perguntarGroq?.({
-    pergunta,
-    contexto,
-    historico: state.chatHistorico
-  });
+  const bubble = assistantRow.querySelector(".copilot-msg-bubble");
+  const contentEl = assistantRow.querySelector(".copilot-msg-content");
+  let streamedText = "";
 
-  if (res?.success && res.resposta) {
-    state.chatHistorico.push({ role: "assistant", content: res.resposta });
+  const finalizarRespostaCopiloto = (finalTxt) => {
+    state.chatHistorico.push({ role: "assistant", content: finalTxt });
     salvarHistoricoChatStorage(state.livroSelecionado?.caminho, state.chatHistorico);
-    const formattedHtml = formatarMarkdownSimples(res.resposta);
-    assistantRow.querySelector(".copilot-msg-bubble").innerHTML = `
-      <div class="copilot-msg-content">${formattedHtml}</div>
-      <div class="copilot-msg-actions">
-        <button type="button" class="btn-msg-copy" title="Copiar resposta">
-          <span>📋</span> <span>Copiar</span>
-        </button>
-      </div>
-    `;
+    contentEl.innerHTML = formatarMarkdownSimples(finalTxt);
 
-    // Ação do Botão Copiar
-    assistantRow.querySelector(".btn-msg-copy")?.addEventListener("click", () => {
-      navigator.clipboard.writeText(res.resposta);
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "copilot-msg-actions";
+    actionsDiv.innerHTML = `
+      <button type="button" class="btn-msg-copy" title="Copiar resposta">
+        <span>📋</span> <span>Copiar</span>
+      </button>
+    `;
+    bubble.appendChild(actionsDiv);
+
+    actionsDiv.querySelector(".btn-msg-copy")?.addEventListener("click", () => {
+      navigator.clipboard.writeText(finalTxt);
       showToast("Resposta copiada para a área de transferência!");
     });
-  } else {
-    assistantRow.querySelector(".copilot-msg-bubble").innerHTML = `
-      <p style="color:#f43f5e; font-weight:600;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>
-    `;
-  }
 
-  if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+    if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+  };
+
+  if (window.api?.perguntarGroqStream) {
+    window.api.perguntarGroqStream({
+      pergunta,
+      contexto,
+      historico: state.chatHistorico.slice(0, -1),
+      modelo: cfg.model || "openai/gpt-oss-20b",
+      onChunk: (chunk) => {
+        streamedText += chunk;
+        contentEl.innerHTML = formatarMarkdownSimples(streamedText) + `<span class="typing-cursor"></span>`;
+        if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+      },
+      onDone: (full) => {
+        finalizarRespostaCopiloto(full || streamedText);
+      },
+      onError: (err) => {
+        bubble.innerHTML = `
+          <p style="color:#f43f5e; font-weight:600;">⚠️ ${err || "Não foi possível obter resposta da IA."}</p>
+        `;
+        if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+      }
+    });
+  } else {
+    const res = await window.api?.perguntarGroq?.({
+      pergunta,
+      contexto,
+      historico: state.chatHistorico
+    });
+
+    if (res?.success && res.resposta) {
+      finalizarRespostaCopiloto(res.resposta);
+    } else {
+      bubble.innerHTML = `
+        <p style="color:#f43f5e; font-weight:600;">⚠️ ${res?.error || "Não foi possível obter resposta da IA."}</p>
+      `;
+    }
+    if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+  }
 }
 
 async function executarBookToSkillCopiloto() {
@@ -2385,6 +2596,7 @@ async function atualizarStatusLeitura(status) {
   if (!state.livroSelecionado) return;
 
   state.livroSelecionado.status = status;
+  state.livroSelecionado.statusLeitura = status;
   await window.api?.salvarStatusLeitura?.(state.livroSelecionado.caminho, status);
 
   // Se marcar como concluído diretamente e houver total de páginas, completa o progresso
@@ -2401,6 +2613,38 @@ async function atualizarStatusLeitura(status) {
     });
     state.livroSelecionado.progresso.paginaAtual = tot;
     state.livroSelecionado.progresso.porcentagem = 100;
+  } else if (status !== "concluidos") {
+    // Se o usuário desmarcar de "concluidos" para outro status ("lendo", "quero-ler", "nenhum"),
+    // e o livro estava com 100% ou com totalPaginas fictício (<= 1), ajustamos o progresso:
+    if (state.livroSelecionado.progresso) {
+      if (state.livroSelecionado.progresso.totalPaginas <= 1) {
+        state.livroSelecionado.progresso.paginaAtual = 0;
+        state.livroSelecionado.progresso.totalPaginas = 0;
+        state.livroSelecionado.progresso.porcentagem = 0;
+      } else if (state.livroSelecionado.progresso.porcentagem >= 100) {
+        state.livroSelecionado.progresso.paginaAtual = 1;
+        state.livroSelecionado.progresso.porcentagem = Math.round((1 / state.livroSelecionado.progresso.totalPaginas) * 100);
+      }
+      const inputPagina = document.getElementById("inputPaginaAtual");
+      if (inputPagina) inputPagina.value = state.livroSelecionado.progresso.paginaAtual;
+      atualizarProgressoVisual(state.livroSelecionado.progresso.paginaAtual, state.livroSelecionado.progresso.totalPaginas);
+      await window.api?.salvarProgressoLeitura?.(state.livroSelecionado.caminho, {
+        paginaAtual: state.livroSelecionado.progresso.paginaAtual,
+        totalPaginas: state.livroSelecionado.progresso.totalPaginas,
+        porcentagem: state.livroSelecionado.progresso.porcentagem,
+        anotacoes: state.livroSelecionado.progresso.anotacoes || ""
+      });
+    }
+  }
+
+  // Sincroniza também na lista global state.todosLivros
+  const idx = state.todosLivros.findIndex(l => l.caminho === state.livroSelecionado.caminho);
+  if (idx !== -1) {
+    state.todosLivros[idx].status = status;
+    state.todosLivros[idx].statusLeitura = status;
+    if (state.livroSelecionado.progresso) {
+      state.todosLivros[idx].progresso = { ...state.livroSelecionado.progresso };
+    }
   }
 
   // Atualiza botões na interface do modal
@@ -2486,6 +2730,7 @@ function fecharMenu() {
 async function abrirPopupPasta() {
   const popup = document.getElementById("popupPasta");
   if (popup) popup.hidden = false;
+  registrarEstadoHistorico();
 
   const section = document.getElementById("cloudDriveSection");
   const chipsContainer = document.getElementById("cloudDriveChips");
@@ -2554,6 +2799,34 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.reload();
     }
   });
+
+  // Suporte a navegação por histórico e botão Voltar nativo do Android / Navegador
+  window.addEventListener("popstate", () => {
+    tratarVoltarNativo();
+  });
+
+  document.addEventListener("backbutton", (e) => {
+    e.preventDefault();
+    const tratado = tratarVoltarNativo();
+    if (!tratado && window.Capacitor?.Plugins?.App?.exitApp) {
+      window.Capacitor.Plugins.App.exitApp();
+    }
+  });
+
+  if (window.Capacitor?.Plugins?.App?.addListener) {
+    try {
+      window.Capacitor.Plugins.App.addListener("backButton", ({ canGoBack }) => {
+        const tratado = tratarVoltarNativo();
+        if (!tratado) {
+          if (canGoBack) {
+            window.history.back();
+          } else {
+            window.Capacitor.Plugins.App.exitApp();
+          }
+        }
+      });
+    } catch (e) {}
+  }
 
   const inputBusca = document.getElementById("inputBusca");
   const btnLimparBusca = document.getElementById("btnLimparBusca");
@@ -2760,6 +3033,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Remover da Estante / Biblioteca
+  document.getElementById("btnRemoverLivroModal")?.addEventListener("click", removerLivroSelecionado);
+
   // Link do Autor
   document.getElementById("linkAutor")?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -2797,18 +3073,26 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnToggleShowKey")?.addEventListener("click", () => {
     const inp = document.getElementById("inputGroqKey");
     if (!inp) return;
+    if (!inp.value) {
+      showToast("Sua chave ativa está protegida e não é exibida na tela por privacidade.");
+      return;
+    }
     inp.type = inp.type === "password" ? "text" : "password";
   });
 
   document.getElementById("btnTestarConexaoIA")?.addEventListener("click", async () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
     const lbl = document.getElementById("lblStatusConexao");
-    if (!key) {
+    const cfg = await window.api?.obterConfigIA?.();
+    const temChave = Boolean(key || cfg?.hasKey || cfg?.apiKey);
+
+    if (!temChave) {
       if (lbl) { lbl.textContent = "⚠️ Digite uma chave para testar"; lbl.className = "status-indicator erro"; }
       return;
     }
     if (lbl) { lbl.textContent = "⏳ Conectando à API do SkillBook..."; lbl.className = "status-indicator"; }
-    const res = await window.api?.testarConexaoGroq?.(key);
+    // Envia a nova chave ou vazio para usar a chave já salva no sistema
+    const res = await window.api?.testarConexaoGroq?.(key || "");
     if (res?.success) {
       if (lbl) { lbl.textContent = "🟢 Conexão com SkillBook validada com sucesso!"; lbl.className = "status-indicator ok"; }
       showToast("SkillBook conectado com sucesso!");
@@ -2820,7 +3104,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnSalvarConfigIA")?.addEventListener("click", async () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
     const model = document.getElementById("selectModeloIA")?.value || "openai/gpt-oss-20b";
-    const ok = await window.api?.salvarConfigIA?.({ apiKey: key, model });
+    // Se o usuário não digitou uma nova chave, preserva com segurança a chave existente no sistema
+    const ok = await window.api?.salvarConfigIA?.({ apiKey: key || "", model });
     if (ok) {
       showToast("Configurações da IA salvas com segurança!");
       fecharModalConfigIA();
@@ -2983,6 +3268,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnDockZoomIn")?.addEventListener("click", () => ajustarZoom(0.2));
   document.getElementById("btnDockTelaCheia")?.addEventListener("click", () => alternarTelaCheiaLeitor());
 
+  // Eventos do Filtro de Leitura (Normal, Sépia, Noturno)
+  document.getElementById("btnLeitorFiltroCor")?.addEventListener("click", alternarFiltroLeitura);
+  document.getElementById("btnDockFiltroCor")?.addEventListener("click", alternarFiltroLeitura);
+  aplicarFiltroLeitura(state.filtroLeitura);
+
   document.getElementById("btnToggleSkillSidebar")?.addEventListener("click", () => toggleSkillSidebar());
   document.getElementById("btnFecharSkillSidebar")?.addEventListener("click", () => toggleSkillSidebar(false));
 
@@ -3073,6 +3363,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.abrirModalSobre = abrirModalSobre;
   window.fecharModalSobre = fecharModalSobre;
   window.criarSkillDiretoDoCard = criarSkillDiretoDoCard;
+  window.alternarFiltroLeitura = alternarFiltroLeitura;
+  window.removerLivroSelecionado = removerLivroSelecionado;
 
   carregarBiblioteca();
 });
