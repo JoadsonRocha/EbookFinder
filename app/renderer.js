@@ -1764,6 +1764,21 @@ function carregarHistoricoChatLeitor(caminhoLivro, tituloObra) {
   }
 }
 
+async function obterTextoDaPaginaAtual() {
+  if (state.leitor.tipoArquivo === "pdf" && state.leitor.paginaObj) {
+    try {
+      const textContent = await state.leitor.paginaObj.getTextContent();
+      return textContent.items.map(item => item.str).join(" ").trim();
+    } catch (e) {
+      return "";
+    }
+  }
+  if (state.leitor.tipoArquivo === "epub" || state.leitor.tipoArquivo === "txt") {
+    return state.leitor.conteudoTextoAtual || "";
+  }
+  return "";
+}
+
 async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
   const input = document.getElementById("inputReaderChat");
   const feed = document.getElementById("readerChatFeed");
@@ -1778,12 +1793,12 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
 
   // Extrai o texto da página corrente para contextualizar o SkillBook
   let contexto = contextoManual;
-  if (!contexto && state.leitor.paginaObj) {
+  if (!contexto) {
     try {
-      const textContent = await state.leitor.paginaObj.getTextContent();
-      const txt = textContent.items.map(item => item.str).join(" ").trim();
-      if (txt.length > 20) {
-        contexto = `Página atual do leitor: ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}\nTrecho da página:\n"${txt.slice(0, 3500)}"`;
+      const txt = await obterTextoDaPaginaAtual();
+      if (txt && txt.length > 20) {
+        const rotulo = state.leitor.tipoArquivo === "epub" ? "Capítulo" : "Página";
+        contexto = `${rotulo} atual do leitor: ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}\nTrecho da obra:\n"${txt.slice(0, 3500)}"`;
       }
     } catch (e) {
       console.warn("Falha ao extrair texto da página atual:", e);
@@ -1860,50 +1875,47 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
 }
 
 async function explicarPaginaAtual() {
-  if (!state.leitor.paginaObj) return;
   try {
-    const textContent = await state.leitor.paginaObj.getTextContent();
-    const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
-    const prompt = `Explique de maneira didática, rica e analítica o conteúdo da Página ${state.leitor.paginaAtual} desta obra. Destaque os pontos cruciais e como o leitor deve interpretar este trecho.`;
+    const textoPagina = await obterTextoDaPaginaAtual();
+    const rotulo = state.leitor.tipoArquivo === "epub" ? "deste capítulo" : `da Página ${state.leitor.paginaAtual}`;
+    const prompt = `Explique de maneira didática, rica e analítica o conteúdo ${rotulo} desta obra. Destaque os pontos cruciais e como o leitor deve interpretar este trecho.`;
     if (textoPagina && textoPagina.length > 20) {
-      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA SEÇÃO:\n"${textoPagina.slice(0, 3500)}"`);
     } else {
       enviarPerguntaChatLeitor(prompt);
     }
   } catch (err) {
-    enviarPerguntaChatLeitor(`Explique o que é abordado na página ${state.leitor.paginaAtual} deste livro.`);
+    enviarPerguntaChatLeitor(`Explique o que é abordado neste trecho do livro.`);
   }
 }
 
 async function resumirPaginaAtual() {
-  if (!state.leitor.paginaObj) return;
   try {
-    const textContent = await state.leitor.paginaObj.getTextContent();
-    const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
-    const prompt = `Faça um resumo executivo com as melhores lições, regras práticas e ideias essenciais da Página ${state.leitor.paginaAtual}.`;
+    const textoPagina = await obterTextoDaPaginaAtual();
+    const rotulo = state.leitor.tipoArquivo === "epub" ? "deste capítulo" : `da Página ${state.leitor.paginaAtual}`;
+    const prompt = `Faça um resumo executivo com as melhores lições, regras práticas e ideias essenciais ${rotulo}.`;
     if (textoPagina && textoPagina.length > 20) {
-      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA SEÇÃO:\n"${textoPagina.slice(0, 3500)}"`);
     } else {
       enviarPerguntaChatLeitor(prompt);
     }
   } catch (err) {
-    enviarPerguntaChatLeitor(`Faça um resumo dos principais pontos da página ${state.leitor.paginaAtual}.`);
+    enviarPerguntaChatLeitor(`Faça um resumo dos principais pontos desta seção.`);
   }
 }
 
 async function extrairConceitosPaginaAtual() {
-  if (!state.leitor.paginaObj) return;
   try {
-    const textContent = await state.leitor.paginaObj.getTextContent();
-    const textoPagina = textContent.items.map(item => item.str).join(" ").trim();
-    const prompt = `Quais são os conceitos fundamentais, princípios ou termos técnicos apresentados na Página ${state.leitor.paginaAtual}? Elenque cada um com uma definição direta.`;
+    const textoPagina = await obterTextoDaPaginaAtual();
+    const rotulo = state.leitor.tipoArquivo === "epub" ? "neste capítulo" : `na Página ${state.leitor.paginaAtual}`;
+    const prompt = `Quais são os conceitos fundamentais, princípios ou termos técnicos apresentados ${rotulo}? Elenque cada um com uma definição direta.`;
     if (textoPagina && textoPagina.length > 20) {
-      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA PÁGINA ${state.leitor.paginaAtual}:\n"${textoPagina}"`);
+      enviarPerguntaChatLeitor(prompt, `CONTEÚDO DA SEÇÃO:\n"${textoPagina.slice(0, 3500)}"`);
     } else {
       enviarPerguntaChatLeitor(prompt);
     }
   } catch (err) {
-    enviarPerguntaChatLeitor(`Quais são os conceitos centrais da página ${state.leitor.paginaAtual}?`);
+    enviarPerguntaChatLeitor(`Quais são os conceitos centrais desta parte do livro?`);
   }
 }
 
@@ -1927,10 +1939,19 @@ function alternarBarraBuscaLeitor(mostrar) {
 }
 
 async function obterTextoPaginaPdf(numPagina) {
+  if (state.leitor.tipoArquivo === "epub" && state.leitor.epubDoc) {
+    const cap = state.leitor.epubDoc.capitulos[numPagina - 1];
+    return (cap?.textoPuro || "").toLowerCase();
+  }
+  if (state.leitor.tipoArquivo === "txt" && state.leitor.txtPaginas.length > 0) {
+    const txt = state.leitor.txtPaginas[numPagina - 1] || "";
+    return txt.toLowerCase();
+  }
   if (state.leitor.busca.cacheTexto.has(numPagina)) {
     return state.leitor.busca.cacheTexto.get(numPagina);
   }
   try {
+    if (!state.leitor.pdfDoc) return "";
     const page = await state.leitor.pdfDoc.getPage(numPagina);
     const content = await page.getTextContent();
     const texto = content.items.map(item => item.str).join(" ").toLowerCase();
@@ -1945,8 +1966,9 @@ async function executarBuscaNoLivro(direcao = 1) {
   const input = document.getElementById("inputLeitorBusca");
   const lblContador = document.getElementById("lblLeitorBuscaContador");
   const termo = (input?.value || "").trim().toLowerCase();
+  const temConteudo = state.leitor.pdfDoc || state.leitor.epubDoc || state.leitor.txtPaginas.length > 0;
 
-  if (!termo || !state.leitor.pdfDoc) {
+  if (!termo || !temConteudo) {
     if (lblContador) lblContador.textContent = "0/0";
     state.leitor.busca.ocorrencias = [];
     state.leitor.busca.indiceAtual = -1;
