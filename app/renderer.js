@@ -3297,6 +3297,7 @@ function abrirMenu() {
   const dropdown = document.getElementById("menuDropdown");
   if (!dropdown) return;
   dropdown.hidden = false;
+  registrarEstadoHistorico();
 
   backdropMenu = document.createElement("div");
   backdropMenu.className = "menu-backdrop";
