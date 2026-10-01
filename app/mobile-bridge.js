@@ -29,6 +29,164 @@
   // Flag global para o frontend reconhecer ambiente mobile
   window.isMobileEnvironment = true;
 
+  // Solicita persistência de dados no WebView / Navegador (evita limpeza pelo Android sob pressão de memória)
+  if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().then((persistent) => {
+      console.log(`💾 [Storage] Armazenamento persistente ${persistent ? "garantido pelo sistema" : "em modo padrão"}.`);
+    }).catch(() => {});
+  }
+
+  /**
+   * Descompacta um arquivo EPUB via streams nativos do navegador (DecompressionStream)
+   */
+  async function descompactarEpubBuffer(arrayBuffer) {
+    try {
+      const bytes = new Uint8Array(arrayBuffer);
+      const view = new DataView(arrayBuffer);
+
+      let eocdOffset = -1;
+      for (let i = bytes.length - 22; i >= 0; i--) {
+        if (view.getUint32(i, true) === 0x06054b50) {
+          eocdOffset = i;
+          break;
+        }
+      }
+      if (eocdOffset === -1) return null;
+
+      const cdOffset = view.getUint32(eocdOffset + 16, true);
+      const totalEntries = view.getUint16(eocdOffset + 10, true);
+
+      const entries = new Map();
+      let pos = cdOffset;
+      const decoder = new TextDecoder("utf-8");
+
+      for (let i = 0; i < totalEntries; i++) {
+        if (view.getUint32(pos, true) !== 0x02014b50) break;
+        const method = view.getUint16(pos + 10, true);
+        const compSize = view.getUint32(pos + 20, true);
+        const nameLen = view.getUint16(pos + 28, true);
+        const extraLen = view.getUint16(pos + 30, true);
+        const commentLen = view.getUint16(pos + 32, true);
+        const localHeaderOffset = view.getUint32(pos + 42, true);
+
+        const name = decoder.decode(bytes.slice(pos + 46, pos + 46 + nameLen));
+        const localNameLen = view.getUint16(localHeaderOffset + 26, true);
+        const localExtraLen = view.getUint16(localHeaderOffset + 28, true);
+        const dataOffset = localHeaderOffset + 30 + localNameLen + localExtraLen;
+        const compData = bytes.slice(dataOffset, dataOffset + compSize);
+
+        entries.set(name, { method, compData });
+        pos += 46 + nameLen + extraLen + commentLen;
+      }
+
+      async function readEntry(name) {
+        let entry = entries.get(name);
+        if (!entry) {
+          for (const [k, v] of entries) {
+            if (k.toLowerCase() === name.toLowerCase()) {
+              entry = v;
+              break;
+            }
+          }
+        }
+        if (!entry) return null;
+
+        if (entry.method === 0) {
+          return decoder.decode(entry.compData);
+        } else if (entry.method === 8) {
+          if (typeof DecompressionStream !== "undefined") {
+            const ds = new DecompressionStream("deflate-raw");
+            const writer = ds.writable.getWriter();
+            writer.write(entry.compData);
+            writer.close();
+            const ab = await new Response(ds.readable).arrayBuffer();
+            return decoder.decode(ab);
+          }
+        }
+        return null;
+      }
+
+      const containerXml = await readEntry("META-INF/container.xml");
+      if (!containerXml) return null;
+
+      const opfMatch = containerXml.match(/full-path=["']([^"']+\.opf)["']/i);
+      if (!opfMatch) return null;
+
+      const opfPath = opfMatch[1];
+      const opfDir = opfPath.includes("/") ? opfPath.substring(0, opfPath.lastIndexOf("/")) : ".";
+      const opfContent = await readEntry(opfPath);
+      if (!opfContent) return null;
+
+      let titulo = "";
+      const titleMatch = opfContent.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
+      if (titleMatch) titulo = titleMatch[1].trim();
+
+      let autor = "";
+      const creatorMatch = opfContent.match(/<dc:creator[^>]*>([^<]+)<\/dc:creator>/i);
+      if (creatorMatch) autor = creatorMatch[1].trim();
+
+      const manifestItems = new Map();
+      const itemRegex = /<item\b[^>]*>/gi;
+      let itemTag;
+      while ((itemTag = itemRegex.exec(opfContent)) !== null) {
+        const tag = itemTag[0];
+        const idMatch = tag.match(/id=["']([^"']+)["']/i);
+        const hrefMatch = tag.match(/href=["']([^"']+)["']/i);
+        if (idMatch && hrefMatch) {
+          manifestItems.set(idMatch[1], hrefMatch[1]);
+        }
+      }
+
+      const spineIdrefs = [];
+      const itemrefRegex = /<itemref\b[^>]*idref=["']([^"']+)["'][^>]*\/?>/gi;
+      let matchRef;
+      while ((matchRef = itemrefRegex.exec(opfContent)) !== null) {
+        spineIdrefs.push(matchRef[1]);
+      }
+
+      const capitulos = [];
+      for (let i = 0; i < spineIdrefs.length; i++) {
+        const idref = spineIdrefs[i];
+        const href = manifestItems.get(idref);
+        if (!href) continue;
+
+        const fullHref = opfDir === "." ? href : `${opfDir}/${href}`;
+        const html = await readEntry(fullHref);
+        if (!html) continue;
+
+        const sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+        let capTitulo = `Capítulo ${capitulos.length + 1}`;
+        const hMatch = sanitized.match(/<h[1-3][^>]*>([^<]+)<\/h[1-3]>/i) || sanitized.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (hMatch && hMatch[1] && hMatch[1].trim()) {
+          capTitulo = hMatch[1].trim();
+        }
+
+        const bodyMatch = sanitized.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        const conteudoFinal = bodyMatch ? bodyMatch[1] : sanitized;
+        const textoPuro = conteudoFinal.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+        if (textoPuro.length > 0 || conteudoFinal.includes("<img")) {
+          capitulos.push({
+            numero: capitulos.length + 1,
+            titulo: capTitulo,
+            conteudoHtml: conteudoFinal,
+            textoPuro: textoPuro.slice(0, 7000)
+          });
+        }
+      }
+
+      return {
+        titulo,
+        autor,
+        totalCapitulos: capitulos.length,
+        capitulos
+      };
+    } catch (e) {
+      console.error("❌ Erro ao descompactar EPUB no mobile:", e);
+      return null;
+    }
+  }
+
   // Inicializa o banco IndexedDB para armazenar PDFs binários e capas em alta resolução
   function abrirIndexedDB() {
     return new Promise((resolve, reject) => {
@@ -749,6 +907,13 @@ ${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : 
       } catch (err) {
         return { success: false, error: err.message };
       }
+    },
+
+    lerConteudoEpub: async (caminho) => {
+      const buffer = await obterBufferDoDB(caminho);
+      if (!buffer) return null;
+      const arrayBuffer = buffer.buffer ? buffer.buffer : buffer;
+      return descompactarEpubBuffer(arrayBuffer);
     }
   };
 })();

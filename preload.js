@@ -170,5 +170,10 @@ contextBridge.exposeInMainWorld("api", {
   /**
    * Exporta conteúdo de texto ou Markdown para arquivo local.
    */
-  exportarArquivoTexto: (dados) => safeInvoke("exportar-arquivo-texto", dados)
+  exportarArquivoTexto: (dados) => safeInvoke("exportar-arquivo-texto", dados),
+
+  /**
+   * Lê os capítulos e conteúdo textual de um arquivo EPUB.
+   */
+  lerConteudoEpub: (caminho) => safeInvoke("ler-conteudo-epub", caminho)
 });
