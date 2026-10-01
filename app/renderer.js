@@ -37,7 +37,12 @@ const state = {
   leitor: {
     ativo: false,
     livro: null,
+    tipoArquivo: "pdf", // "pdf" | "epub" | "txt"
     pdfDoc: null,
+    epubDoc: null,
+    txtPaginas: [],
+    tamanhoFonte: 18,
+    conteudoTextoAtual: "",
     paginaAtual: 1,
     totalPaginas: 1,
     paginaObj: null,
@@ -1075,15 +1080,19 @@ async function abrirLeitorInterno(livro) {
 
   const ext = (livro.extensao || "").toLowerCase();
   const isPdf = ext === ".pdf" || ext === "pdf" || livro.caminho.toLowerCase().endsWith(".pdf");
+  const isEpub = ext === ".epub" || ext === "epub" || livro.caminho.toLowerCase().endsWith(".epub");
+  const isTxt = ext === ".txt" || ext === "txt" || livro.caminho.toLowerCase().endsWith(".txt");
 
-  if (!isPdf) {
-    showToast(`O formato ${ext.toUpperCase() || "da obra"} abre no leitor externo do Windows.`);
+  if (!isPdf && !isEpub && !isTxt) {
+    showToast(`O formato ${ext.toUpperCase() || "da obra"} abre no leitor externo.`);
     window.api?.abrirNoWindows?.(livro.caminho);
     return;
   }
 
   const overlay = document.getElementById("viewLeitorIntegrado");
   const loading = document.getElementById("readerPdfLoading");
+  const containerPdf = document.getElementById("readerPdfContainer");
+  const containerTexto = document.getElementById("readerTextContainer");
   if (!overlay) return;
 
   fecharModalLivro();
@@ -1107,8 +1116,12 @@ async function abrirLeitorInterno(livro) {
 
   state.leitor.ativo = true;
   state.leitor.livro = livro;
+  state.leitor.tipoArquivo = isEpub ? "epub" : (isTxt ? "txt" : "pdf");
   state.leitor.pdfDoc = null;
+  state.leitor.epubDoc = null;
+  state.leitor.txtPaginas = [];
   state.leitor.paginaObj = null;
+  state.leitor.conteudoTextoAtual = "";
   state.leitor.paginaAtual = Math.max(1, livro.progresso?.paginaAtual || 1);
   state.leitor.totalPaginas = livro.progresso?.totalPaginas || 1;
   state.leitor.escala = 1.0;
@@ -1147,53 +1160,108 @@ async function abrirLeitorInterno(livro) {
   }
 
   try {
-    const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
-    if (!buffer) {
-      showToast("Não foi possível carregar o arquivo PDF.");
-      fecharLeitorInterno();
-      return;
-    }
+    if (isEpub) {
+      if (containerPdf) containerPdf.hidden = true;
+      if (containerTexto) containerTexto.hidden = false;
 
-    const pdfjs = window.pdfjsLib || window["pdfjs-dist/build/pdf"];
-    if (!pdfjs) {
-      showToast("Mecanismo PDF.js indisponível.");
-      fecharLeitorInterno();
-      return;
-    }
-
-    const uint8Array = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    const loadingTask = pdfjs.getDocument({ data: uint8Array });
-    const pdfDoc = await loadingTask.promise;
-
-    state.leitor.pdfDoc = pdfDoc;
-    state.leitor.totalPaginas = pdfDoc.numPages;
-
-    const totalEl = document.getElementById("leitorTotalPaginas");
-    if (totalEl) totalEl.textContent = pdfDoc.numPages;
-
-    if (state.leitor.paginaAtual > pdfDoc.numPages) {
-      state.leitor.paginaAtual = 1;
-    }
-
-    // Pré-calcula a escala ideal para a tela (evita render duplo e piscas)
-    try {
-      const pageInit = await pdfDoc.getPage(state.leitor.paginaAtual);
-      state.leitor.paginaObj = pageInit;
-      const unscaled = pageInit.getViewport({ scale: 1 });
-      const viewportEl = document.getElementById("readerPdfViewport");
-      const margem = isMobile ? 0 : 40;
-      const larguraDisponivel = (viewportEl?.clientWidth || window.innerWidth) - margem;
-      if (larguraDisponivel > 50 && unscaled.width > 0) {
-        state.leitor.escala = Math.max(0.35, Math.min(3.5, larguraDisponivel / unscaled.width));
+      const epubData = await window.api?.lerConteudoEpub?.(livro.caminho);
+      if (!epubData || !epubData.capitulos || epubData.capitulos.length === 0) {
+        showToast("Não foi possível carregar os capítulos do EPUB.");
+        fecharLeitorInterno();
+        return;
       }
-    } catch (eCalc) {
-      console.warn("Aviso no pré-cálculo da escala:", eCalc);
-    }
 
-    await renderizarPaginaLeitor(state.leitor.paginaAtual);
-    configurarGestosTouchLeitor();
+      state.leitor.epubDoc = epubData;
+      state.leitor.totalPaginas = epubData.totalCapitulos;
+
+      const totalEl = document.getElementById("leitorTotalPaginas");
+      if (totalEl) totalEl.textContent = epubData.totalCapitulos;
+
+      if (state.leitor.paginaAtual > epubData.totalCapitulos) {
+        state.leitor.paginaAtual = 1;
+      }
+
+      aplicarZoomTexto();
+      await renderizarPaginaLeitor(state.leitor.paginaAtual);
+    } else if (isTxt) {
+      if (containerPdf) containerPdf.hidden = true;
+      if (containerTexto) containerTexto.hidden = false;
+
+      const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
+      if (!buffer) {
+        showToast("Não foi possível ler o arquivo de texto.");
+        fecharLeitorInterno();
+        return;
+      }
+
+      const decoder = new TextDecoder("utf-8");
+      const fullText = decoder.decode(buffer);
+      const paginas = paginarTextoSimples(fullText, 2500);
+
+      state.leitor.txtPaginas = paginas;
+      state.leitor.totalPaginas = Math.max(1, paginas.length);
+
+      const totalEl = document.getElementById("leitorTotalPaginas");
+      if (totalEl) totalEl.textContent = state.leitor.totalPaginas;
+
+      if (state.leitor.paginaAtual > state.leitor.totalPaginas) {
+        state.leitor.paginaAtual = 1;
+      }
+
+      aplicarZoomTexto();
+      await renderizarPaginaLeitor(state.leitor.paginaAtual);
+    } else {
+      if (containerTexto) containerTexto.hidden = true;
+      if (containerPdf) containerPdf.hidden = false;
+
+      const buffer = await window.api?.lerArquivoBuffer?.(livro.caminho);
+      if (!buffer) {
+        showToast("Não foi possível carregar o arquivo PDF.");
+        fecharLeitorInterno();
+        return;
+      }
+
+      const pdfjs = window.pdfjsLib || window["pdfjs-dist/build/pdf"];
+      if (!pdfjs) {
+        showToast("Mecanismo PDF.js indisponível.");
+        fecharLeitorInterno();
+        return;
+      }
+
+      const uint8Array = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+      const loadingTask = pdfjs.getDocument({ data: uint8Array });
+      const pdfDoc = await loadingTask.promise;
+
+      state.leitor.pdfDoc = pdfDoc;
+      state.leitor.totalPaginas = pdfDoc.numPages;
+
+      const totalEl = document.getElementById("leitorTotalPaginas");
+      if (totalEl) totalEl.textContent = pdfDoc.numPages;
+
+      if (state.leitor.paginaAtual > pdfDoc.numPages) {
+        state.leitor.paginaAtual = 1;
+      }
+
+      // Pré-calcula a escala ideal para a tela (evita render duplo e piscas)
+      try {
+        const pageInit = await pdfDoc.getPage(state.leitor.paginaAtual);
+        state.leitor.paginaObj = pageInit;
+        const unscaled = pageInit.getViewport({ scale: 1 });
+        const viewportEl = document.getElementById("readerPdfViewport");
+        const margem = isMobile ? 0 : 40;
+        const larguraDisponivel = (viewportEl?.clientWidth || window.innerWidth) - margem;
+        if (larguraDisponivel > 50 && unscaled.width > 0) {
+          state.leitor.escala = Math.max(0.35, Math.min(3.5, larguraDisponivel / unscaled.width));
+        }
+      } catch (eCalc) {
+        console.warn("Aviso no pré-cálculo da escala:", eCalc);
+      }
+
+      await renderizarPaginaLeitor(state.leitor.paginaAtual);
+      configurarGestosTouchLeitor();
+    }
   } catch (err) {
-    console.error("Erro ao abrir PDF no leitor interno:", err);
+    console.error("Erro ao abrir obra no leitor interno:", err);
     if (isMobile) {
       showToast("Erro ao abrir este documento no aparelho.");
     } else {
@@ -1212,6 +1280,11 @@ function fecharLeitorInterno() {
   const overlay = document.getElementById("viewLeitorIntegrado");
   if (overlay) overlay.hidden = true;
 
+  const containerPdf = document.getElementById("readerPdfContainer");
+  const containerTexto = document.getElementById("readerTextContainer");
+  if (containerPdf) containerPdf.hidden = false;
+  if (containerTexto) containerTexto.hidden = true;
+
   if (state.leitor.currentRenderTask) {
     try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
   }
@@ -1223,7 +1296,10 @@ function fecharLeitorInterno() {
   state.leitor.ativo = false;
   state.leitor.livro = null;
   state.leitor.pdfDoc = null;
+  state.leitor.epubDoc = null;
+  state.leitor.txtPaginas = [];
   state.leitor.paginaObj = null;
+  state.leitor.conteudoTextoAtual = "";
 
   carregarBiblioteca();
 }
