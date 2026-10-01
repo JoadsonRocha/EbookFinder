@@ -1446,58 +1446,139 @@ function configurarGestosTouchLeitor() {
   }, { passive: true });
 }
 
+function paginarTextoSimples(texto, tamanhoPagina = 2500) {
+  if (!texto) return [""];
+  const paragrafos = texto.split(/\r?\n\r?\n/);
+  const paginas = [];
+  let buffer = "";
+
+  for (const p of paragrafos) {
+    const pLimpo = p.trim();
+    if (!pLimpo) continue;
+    if ((buffer.length + pLimpo.length) > tamanhoPagina && buffer.length > 0) {
+      paginas.push(buffer.trim());
+      buffer = pLimpo + "\n\n";
+    } else {
+      buffer += pLimpo + "\n\n";
+    }
+  }
+  if (buffer.trim().length > 0) {
+    paginas.push(buffer.trim());
+  }
+  return paginas.length > 0 ? paginas : [texto];
+}
+
+function escapeHtml(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function aplicarZoomTexto() {
+  const contentEl = document.getElementById("readerTextContent");
+  if (contentEl) {
+    contentEl.style.fontSize = `${state.leitor.tamanhoFonte || 18}px`;
+  }
+  const pct = `${state.leitor.tamanhoFonte || 18}px`;
+  const lblZoom = document.getElementById("lblLeitorZoom");
+  if (lblZoom) lblZoom.textContent = pct;
+  const lblDockZoom = document.getElementById("lblDockZoom");
+  if (lblDockZoom) lblDockZoom.textContent = pct;
+}
+
 async function renderizarPaginaLeitor(num) {
-  if (!state.leitor.pdfDoc || state.leitor.renderizando) return;
+  if (state.leitor.renderizando) return;
   state.leitor.renderizando = true;
 
-  const canvas = document.getElementById("readerPdfCanvas");
   const loading = document.getElementById("readerPdfLoading");
   if (loading) loading.hidden = false;
 
   try {
-    const page = await state.leitor.pdfDoc.getPage(num);
-    state.leitor.paginaAtual = num;
-    state.leitor.paginaObj = page;
-
     const inputPag = document.getElementById("inputLeitorPagina");
     if (inputPag) inputPag.value = num;
+    state.leitor.paginaAtual = num;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    const viewport = page.getViewport({ scale: state.leitor.escala });
+    if (state.leitor.tipoArquivo === "epub" && state.leitor.epubDoc) {
+      const cap = state.leitor.epubDoc.capitulos[num - 1] || state.leitor.epubDoc.capitulos[0];
+      const headerEl = document.getElementById("readerTextHeader");
+      const contentEl = document.getElementById("readerTextContent");
 
-    canvas.width = Math.floor(viewport.width * dpr);
-    canvas.height = Math.floor(viewport.height * dpr);
-    canvas.style.width = Math.floor(viewport.width) + "px";
-    canvas.style.height = Math.floor(viewport.height) + "px";
-    canvas.style.maxWidth = "none"; // Permite que o zoom expanda além da largura da tela
+      if (headerEl) headerEl.textContent = cap.titulo || `Capítulo ${num}`;
+      if (contentEl) contentEl.innerHTML = cap.conteudoHtml || "";
+      state.leitor.conteudoTextoAtual = cap.textoPuro || "";
 
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      aplicarZoomTexto();
+      salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
+      atualizarIndicadorMarcadorToolbar();
 
-    const renderContext = {
-      canvasContext: ctx,
-      transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
-      viewport: viewport
-    };
+      const viewportElem = document.getElementById("readerPdfViewport");
+      if (viewportElem) viewportElem.scrollTop = 0;
+    } else if (state.leitor.tipoArquivo === "txt" && state.leitor.txtPaginas.length > 0) {
+      const txt = state.leitor.txtPaginas[num - 1] || "";
+      const headerEl = document.getElementById("readerTextHeader");
+      const contentEl = document.getElementById("readerTextContent");
 
-    if (state.leitor.currentRenderTask) {
-      try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
+      if (headerEl) headerEl.textContent = `Página ${num} de ${state.leitor.totalPaginas}`;
+      if (contentEl) {
+        contentEl.innerHTML = txt
+          .split("\n\n")
+          .filter(Boolean)
+          .map(p => `<p>${escapeHtml(p.trim())}</p>`)
+          .join("");
+      }
+      state.leitor.conteudoTextoAtual = txt;
+
+      aplicarZoomTexto();
+      salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
+      atualizarIndicadorMarcadorToolbar();
+
+      const viewportElem = document.getElementById("readerPdfViewport");
+      if (viewportElem) viewportElem.scrollTop = 0;
+    } else if (state.leitor.pdfDoc) {
+      const canvas = document.getElementById("readerPdfCanvas");
+      const page = await state.leitor.pdfDoc.getPage(num);
+      state.leitor.paginaObj = page;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      const viewport = page.getViewport({ scale: state.leitor.escala });
+
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+      canvas.style.width = Math.floor(viewport.width) + "px";
+      canvas.style.height = Math.floor(viewport.height) + "px";
+      canvas.style.maxWidth = "none";
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const renderContext = {
+        canvasContext: ctx,
+        transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
+        viewport: viewport
+      };
+
+      if (state.leitor.currentRenderTask) {
+        try { state.leitor.currentRenderTask.cancel(); } catch (e) {}
+      }
+      state.leitor.currentRenderTask = page.render(renderContext);
+      await state.leitor.currentRenderTask.promise;
+
+      const pct = `${Math.round(state.leitor.escala * 100)}%`;
+      const lblZoom = document.getElementById("lblLeitorZoom");
+      if (lblZoom) lblZoom.textContent = pct;
+
+      const lblDockZoom = document.getElementById("lblDockZoom");
+      if (lblDockZoom) lblDockZoom.textContent = pct;
+
+      salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
+      atualizarIndicadorMarcadorToolbar();
+
+      const viewportElem = document.getElementById("readerPdfViewport");
+      if (viewportElem) viewportElem.scrollTop = 0;
     }
-    state.leitor.currentRenderTask = page.render(renderContext);
-    await state.leitor.currentRenderTask.promise;
-
-    const pct = `${Math.round(state.leitor.escala * 100)}%`;
-    const lblZoom = document.getElementById("lblLeitorZoom");
-    if (lblZoom) lblZoom.textContent = pct;
-
-    const lblDockZoom = document.getElementById("lblDockZoom");
-    if (lblDockZoom) lblDockZoom.textContent = pct;
-
-    salvarProgressoLeitor(state.leitor.livro, num, state.leitor.totalPaginas);
-    atualizarIndicadorMarcadorToolbar();
-
-    const viewportElem = document.getElementById("readerPdfViewport");
-    if (viewportElem) viewportElem.scrollTop = 0;
   } catch (err) {
     if (err?.name !== "RenderingCancelledException") {
       console.error("Erro ao renderizar página:", err);
@@ -1509,7 +1590,8 @@ async function renderizarPaginaLeitor(num) {
 }
 
 function mudarPaginaLeitor(delta) {
-  if (!state.leitor.pdfDoc) return;
+  const temConteudo = state.leitor.pdfDoc || state.leitor.epubDoc || state.leitor.txtPaginas.length > 0;
+  if (!temConteudo) return;
   const nova = state.leitor.paginaAtual + delta;
   if (nova >= 1 && nova <= state.leitor.totalPaginas) {
     renderizarPaginaLeitor(nova);
@@ -1517,12 +1599,24 @@ function mudarPaginaLeitor(delta) {
 }
 
 function irParaPaginaLeitor(num) {
-  if (!state.leitor.pdfDoc) return;
+  const temConteudo = state.leitor.pdfDoc || state.leitor.epubDoc || state.leitor.txtPaginas.length > 0;
+  if (!temConteudo) return;
   const pag = Math.max(1, Math.min(state.leitor.totalPaginas, parseInt(num, 10) || 1));
   renderizarPaginaLeitor(pag);
 }
 
 function ajustarZoom(delta, definirFixo) {
+  if (state.leitor.tipoArquivo === "epub" || state.leitor.tipoArquivo === "txt") {
+    if (definirFixo !== undefined) {
+      state.leitor.tamanhoFonte = Math.max(14, Math.min(32, Math.round(definirFixo)));
+    } else {
+      state.leitor.tamanhoFonte = Math.max(14, Math.min(32, (state.leitor.tamanhoFonte || 18) + (delta > 0 ? 2 : -2)));
+    }
+    aplicarZoomTexto();
+    return;
+  }
+
+  // PDF
   if (definirFixo !== undefined) {
     state.leitor.escala = Math.max(0.35, Math.min(3.5, definirFixo));
   } else {
@@ -1542,6 +1636,12 @@ function ajustarZoom(delta, definirFixo) {
 }
 
 function ajustarLarguraLeitor() {
+  if (state.leitor.tipoArquivo === "epub" || state.leitor.tipoArquivo === "txt") {
+    state.leitor.tamanhoFonte = 18;
+    aplicarZoomTexto();
+    return;
+  }
+
   const viewport = document.getElementById("readerPdfViewport");
   if (!viewport || !state.leitor.paginaObj) return;
 
