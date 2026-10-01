@@ -177,6 +177,26 @@ if (fs.existsSync(estanteConfigFile)) {
   }
 }
 
+// Arquivo para armazenar obras removidas/ocultadas da estante
+const ocultosConfigFile = path.join(app.getPath("userData"), "livros_ocultos.json");
+let livrosOcultos = new Set();
+if (fs.existsSync(ocultosConfigFile)) {
+  try {
+    const list = JSON.parse(fs.readFileSync(ocultosConfigFile, "utf8"));
+    if (Array.isArray(list)) livrosOcultos = new Set(list);
+  } catch (e) {
+    livrosOcultos = new Set();
+  }
+}
+
+function salvarLivrosOcultos() {
+  try {
+    fs.writeFileSync(ocultosConfigFile, JSON.stringify([...livrosOcultos], null, 2));
+  } catch (e) {
+    console.error("❌ Erro ao salvar livros_ocultos.json:", e);
+  }
+}
+
 function salvarStatusObra(caminho, status) {
   estanteStatus[caminho] = status;
   try {
@@ -502,18 +522,20 @@ function buscarEbooksNaPasta(dir, termo = "", recursivo = true) {
         } else if (entrada.isFile()) {
           const ext = path.extname(entrada.name).toLowerCase();
           if (EXTENSOES_EBOOKS.includes(ext)) {
+            const caminhoCompleto = path.join(caminhoAtual, entrada.name);
+            if (livrosOcultos.has(caminhoCompleto)) {
+              continue;
+            }
             const baseNome = path.basename(entrada.name, ext);
 
             if (!termoLower || entrada.name.toLowerCase().includes(termoLower)) {
               let tamanho = 0;
               let modificadoEm = 0;
               try {
-                const stat = fs.statSync(path.join(caminhoAtual, entrada.name));
+                const stat = fs.statSync(caminhoCompleto);
                 tamanho = stat.size;
                 modificadoEm = stat.mtimeMs;
               } catch (e) {}
-
-              const caminhoCompleto = path.join(caminhoAtual, entrada.name);
               const prog = progressoLeitura[caminhoCompleto] || {
                 paginaAtual: 0,
                 totalPaginas: 0,
@@ -1012,12 +1034,123 @@ ipcMain.handle("remover-livro", (e, caminho) => {
   if (!caminho) return false;
   try {
     delete progressoLeitura[caminho];
-    delete statusLeitura[caminho];
-    salvarProgressoPersistente();
-    salvarStatusPersistente();
+    delete estanteStatus[caminho];
+    livrosOcultos.add(caminho);
+    salvarLivrosOcultos();
+
+    try {
+      fs.writeFileSync(progressoConfigFile, JSON.stringify(progressoLeitura, null, 2));
+    } catch (errProg) {}
+
+    try {
+      fs.writeFileSync(estanteConfigFile, JSON.stringify(estanteStatus, null, 2));
+    } catch (errEst) {}
+
+    const hash = gerarHashCaminho(caminho);
+    const capaCompleta = path.join(thumbsDir, `${hash}_cover.jpg`);
+    if (fs.existsSync(capaCompleta)) {
+      try { fs.unlinkSync(capaCompleta); } catch (errUnlink) {}
+    }
+
     return true;
   } catch (err) {
+    console.error("❌ Erro ao remover livro:", err);
     return false;
+  }
+});
+
+/**
+ * Lê os capítulos e metadados de um arquivo EPUB para visualização no Leitor Interno.
+ */
+ipcMain.handle("ler-conteudo-epub", async (e, caminho) => {
+  if (!caminho || !fs.existsSync(caminho) || !AdmZip) return null;
+  try {
+    const zip = new AdmZip(caminho);
+    const containerEntry = zip.getEntry("META-INF/container.xml");
+    if (!containerEntry) return null;
+
+    const containerXml = containerEntry.getData().toString("utf8");
+    const opfMatch = containerXml.match(/full-path=["']([^"']+\.opf)["']/i);
+    if (!opfMatch) return null;
+
+    const opfPath = opfMatch[1];
+    const opfDir = path.posix.dirname(opfPath);
+    const opfEntry = zip.getEntry(opfPath);
+    if (!opfEntry) return null;
+
+    const opfContent = opfEntry.getData().toString("utf8");
+
+    let titulo = "";
+    const titleMatch = opfContent.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
+    if (titleMatch) titulo = titleMatch[1].trim();
+
+    let autor = "";
+    const creatorMatch = opfContent.match(/<dc:creator[^>]*>([^<]+)<\/dc:creator>/i);
+    if (creatorMatch) autor = creatorMatch[1].trim();
+
+    // Mapeia itens do manifesto
+    const manifestItems = new Map();
+    const itemRegex = /<item\b[^>]*>/gi;
+    let itemTag;
+    while ((itemTag = itemRegex.exec(opfContent)) !== null) {
+      const tag = itemTag[0];
+      const idMatch = tag.match(/id=["']([^"']+)["']/i);
+      const hrefMatch = tag.match(/href=["']([^"']+)["']/i);
+      if (idMatch && hrefMatch) {
+        manifestItems.set(idMatch[1], hrefMatch[1]);
+      }
+    }
+
+    // Lê a ordem de leitura na spine
+    const spineIdrefs = [];
+    const itemrefRegex = /<itemref\b[^>]*idref=["']([^"']+)["'][^>]*\/?>/gi;
+    let matchRef;
+    while ((matchRef = itemrefRegex.exec(opfContent)) !== null) {
+      spineIdrefs.push(matchRef[1]);
+    }
+
+    const capitulos = [];
+    for (let i = 0; i < spineIdrefs.length; i++) {
+      const idref = spineIdrefs[i];
+      const href = manifestItems.get(idref);
+      if (!href) continue;
+
+      const fullHref = opfDir === "." ? href : path.posix.join(opfDir, href);
+      const entry = zip.getEntry(fullHref) || zip.getEntry(decodeURIComponent(fullHref));
+      if (!entry) continue;
+
+      let html = entry.getData().toString("utf8");
+      html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+
+      let capTitulo = `Capítulo ${capitulos.length + 1}`;
+      const hMatch = html.match(/<h[1-3][^>]*>([^<]+)<\/h[1-3]>/i) || html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      if (hMatch && hMatch[1] && hMatch[1].trim()) {
+        capTitulo = hMatch[1].trim();
+      }
+
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      const conteudoFinal = bodyMatch ? bodyMatch[1] : html;
+      const textoPuro = conteudoFinal.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+      if (textoPuro.length > 0 || conteudoFinal.includes("<img")) {
+        capitulos.push({
+          numero: capitulos.length + 1,
+          titulo: capTitulo,
+          conteudoHtml: conteudoFinal,
+          textoPuro: textoPuro.slice(0, 7000)
+        });
+      }
+    }
+
+    return {
+      titulo,
+      autor,
+      totalCapitulos: capitulos.length,
+      capitulos
+    };
+  } catch (err) {
+    console.error("❌ Erro ao ler conteúdo do EPUB:", err);
+    return null;
   }
 });
 
