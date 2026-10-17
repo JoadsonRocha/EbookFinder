@@ -314,6 +314,14 @@ function sanitizarHtmlEpub(html) {
   return clean;
 }
 
+function normalizarModeloIA(m) {
+  if (!m) return "llama-3.1-8b-instant";
+  const str = String(m).toLowerCase();
+  if (str.includes("120b") || str.includes("70b") || str.includes("pro")) return "llama-3.3-70b-versatile";
+  if (str.includes("20b") || str.includes("8b") || str.includes("turbo")) return "llama-3.1-8b-instant";
+  return m;
+}
+
 function showToast(msg, duracao = 3000) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -1172,7 +1180,7 @@ async function abrirLeitorInterno(livro) {
   }
 
   // Atualiza indicador do modelo na barra lateral do leitor
-  const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
+  const cfg = await window.api?.obterConfigIA?.() || { model: "llama-3.1-8b-instant" };
   const lblModel = document.getElementById("lblReaderModeloIA");
   if (lblModel) {
     const isPro = (cfg.model || "").includes("120b") || (cfg.model || "").includes("70b");
@@ -1852,7 +1860,7 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
     feed.scrollTop = feed.scrollHeight;
 
     const contentEl = respMsg.querySelector(".copilot-msg-content");
-    const cfg = await window.api?.obterConfigIA?.() || { model: "openai/gpt-oss-20b" };
+    const cfg = await window.api?.obterConfigIA?.() || { model: "llama-3.1-8b-instant" };
     const historicoAtual = obterHistoricoChatStorage(state.leitor.livro.caminho) || [];
 
     let streamedText = "";
@@ -1861,7 +1869,7 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
         pergunta,
         contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
         historico: historicoAtual,
-        modelo: cfg.model || "openai/gpt-oss-20b",
+        modelo: normalizarModeloIA(cfg.model),
         onChunk: (chunk) => {
           streamedText += chunk;
           contentEl.innerHTML = formatarMarkdownSimples(streamedText) + `<span class="typing-cursor"></span>`;
@@ -1885,7 +1893,7 @@ async function enviarPerguntaChatLeitor(perguntaManual, contextoManual) {
         pergunta,
         contexto: contexto || `Leitura em andamento: Página ${state.leitor.paginaAtual} de ${state.leitor.totalPaginas}`,
         historico: historicoAtual,
-        modelo: cfg.model || "openai/gpt-oss-20b"
+        modelo: normalizarModeloIA(cfg.model)
       });
 
       if (res?.success && res.resposta) {
@@ -2314,7 +2322,7 @@ async function abrirModalConfigIA() {
   const modal = document.getElementById("modalConfigIA");
   if (!modal) return;
 
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b", isBundled: false, hasKey: false };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant", isBundled: false, hasKey: false };
   const inputKey = document.getElementById("inputGroqKey");
   const selectModel = document.getElementById("selectModeloIA");
   const lblStatus = document.getElementById("lblStatusConexao");
@@ -2347,7 +2355,7 @@ async function abrirModalConfigIA() {
     }
   }
 
-  if (selectModel) selectModel.value = cfg.model || "openai/gpt-oss-20b";
+  if (selectModel) selectModel.value = normalizarModeloIA(cfg.model);
 
   if (lblStatus) {
     if (temChaveAtiva) {
@@ -2521,7 +2529,7 @@ description: "Modelos mentais, princípios fundamentais e regras práticas da ob
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptSkill,
       contexto: "Destilação oficial no formato book-to-skill",
-      modelo: cfg.model || "openai/gpt-oss-20b"
+      modelo: normalizarModeloIA(cfg.model)
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -2622,7 +2630,7 @@ async function enviarPerguntaChat(textoPergunta = null) {
       pergunta,
       contexto,
       historico: state.chatHistorico.slice(0, -1),
-      modelo: cfg.model || "openai/gpt-oss-20b",
+      modelo: normalizarModeloIA(cfg.model),
       onChunk: (chunk) => {
         streamedText += chunk;
         contentEl.innerHTML = formatarMarkdownSimples(streamedText) + `<span class="typing-cursor"></span>`;
@@ -2817,7 +2825,7 @@ async function abrirCopilotoIA(livro) {
   }
 
   // Identifica o modelo ativo
-  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "openai/gpt-oss-20b" };
+  const cfg = await window.api?.obterConfigIA?.() || { apiKey: "", model: "llama-3.1-8b-instant" };
   if (modelName) {
     const isPro = (cfg.model || "").includes("120b") || (cfg.model || "").includes("70b");
     modelName.textContent = isPro ? "SkillBook Pro" : "SkillBook Turbo";
@@ -3014,7 +3022,7 @@ async function enviarPerguntaCopiloto(textoPergunta = null) {
       pergunta,
       contexto,
       historico: state.chatHistorico.slice(0, -1),
-      modelo: cfg.model || "openai/gpt-oss-20b",
+      modelo: normalizarModeloIA(cfg.model),
       onChunk: (chunk) => {
         streamedText += chunk;
         contentEl.innerHTML = formatarMarkdownSimples(streamedText) + `<span class="typing-cursor"></span>`;
@@ -3127,7 +3135,7 @@ ${textoAmostra.slice(0, 8000)}`;
     const resIA = await window.api?.perguntarGroq?.({
       pergunta: promptDestilacao,
       contexto: "",
-      modelo: cfg.model || "openai/gpt-oss-20b"
+      modelo: normalizarModeloIA(cfg.model)
     });
 
     if (resIA?.success && resIA.resposta) {
@@ -3719,7 +3727,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnSalvarConfigIA")?.addEventListener("click", async () => {
     const key = document.getElementById("inputGroqKey")?.value?.trim();
-    const model = document.getElementById("selectModeloIA")?.value || "openai/gpt-oss-20b";
+    const model = normalizarModeloIA(document.getElementById("selectModeloIA")?.value);
     // Se o usuário não digitou uma nova chave, preserva com segurança a chave existente no sistema
     const ok = await window.api?.salvarConfigIA?.({ apiKey: key || "", model });
     if (ok) {

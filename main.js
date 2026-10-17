@@ -58,10 +58,10 @@ const bundledIaConfigPaths = [
 ];
 
 function normalizarModeloIA(m) {
-  if (!m) return "openai/gpt-oss-20b";
-  if (m.includes("120b")) return "openai/gpt-oss-120b";
-  if (m.includes("20b")) return "openai/gpt-oss-20b";
-  if (m.includes("llama")) return "openai/gpt-oss-20b";
+  if (!m) return "llama-3.1-8b-instant";
+  const str = String(m).toLowerCase();
+  if (str.includes("120b") || str.includes("70b") || str.includes("pro")) return "llama-3.3-70b-versatile";
+  if (str.includes("20b") || str.includes("8b") || str.includes("turbo")) return "llama-3.1-8b-instant";
   return m;
 }
 
@@ -112,7 +112,7 @@ function obterConfigIA() {
     };
   }
 
-  return { apiKey: "", model: "openai/gpt-oss-20b", origem: "nenhuma", isBundled: false };
+  return { apiKey: "", model: "llama-3.1-8b-instant", origem: "nenhuma", isBundled: false };
 }
 
 function salvarConfigIA(cfg) {
@@ -865,7 +865,7 @@ ipcMain.handle("testar-conexao-groq", async (e, apiKey) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-20b",
+        model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 2
       })
@@ -893,7 +893,7 @@ ipcMain.handle("perguntar-groq", async (e, { pergunta, contexto, historico = [],
     };
   }
 
-  const modelToUse = normalizarModeloIA(modelo || cfg.model || "openai/gpt-oss-20b");
+  const modelToUse = normalizarModeloIA(modelo || cfg.model || "llama-3.1-8b-instant");
 
   const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
 Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
@@ -950,7 +950,7 @@ ipcMain.on("iniciar-groq-stream", async (event, { streamId, pergunta, contexto, 
     return;
   }
 
-  const modelToUse = normalizarModeloIA(modelo || cfg.model || "openai/gpt-oss-20b");
+  const modelToUse = normalizarModeloIA(modelo || cfg.model || "llama-3.1-8b-instant");
 
   const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
 Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.

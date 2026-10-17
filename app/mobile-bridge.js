@@ -372,22 +372,36 @@
     return fileInput;
   }
 
+  function normalizarModeloIA(m) {
+    if (!m) return "llama-3.1-8b-instant";
+    const str = String(m).toLowerCase();
+    if (str.includes("120b") || str.includes("70b") || str.includes("pro")) return "llama-3.3-70b-versatile";
+    if (str.includes("20b") || str.includes("8b") || str.includes("turbo")) return "llama-3.1-8b-instant";
+    return m;
+  }
+
   // Função privada para recuperar as credenciais reais da IA sem expor à camada DOM
   async function obterConfigIAPrivada() {
     try {
       const raw = localStorage.getItem("ef_ia_config");
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed) {
+          parsed.model = normalizarModeloIA(parsed.model);
+          return parsed;
+        }
+      }
       const res = await fetch("ia_config_bundle.json").catch(() => null);
       if (res && res.ok) {
         const bundle = await res.json().catch(() => null);
         if (bundle && bundle.apiKey) {
-          return { apiKey: bundle.apiKey.trim(), model: bundle.model || "openai/gpt-oss-20b", isBundled: true };
+          return { apiKey: bundle.apiKey.trim(), model: normalizarModeloIA(bundle.model), isBundled: true };
         }
       }
     } catch (e) {}
     return {
       apiKey: "",
-      model: "openai/gpt-oss-20b",
+      model: "llama-3.1-8b-instant",
       isBundled: false
     };
   }
@@ -630,7 +644,7 @@
 
         const cfgFinal = {
           apiKey: chaveFinal,
-          model: config.model || configAtual.model || "openai/gpt-oss-20b"
+          model: normalizarModeloIA(config.model || configAtual.model)
         };
         localStorage.setItem("ef_ia_config", JSON.stringify(cfgFinal));
         return true;
@@ -653,7 +667,7 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: "openai/gpt-oss-20b",
+            model: "llama-3.1-8b-instant",
             messages: [{ role: "user", content: "ping" }],
             max_tokens: 2
           })
@@ -676,7 +690,7 @@
         const key = (cfg.apiKey || "").trim();
         if (!key) return { success: false, error: "Chave da API não configurada." };
 
-        const modelToUse = modelo || cfg.model || "openai/gpt-oss-20b";
+        const modelToUse = normalizarModeloIA(modelo || cfg.model || "llama-3.1-8b-instant");
         const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
 Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
 Responda sempre em Português do Brasil com primorosa formatação Markdown.
@@ -725,7 +739,7 @@ ${contexto ? `--- CONTEXTO DA OBRA ---\n${contexto}\n-----------------------` : 
           return;
         }
 
-        const modelToUse = modelo || cfg.model || "openai/gpt-oss-20b";
+        const modelToUse = normalizarModeloIA(modelo || cfg.model || "llama-3.1-8b-instant");
         const systemPrompt = `Você é o SkillBook, a inteligência artificial especialista e mentora de leitura integrada ao EbookFinder.
 Seu papel é responder com máxima clareza, profundidade pedagógica e excelência analítica sobre a obra que o leitor está explorando.
 Responda sempre em Português do Brasil com primorosa formatação Markdown.
