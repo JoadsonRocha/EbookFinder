@@ -1,6 +1,6 @@
 {
   "name": "ebookfinder",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Organizador e leitor inteligente de e-books e documentos digitais locais",
   "main": "main.js",
   "license": "GPL-3.0",
@@ -16,7 +16,7 @@
   },
   "author": "Joadson Rocha <joadson.dev@gmail.com>",
   "build": {
-    "appId": "com.ebookfinder.app",
+    "appId": "com.joadsonrocha.ebookfinder",
     "productName": "EbookFinder",
     "directories": {
       "output": "dist"
