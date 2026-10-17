@@ -1059,6 +1059,20 @@ ipcMain.handle("remover-livro", (e, caminho) => {
   }
 });
 
+function sanitizarHtmlEpub(html) {
+  if (!html) return "";
+  let clean = String(html);
+  clean = clean.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  clean = clean.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "");
+  clean = clean.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "");
+  clean = clean.replace(/<embed\b[^>]*\/?>/gi, "");
+  clean = clean.replace(/<base\b[^>]*\/?>/gi, "");
+  clean = clean.replace(/\s+on[a-z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, "");
+  clean = clean.replace(/\bhref\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'href="#"');
+  clean = clean.replace(/\bsrc\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'src=""');
+  return clean;
+}
+
 /**
  * Lê os capítulos e metadados de um arquivo EPUB para visualização no Leitor Interno.
  */
@@ -1120,7 +1134,7 @@ ipcMain.handle("ler-conteudo-epub", async (e, caminho) => {
       if (!entry) continue;
 
       let html = entry.getData().toString("utf8");
-      html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+      html = sanitizarHtmlEpub(html);
 
       let capTitulo = `Capítulo ${capitulos.length + 1}`;
       const hMatch = html.match(/<h[1-3][^>]*>([^<]+)<\/h[1-3]>/i) || html.match(/<title[^>]*>([^<]+)<\/title>/i);

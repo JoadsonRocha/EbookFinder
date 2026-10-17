@@ -290,6 +290,30 @@ function aplicarModoVisualizacao(modo) {
 // 2. UTILITÁRIOS
 // ============================================================================
 
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizarHtmlEpub(html) {
+  if (!html) return "";
+  let clean = String(html);
+  clean = clean.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  clean = clean.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "");
+  clean = clean.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "");
+  clean = clean.replace(/<embed\b[^>]*\/?>/gi, "");
+  clean = clean.replace(/<base\b[^>]*\/?>/gi, "");
+  clean = clean.replace(/\s+on[a-z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, "");
+  clean = clean.replace(/\bhref\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'href="#"');
+  clean = clean.replace(/\bsrc\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'src=""');
+  return clean;
+}
+
 function showToast(msg, duracao = 3000) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -659,20 +683,23 @@ function renderizarGrade(lista) {
 
     // Capa Extraída ou Fallback Estilo Capa Dura Clássica
     const temCapaValida = typeof livro.thumbnail === "string" && livro.thumbnail.length > 15 && livro.thumbnail !== "true" && livro.thumbnail !== "false";
+    const tituloEscapado = escapeHtml(tituloExibicao);
+    const autorEscapado = livro.autor !== "Desconhecido" ? escapeHtml(livro.autor) : "";
+
     const capaConteudo = temCapaValida
       ? `
-        <img class="book-cover-image" src="${livro.thumbnail}" alt="${tituloExibicao}" loading="lazy" onerror="this.remove();" />
+        <img class="book-cover-image" src="${escapeHtml(livro.thumbnail)}" alt="${tituloEscapado}" loading="lazy" onerror="this.remove();" />
         <div class="book-cover-fallback theme-${paleta.tema}" style="background: ${paleta.bg}; border-left-color: ${paleta.borda};">
           <div class="fallback-book-ribbon" style="background: ${paleta.borda};"></div>
-          <h4 class="fallback-book-title">${tituloExibicao}</h4>
-          <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : ""}</p>
+          <h4 class="fallback-book-title">${tituloEscapado}</h4>
+          <p class="fallback-book-author" style="color: ${paleta.borda};">${autorEscapado}</p>
         </div>
       `
       : `
         <div class="book-cover-fallback theme-${paleta.tema}" style="background: ${paleta.bg}; border-left-color: ${paleta.borda};">
           <div class="fallback-book-ribbon" style="background: ${paleta.borda};"></div>
-          <h4 class="fallback-book-title">${tituloExibicao}</h4>
-          <p class="fallback-book-author" style="color: ${paleta.borda};">${livro.autor !== "Desconhecido" ? livro.autor : ""}</p>
+          <h4 class="fallback-book-title">${tituloEscapado}</h4>
+          <p class="fallback-book-author" style="color: ${paleta.borda};">${autorEscapado}</p>
         </div>
       `;
 
@@ -691,7 +718,7 @@ function renderizarGrade(lista) {
     card.innerHTML = `
       <div class="book-cover-wrapper">
         ${capaConteudo}
-        <span class="badge-format">${formato}</span>
+        <span class="badge-format">${escapeHtml(formato)}</span>
         ${statusBadge}
 
         <button class="card-copilot-badge" title="Conversar com o SkillBook deste livro">
@@ -730,7 +757,7 @@ function renderizarGrade(lista) {
       </div>
 
       <div class="book-card-body">
-        <h3 class="book-title" title="${livro.titulo} (${livro.nome})">${tituloExibicao}</h3>
+        <h3 class="book-title" title="${escapeHtml(livro.titulo || '')} (${escapeHtml(livro.nome || '')})">${tituloEscapado}</h3>
         <div class="card-reading-meta-bar">
           <span class="card-status-pill ${statusClass}">${statusIcon} ${statusLabel}</span>
           <span class="meta-size">${tamanho}</span>
@@ -1507,7 +1534,7 @@ async function renderizarPaginaLeitor(num) {
       const contentEl = document.getElementById("readerTextContent");
 
       if (headerEl) headerEl.textContent = cap.titulo || `Capítulo ${num}`;
-      if (contentEl) contentEl.innerHTML = cap.conteudoHtml || "";
+      if (contentEl) contentEl.innerHTML = sanitizarHtmlEpub(cap.conteudoHtml || "");
       state.leitor.conteudoTextoAtual = cap.textoPuro || "";
 
       aplicarZoomTexto();

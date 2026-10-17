@@ -36,6 +36,20 @@
     }).catch(() => {});
   }
 
+  function sanitizarHtmlEpub(html) {
+    if (!html) return "";
+    let clean = String(html);
+    clean = clean.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+    clean = clean.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "");
+    clean = clean.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "");
+    clean = clean.replace(/<embed\b[^>]*\/?>/gi, "");
+    clean = clean.replace(/<base\b[^>]*\/?>/gi, "");
+    clean = clean.replace(/\s+on[a-z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, "");
+    clean = clean.replace(/\bhref\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'href="#"');
+    clean = clean.replace(/\bsrc\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'src=""');
+    return clean;
+  }
+
   /**
    * Descompacta um arquivo EPUB via streams nativos do navegador (DecompressionStream)
    */
@@ -154,7 +168,7 @@
         const html = await readEntry(fullHref);
         if (!html) continue;
 
-        const sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+        const sanitized = sanitizarHtmlEpub(html);
         let capTitulo = `Capítulo ${capitulos.length + 1}`;
         const hMatch = sanitized.match(/<h[1-3][^>]*>([^<]+)<\/h[1-3]>/i) || sanitized.match(/<title[^>]*>([^<]+)<\/title>/i);
         if (hMatch && hMatch[1] && hMatch[1].trim()) {
