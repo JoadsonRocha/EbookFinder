@@ -26,7 +26,8 @@
       "main.js",
       "preload.js",
       "package.json",
-      "ia_config_bundle.json",
+      "!**/ia_config_bundle.json",
+      "!**/ia_config.json",
       "!**/android/**",
       "!**/*.apk"
     ],
