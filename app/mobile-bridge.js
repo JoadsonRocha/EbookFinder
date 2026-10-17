@@ -593,33 +593,6 @@
       if (url) window.open(url, "_blank");
     },
 
-    exportarArquivoTexto: async ({ nomeSugerido = "analise.md", conteudo = "" }) => {
-      try {
-        if (navigator.share) {
-          await navigator.share({
-            title: nomeSugerido,
-            text: conteudo
-          });
-          return { success: true };
-        }
-      } catch (e) {}
-
-      try {
-        const blob = new Blob([conteudo], { type: "text/markdown;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = nomeSugerido;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return { success: true };
-      } catch (err) {
-        return { success: false, error: err.message };
-      }
-    },
-
     obterConfigIA: async () => {
       const privada = await obterConfigIAPrivada();
       const hasKey = Boolean(privada.apiKey && privada.apiKey.trim());
