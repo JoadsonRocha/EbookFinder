@@ -1223,6 +1223,53 @@
     </p>
   </footer>
 
+  <!-- ============================================================
+       MENU DE CONTEXTO DA OBRA (CLIQUE DIREITO NA ESTANTE)
+       ============================================================ -->
+  <div id="bookContextMenu" class="context-menu" hidden>
+    <div class="context-menu-header">
+      <span id="contextMenuBookTitle" class="context-menu-title">Título do Livro</span>
+    </div>
+    <div class="context-menu-separator"></div>
+    <button type="button" class="context-menu-item" data-action="ler">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>Ler no Leitor Interno</span>
+    </button>
+    <button type="button" class="context-menu-item" data-action="skillbook">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span>Conversar com o SkillBook</span>
+    </button>
+    <button type="button" class="context-menu-item" data-action="book-to-skill">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6M12 9v6"/></svg>
+      <span>Gerar SKILL.md (Book-to-Skill)</span>
+    </button>
+    <button type="button" class="context-menu-item" data-action="favorito">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span id="contextMenuFavText">Alternar Favorito</span>
+    </button>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-submenu-title">Status de Leitura:</div>
+    <div class="context-menu-status-row">
+      <button type="button" class="context-status-pill" data-status="lendo" title="Marcar como Lendo">📖 Lendo</button>
+      <button type="button" class="context-status-pill" data-status="concluidos" title="Marcar como Concluído">✅ Concluído</button>
+      <button type="button" class="context-status-pill" data-status="quero-ler" title="Marcar como Quero Ler">🔖 Quero Ler</button>
+    </div>
+    <div class="context-menu-separator"></div>
+    <button type="button" class="context-menu-item" data-action="detalhes">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>Ver Ficha Técnica / Detalhes</span>
+    </button>
+    <button type="button" class="context-menu-item" data-action="explorer">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Revelar no Explorador de Arquivos</span>
+    </button>
+    <div class="context-menu-separator"></div>
+    <button type="button" class="context-menu-item context-menu-item-danger" data-action="remover">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span>Remover da Estante</span>
+    </button>
+  </div>
+
   <div id="toast" class="toast" role="status"></div>
 
   <script src="mobile-bridge.js"></script>

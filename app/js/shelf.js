@@ -721,6 +721,80 @@ function fecharPopupPasta() {
 }
 
 // ============================================================
+// 7. MENU DE CONTEXTO DO LIVRO
+// ============================================================
+
+function abrirMenuContextoLivro(livro, clientX, clientY) {
+  const menu = document.getElementById("bookContextMenu");
+  if (!menu || !livro) return;
+
+  state.livroMenuContexto = livro;
+  state.livroSelecionado = livro;
+
+  const titleEl = document.getElementById("contextMenuBookTitle");
+  if (titleEl) {
+    titleEl.textContent = livro.titulo || livro.nomeArquivo || "Livro sem título";
+  }
+
+  const favTextEl = document.getElementById("contextMenuFavText");
+  if (favTextEl) {
+    favTextEl.textContent = livro.favorito ? "Remover dos Favoritos" : "Adicionar aos Favoritos";
+  }
+
+  const statusAtual = livro.status || livro.statusLeitura || "nenhum";
+  menu.querySelectorAll(".context-status-pill").forEach(pill => {
+    pill.classList.toggle("active", pill.dataset.status === statusAtual);
+  });
+
+  menu.hidden = false;
+
+  const menuWidth = 250;
+  const menuHeight = 320;
+  const winWidth = window.innerWidth;
+  const winHeight = window.innerHeight;
+
+  let left = clientX;
+  let top = clientY;
+
+  if (left + menuWidth > winWidth - 10) {
+    left = Math.max(10, winWidth - menuWidth - 10);
+  }
+  if (top + menuHeight > winHeight - 10) {
+    top = Math.max(10, winHeight - menuHeight - 10);
+  }
+
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+}
+
+function fecharMenuContextoLivro() {
+  const menu = document.getElementById("bookContextMenu");
+  if (menu && !menu.hidden) {
+    menu.hidden = true;
+  }
+  state.livroMenuContexto = null;
+}
+
+function removerLivroDaEstante(livro) {
+  if (!livro) return;
+  const caminho = livro.caminho;
+  if (Array.isArray(state.todosLivros)) {
+    state.todosLivros = state.todosLivros.filter(l => l.caminho !== caminho);
+  }
+  if (Array.isArray(state.livros)) {
+    state.livros = state.livros.filter(l => l.caminho !== caminho);
+  }
+  if (Array.isArray(state.livrosFiltrados)) {
+    state.livrosFiltrados = state.livrosFiltrados.filter(l => l.caminho !== caminho);
+  }
+  aplicarFiltrosEOrdenacao();
+  if (typeof window.atualizarResumo === "function") {
+    window.atualizarResumo();
+  }
+  showToast(`"${livro.titulo || livro.nomeArquivo}" removido da estante.`);
+}
+
+// ============================================================
 // 8. INICIALIZAÇÃO
 // ============================================================
 
@@ -735,3 +809,6 @@ window.fecharMenu = fecharMenu;
 window.abrirPopupPasta = abrirPopupPasta;
 window.fecharPopupPasta = fecharPopupPasta;
 window.alternarSubpastas = alternarSubpastas;
+window.abrirMenuContextoLivro = abrirMenuContextoLivro;
+window.fecharMenuContextoLivro = fecharMenuContextoLivro;
+window.removerLivroDaEstante = removerLivroDaEstante;

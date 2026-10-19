@@ -215,6 +215,90 @@ document.addEventListener("DOMContentLoaded", () => {
                     (state.todosLivros && state.todosLivros.find(l => l.caminho === caminho));
       if (livro) abrirLeitorInterno(livro);
     });
+
+    grid.addEventListener("contextmenu", (e) => {
+      const card = e.target.closest(".book-card");
+      if (!card) return;
+      e.preventDefault();
+      const caminho = card.dataset.caminho;
+      const livro = (state.livrosFiltrados && state.livrosFiltrados.find(l => l.caminho === caminho)) ||
+                    (state.todosLivros && state.todosLivros.find(l => l.caminho === caminho));
+      if (livro) abrirMenuContextoLivro(livro, e.clientX, e.clientY);
+    });
+  }
+
+  // Menu de Contexto da Obra (clique direito na estante)
+  const bookContextMenu = document.getElementById("bookContextMenu");
+  if (bookContextMenu) {
+    bookContextMenu.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const livro = state.livroMenuContexto || state.livroSelecionado;
+      if (!livro) {
+        fecharMenuContextoLivro();
+        return;
+      }
+
+      const statusBtn = e.target.closest(".context-status-pill");
+      if (statusBtn) {
+        const novoStatus = statusBtn.dataset.status;
+        fecharMenuContextoLivro();
+        if (typeof window.atualizarStatusLeitura === "function") {
+          state.livroSelecionado = livro;
+          await window.atualizarStatusLeitura(novoStatus);
+        } else {
+          livro.statusLeitura = novoStatus;
+          livro.status = novoStatus;
+          await window.api?.salvarStatusLeitura?.(livro.caminho, novoStatus);
+          aplicarFiltrosEOrdenacao();
+        }
+        showToast(`Status definido como: ${novoStatus}`);
+        return;
+      }
+
+      const actionBtn = e.target.closest(".context-menu-item");
+      if (!actionBtn) return;
+      const action = actionBtn.dataset.action;
+      fecharMenuContextoLivro();
+
+      switch (action) {
+        case "ler":
+          abrirLeitorInterno(livro);
+          break;
+        case "skillbook":
+          abrirCopilotoIA(livro);
+          break;
+        case "book-to-skill":
+          criarSkillDiretoDoCard(livro);
+          break;
+        case "favorito": {
+          const card = Array.from(document.querySelectorAll(".book-card")).find(c => c.dataset.caminho === livro.caminho);
+          const favBtn = card ? card.querySelector(".fav-btn") : null;
+          alternarFavorito(livro.caminho, favBtn);
+          break;
+        }
+        case "detalhes":
+          abrirModalLivro(livro);
+          break;
+        case "explorer":
+          window.api?.revelarNoExplorer?.(livro.caminho);
+          break;
+        case "remover":
+          removerLivroDaEstante(livro);
+          break;
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#bookContextMenu")) {
+        fecharMenuContextoLivro();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        fecharMenuContextoLivro();
+      }
+    });
   }
 
   // Menu Dropdown
