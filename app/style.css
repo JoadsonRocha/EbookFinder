@@ -101,10 +101,10 @@ body[data-theme="light"] header#appHeader {
 }
 
 body[data-theme="light"] .logo-text {
-  background: linear-gradient(135deg, #0f172a 35%, #d97706 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  font-weight: 500 !important;
+  background: linear-gradient(135deg, #0f172a 35%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 500;
 }
 
 body[data-theme="light"] .logo-badge {
@@ -391,7 +391,7 @@ body[data-theme="light"] .book-dialog-header {
   background: #ffffff;
 }
 body[data-theme="light"] .book-dialog-info h2 {
-  color: #0f172a !important;
+  color: #0f172a;
   font-weight: 500;
 }
 body[data-theme="light"] .book-dialog-info .book-author {
@@ -414,7 +414,7 @@ body[data-theme="light"] .chat-input-bar input,
 body[data-theme="light"] .input-password-wrap input {
   background: #ffffff;
   border: 1px solid var(--border-subtle);
-  color: #0f172a !important;
+  color: #0f172a;
   font-weight: 400;
 }
 body[data-theme="light"] .page-stepper-wrap input[type="number"]:focus,
@@ -448,7 +448,7 @@ body[data-theme="light"] .btn-step:hover {
 
 body[data-theme="light"] .btn-primary-action {
   background: linear-gradient(135deg, #d97706, #b45309);
-  color: #ffffff !important;
+  color: #ffffff;
   font-weight: 450;
 }
 body[data-theme="light"] .btn-secondary-action {
@@ -544,8 +544,8 @@ p, span, h1, h2, h3, h4, h5, h6,
 .copilot-hero-title, .copilot-hero-subtitle,
 .skill-file-viewer, .skill-markdown-view, .skill-status-texts,
 pre, code, blockquote, label {
-  user-select: text !important;
-  -webkit-user-select: text !important;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Evitar seleção acidental em botões interativos */
@@ -1305,11 +1305,11 @@ main#mainContent {
 }
 
 body.is-mobile-app .book-card .meta-size {
-  display: none !important;
+  display: none;
 }
 
 body.is-mobile-app .card-reading-meta-bar {
-  justify-content: flex-start !important;
+  justify-content: flex-start;
 }
 
 .card-status-pill {
@@ -1418,12 +1418,12 @@ body.is-mobile-app .card-reading-meta-bar {
 }
 
 /* Temas de Capa Dura Clássica */
-.theme-sapphire { background: linear-gradient(145deg, #132238, #0b1524); border-left-color: #38bdf8 !important; }
-.theme-emerald  { background: linear-gradient(145deg, #063c2e, #02241b); border-left-color: #34d399 !important; }
-.theme-burgundy { background: linear-gradient(145deg, #3d0718, #22020b); border-left-color: #fb7185 !important; }
-.theme-obsidian { background: linear-gradient(145deg, #1c1926, #0e0d16); border-left-color: #f59e0b !important; }
-.theme-amethyst { background: linear-gradient(145deg, #2d0b4e, #18042b); border-left-color: #c084fc !important; }
-.theme-indigo   { background: linear-gradient(145deg, #181842, #0d0c24); border-left-color: #818cf8 !important; }
+.theme-sapphire { background: linear-gradient(145deg, #132238, #0b1524); border-left-color: #38bdf8; }
+.theme-emerald  { background: linear-gradient(145deg, #063c2e, #02241b); border-left-color: #34d399; }
+.theme-burgundy { background: linear-gradient(145deg, #3d0718, #22020b); border-left-color: #fb7185; }
+.theme-obsidian { background: linear-gradient(145deg, #1c1926, #0e0d16); border-left-color: #f59e0b; }
+.theme-amethyst { background: linear-gradient(145deg, #2d0b4e, #18042b); border-left-color: #c084fc; }
+.theme-indigo   { background: linear-gradient(145deg, #181842, #0d0c24); border-left-color: #818cf8; }
 
 /* Modo de Exibição em Lista */
 .book-grid.list-view {
@@ -1452,7 +1452,7 @@ body.is-mobile-app .card-reading-meta-bar {
 .book-grid.list-view .badge-reading-status,
 .book-grid.list-view .fav-btn,
 .book-grid.list-view .cover-hover-overlay {
-  display: none !important;
+  display: none;
 }
 
 .book-grid.list-view .book-card-body {
@@ -3927,11 +3927,11 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 }
 
 #viewLeitorIntegrado.modo-imersivo .btn-fullscreen-toggle .icon-expand {
-  display: none !important;
+  display: none;
 }
 
 #viewLeitorIntegrado.modo-imersivo .btn-fullscreen-toggle .icon-compress {
-  display: block !important;
+  display: block;
 }
 
 /* Modo Imersivo / Tela Cheia */
@@ -4047,10 +4047,10 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  align-self: center !important;
-  margin: auto !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  align-self: center;
+  margin: auto;
+  margin-left: auto;
+  margin-right: auto;
   box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 6px;
   background: #ffffff;
@@ -4060,7 +4060,7 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 
 .reader-pdf-canvas {
   display: block;
-  margin: 0 auto !important;
+  margin: 0 auto;
   border-radius: 6px;
 }
 
@@ -4095,31 +4095,31 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
    ============================================================ */
 /* 1. MODO SÉPIA (CONFORTO TÉRMICO / PAPEL NOBRE) */
 .reader-pdf-viewport[data-reader-filter="sepia"] {
-  background: #dfd5be !important;
+  background: #dfd5be;
 }
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-pdf-container {
-  background: #f7f1e1 !important;
-  box-shadow: 0 10px 35px rgba(84, 60, 24, 0.22) !important;
+  background: #f7f1e1;
+  box-shadow: 0 10px 35px rgba(84, 60, 24, 0.22);
 }
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-pdf-canvas {
-  filter: sepia(0.38) contrast(0.96) brightness(0.98) !important;
+  filter: sepia(0.38) contrast(0.96) brightness(0.98);
 }
 
 /* 2. MODO NOTURNO (ALTO CONTRASTE ESCURO) */
 .reader-pdf-viewport[data-reader-filter="night"] {
-  background: #08070d !important;
+  background: #08070d;
 }
 .reader-pdf-viewport[data-reader-filter="night"] .reader-pdf-container {
-  background: #110f1a !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9) !important;
+  background: #110f1a;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
 }
 .reader-pdf-viewport[data-reader-filter="night"] .reader-pdf-canvas {
-  filter: invert(0.92) hue-rotate(180deg) brightness(0.96) contrast(1.08) !important;
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.96) contrast(1.08);
 }
 
 /* 3. MODO NORMAL (PADRÃO) */
 .reader-pdf-viewport[data-reader-filter="normal"] .reader-pdf-canvas {
-  filter: none !important;
+  filter: none;
 }
 
 /* ============================================================
@@ -4207,47 +4207,47 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 
 /* Modos de Cor no Leitor de Texto */
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-text-inner {
-  background: #f7f1e1 !important;
-  color: #3d3120 !important;
-  border-color: rgba(180, 83, 9, 0.2) !important;
-  box-shadow: 0 10px 35px rgba(84, 60, 24, 0.18) !important;
+  background: #f7f1e1;
+  color: #3d3120;
+  border-color: rgba(180, 83, 9, 0.2);
+  box-shadow: 0 10px 35px rgba(84, 60, 24, 0.18);
 }
 
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-text-chapter-header,
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-text-content h1,
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-text-content h2,
 .reader-pdf-viewport[data-reader-filter="sepia"] .reader-text-content h3 {
-  color: #854d0e !important;
-  border-color: rgba(180, 83, 9, 0.2) !important;
+  color: #854d0e;
+  border-color: rgba(180, 83, 9, 0.2);
 }
 
 .reader-pdf-viewport[data-reader-filter="night"] .reader-text-inner {
-  background: #110f1a !important;
-  color: #e2e0ee !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9) !important;
+  background: #110f1a;
+  color: #e2e0ee;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
 }
 
 .reader-pdf-viewport[data-reader-filter="night"] .reader-text-chapter-header,
 .reader-pdf-viewport[data-reader-filter="night"] .reader-text-content h1,
 .reader-pdf-viewport[data-reader-filter="night"] .reader-text-content h2,
 .reader-pdf-viewport[data-reader-filter="night"] .reader-text-content h3 {
-  color: #fbbf24 !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fbbf24;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 768px) {
   .reader-text-container {
-    padding: 0 8px !important;
-    margin: 8px auto 36px auto !important;
+    padding: 0 8px;
+    margin: 8px auto 36px auto;
   }
   .reader-text-inner {
-    padding: 20px 16px !important;
-    border-radius: 8px !important;
+    padding: 20px 16px;
+    border-radius: 8px;
   }
   .reader-text-content {
-    font-size: 1rem !important;
-    line-height: 1.7 !important;
+    font-size: 1rem;
+    line-height: 1.7;
   }
 }
 
@@ -4270,16 +4270,16 @@ body[data-theme="light"] .copilot-textarea { color: var(--text-primary); }
 
 /* BOTÃO DE EXCLUIR / REMOVER DA ESTANTE */
 .btn-delete-action {
-  border-color: rgba(244, 63, 94, 0.35) !important;
-  color: var(--rose) !important;
-  background: rgba(244, 63, 94, 0.08) !important;
-  transition: all var(--transition-fast) !important;
+  border-color: rgba(244, 63, 94, 0.35);
+  color: var(--rose);
+  background: rgba(244, 63, 94, 0.08);
+  transition: all var(--transition-fast);
 }
 
 .btn-delete-action:hover {
-  background: rgba(244, 63, 94, 0.2) !important;
-  border-color: var(--rose) !important;
-  color: #fff !important;
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--rose);
+  color: #fff;
   transform: translateY(-1px);
 }
 
@@ -5022,17 +5022,17 @@ body[data-theme="light"] .about-footer {
 @media (max-width: 768px) {
   /* 0. FLUIDEZ GLOBAL DE NAVEGAÇÃO & TOUCH */
   html, body {
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: contain !important;
-    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
   }
 
   * {
-    -webkit-tap-highlight-color: transparent !important;
+    -webkit-tap-highlight-color: transparent;
   }
 
   button, a, .tab-btn, .menu-item, .book-card, .btn-header, .fav-btn, .dialog-tab-btn {
-    touch-action: manipulation !important;
+    touch-action: manipulation;
   }
 
   /* Feedback tátil imediato em toques (Zero lag visual) */
@@ -5044,107 +5044,107 @@ body[data-theme="light"] .about-footer {
   .btn-action-skill:active,
   .btn-view-mode:active,
   .fav-btn:active {
-    transform: scale(0.94) !important;
-    transition: transform 0.08s ease !important;
+    transform: scale(0.94);
+    transition: transform 0.08s ease;
   }
 
   /* 1. CABEÇALHO PRINCIPAL NO CELULAR */
   header#appHeader {
-    padding: 9px 12px !important;
-    gap: 8px !important;
-    flex-wrap: wrap !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 100 !important;
-    backdrop-filter: blur(18px) !important;
-    -webkit-backdrop-filter: blur(18px) !important;
-    transition: background 0.2s ease, box-shadow 0.2s ease !important;
+    padding: 9px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
   }
 
   .logo {
-    gap: 8px !important;
+    gap: 8px;
   }
 
   .logo-img {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 8px !important;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 
   .logo-text {
-    font-size: 1.10rem !important;
+    font-size: 1.10rem;
   }
 
   .logo-badge {
-    display: none !important;
+    display: none;
   }
 
   .header-actions {
-    gap: 6px !important;
-    margin-left: auto !important;
+    gap: 6px;
+    margin-left: auto;
   }
 
   .btn-header {
-    padding: 7px 10px !important;
-    font-size: 0.8rem !important;
-    border-radius: 8px !important;
+    padding: 7px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
   }
 
   .btn-header .btn-label {
-    display: none !important; /* Mostra apenas o ícone no celular */
+    display: none; /* Mostra apenas o ícone no celular */
   }
 
   .btn-header svg,
   .menu-toggle svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 18px;
+    height: 18px;
   }
 
   .menu-toggle {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 8px !important;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
   }
 
   .search-group {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 100% !important;
-    order: 3 !important;
-    padding: 6px 12px !important;
-    margin: 0 !important;
-    border-radius: 12px !important;
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+    order: 3;
+    padding: 6px 12px;
+    margin: 0;
+    border-radius: 12px;
   }
 
   .search-group input {
-    font-size: 16px !important; /* Evita zoom automático no iOS/Android */
+    font-size: 16px; /* Evita zoom automático no iOS/Android */
   }
 
   /* MENU DROPDOWN EM FORMATO POPOVER / DRAWER FLUIDO NO MOBILE */
   .menu-dropdown {
-    position: fixed !important;
-    top: 56px !important;
-    right: 10px !important;
-    left: 10px !important;
-    width: auto !important;
-    max-width: 440px !important;
-    margin: 0 auto !important;
-    max-height: calc(85vh - 56px) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    border-radius: 16px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-subtle) !important;
-    background: rgba(18, 16, 28, 0.96) !important;
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
-    padding: 8px 10px !important;
-    animation: mobileMenuSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    z-index: 120 !important;
+    position: fixed;
+    top: 56px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: 440px;
+    margin: 0 auto;
+    max-height: calc(85vh - 56px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-subtle);
+    background: rgba(18, 16, 28, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding: 8px 10px;
+    animation: mobileMenuSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 120;
   }
 
   body[data-theme="light"] .menu-dropdown {
-    background: rgba(255, 255, 255, 0.98) !important;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.08);
   }
 
   @keyframes mobileMenuSlide {
@@ -5159,167 +5159,167 @@ body[data-theme="light"] .about-footer {
   }
 
   .menu-item {
-    min-height: 42px !important;
-    padding: 9px 12px !important;
-    font-size: 0.88rem !important;
-    border-radius: 10px !important;
-    transition: background 0.15s ease, transform 0.08s ease !important;
+    min-height: 42px;
+    padding: 9px 12px;
+    font-size: 0.88rem;
+    border-radius: 10px;
+    transition: background 0.15s ease, transform 0.08s ease;
   }
 
   .menu-item:active {
-    transform: scale(0.97) !important;
-    background: rgba(255, 255, 255, 0.09) !important;
+    transform: scale(0.97);
+    background: rgba(255, 255, 255, 0.09);
   }
 
   .menu-backdrop {
-    background: rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-    z-index: 110 !important;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 110;
   }
 
   /* 2. BARRA DE ESTANTES E FILTROS FLUIDOS */
   .control-bar {
-    padding: 6px 10px !important;
-    gap: 6px !important;
+    padding: 6px 10px;
+    gap: 6px;
   }
 
   .control-row-top {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 6px !important;
-    width: 100% !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
   }
 
   .tabs-group {
-    display: flex !important;
-    overflow-x: auto !important;
-    width: 100% !important;
-    padding: 3px 2px !important;
-    gap: 5px !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    scroll-snap-type: x proximity !important;
-    overscroll-behavior-x: contain !important;
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding: 3px 2px;
+    gap: 5px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
   }
 
   .tabs-group::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   .tab-btn {
-    scroll-snap-align: start !important;
-    flex-shrink: 0 !important;
-    padding: 6px 12px !important;
-    font-size: 0.78rem !important;
-    white-space: nowrap !important;
-    border-radius: 20px !important;
-    transition: transform 0.08s ease, background 0.18s ease, color 0.18s ease !important;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    border-radius: 20px;
+    transition: transform 0.08s ease, background 0.18s ease, color 0.18s ease;
   }
 
   .tab-btn:active {
-    transform: scale(0.94) !important;
+    transform: scale(0.94);
   }
 
   .current-path-info {
-    width: 100% !important;
-    max-width: 100% !important;
-    font-size: 0.76rem !important;
-    padding: 5px 10px !important;
-    justify-content: space-between !important;
-    border-radius: 8px !important;
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.76rem;
+    padding: 5px 10px;
+    justify-content: space-between;
+    border-radius: 8px;
   }
 
   .control-row-bottom {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
   .results-header {
-    font-size: 0.74rem !important;
-    padding: 3px 8px !important;
+    font-size: 0.74rem;
+    padding: 3px 8px;
   }
 
   .controls-right {
-    gap: 6px !important;
+    gap: 6px;
   }
 
   .sort-label {
-    display: none !important;
+    display: none;
   }
 
   .sort-select {
-    font-size: 0.76rem !important;
-    padding: 4px 8px !important;
-    border-radius: 8px !important;
+    font-size: 0.76rem;
+    padding: 4px 8px;
+    border-radius: 8px;
   }
 
   .view-mode-group {
-    display: none !important; /* No celular, o grid duplo padrão é o ideal */
+    display: none; /* No celular, o grid duplo padrão é o ideal */
   }
 
   /* 3. ESTANTE DE LIVROS FLUIDA (2 COLUNAS NO CELULAR) */
   .book-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-    padding: 10px 8px 30px 8px !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px 8px 30px 8px;
   }
 
   .book-card {
-    border-radius: 10px !important;
-    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease !important;
+    border-radius: 10px;
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
     will-change: transform;
   }
 
   .book-card:active {
-    transform: scale(0.96) !important;
+    transform: scale(0.96);
   }
 
   .book-cover-wrapper {
-    aspect-ratio: 2 / 3 !important;
+    aspect-ratio: 2 / 3;
   }
 
   .book-title {
-    font-size: 0.82rem !important;
-    line-height: 1.25 !important;
-    max-height: 2.5em !important;
-    -webkit-line-clamp: 2 !important;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    max-height: 2.5em;
+    -webkit-line-clamp: 2;
   }
 
   .book-meta {
-    font-size: 0.72rem !important;
+    font-size: 0.72rem;
   }
 
   /* No mobile, retira os MBs do PDF nos cards para maior clareza visual */
   .book-card .meta-size {
-    display: none !important;
+    display: none;
   }
 
   .card-reading-meta-bar {
-    justify-content: flex-start !important;
+    justify-content: flex-start;
   }
 
   .fav-btn {
-    opacity: 1 !important;
-    transform: none !important;
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 0.95rem !important;
+    opacity: 1;
+    transform: none;
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
   }
 
   .cover-hover-overlay {
-    display: none !important; /* Celulares não usam hover */
+    display: none; /* Celulares não usam hover */
   }
 
   /* 4. MODAIS EM FORMATO BOTTOM-SHEET ULTRA-FLUIDO */
   .modal-backdrop,
   .modal-sobre-backdrop {
-    padding: 0 !important;
-    align-items: flex-end !important; /* Desliza de baixo para cima */
+    padding: 0;
+    align-items: flex-end; /* Desliza de baixo para cima */
   }
 
   @keyframes sheetSlideUp {
@@ -5336,18 +5336,18 @@ body[data-theme="light"] .about-footer {
   .book-dialog,
   .config-dialog,
   .about-dialog {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 90vh !important;
-    max-height: 90dvh !important;
-    border-radius: 20px 20px 0 0 !important;
-    margin: 0 !important;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.75) !important;
-    border-bottom: none !important;
-    position: relative !important;
-    animation: sheetSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.75);
+    border-bottom: none;
+    position: relative;
+    animation: sheetSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Puxador (Drag Handle) no topo dos Bottom-Sheets */
@@ -5374,163 +5374,163 @@ body[data-theme="light"] .about-footer {
   }
 
   .book-dialog-body {
-    padding: 14px 12px !important;
-    gap: 12px !important;
+    padding: 14px 12px;
+    gap: 12px;
   }
 
   .book-dialog-top {
-    flex-direction: row !important;
-    gap: 12px !important;
+    flex-direction: row;
+    gap: 12px;
   }
 
   .book-dialog-cover {
-    width: 80px !important;
-    height: 115px !important;
-    flex-shrink: 0 !important;
+    width: 80px;
+    height: 115px;
+    flex-shrink: 0;
   }
 
   .book-dialog-actions {
-    flex-direction: column !important;
-    width: 100% !important;
-    gap: 8px !important;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
   }
 
   .book-dialog-actions button {
-    width: 100% !important;
-    height: 44px !important;
-    font-size: 0.92rem !important;
-    justify-content: center !important;
+    width: 100%;
+    height: 44px;
+    font-size: 0.92rem;
+    justify-content: center;
   }
 
   .config-dialog {
-    padding: 16px !important;
+    padding: 16px;
   }
 
   .config-dialog input,
   .config-dialog select {
-    font-size: 16px !important; /* Evita zoom automático */
+    font-size: 16px; /* Evita zoom automático */
   }
 
   .about-pillars-grid {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .about-header {
-    padding: 14px !important;
+    padding: 14px;
   }
 
   .about-body {
-    padding: 14px !important;
-    gap: 16px !important;
+    padding: 14px;
+    gap: 16px;
   }
 
   /* 5. LEITOR INTERNO COM EXPERIÊNCIA FLUIDA NO CELULAR */
   .reader-split-layout {
-    flex-direction: column !important;
-    position: relative !important;
-    overflow: hidden !important;
-    height: calc(100vh - 46px) !important;
-    transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    height: calc(100vh - 46px);
+    transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   #viewLeitorIntegrado.modo-imersivo .reader-split-layout {
-    height: 100vh !important;
+    height: 100vh;
   }
 
   .reader-pdf-viewport {
-    width: 100% !important;
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    text-align: center !important;
-    padding: 8px 0 36px 0 !important;
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-x pan-y pinch-zoom !important;
-    scroll-behavior: auto !important;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 8px 0 36px 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
+    scroll-behavior: auto;
   }
 
   .reader-pdf-container {
-    max-width: none !important;
-    margin: 8px auto 36px auto !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    align-self: center !important;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55) !important;
-    border-radius: 4px !important;
-    display: inline-flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transform-origin: center center !important;
-    background: #ffffff !important;
+    max-width: none;
+    margin: 8px auto 36px auto;
+    margin-left: auto;
+    margin-right: auto;
+    align-self: center;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+    border-radius: 4px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    background: #ffffff;
   }
 
   .reader-pdf-canvas {
-    max-width: none !important;
-    height: auto !important;
-    display: block !important;
-    margin: 0 auto !important;
-    border-radius: 4px !important;
+    max-width: none;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
   }
 
   .reader-float-nav {
-    width: 36px !important;
-    height: 48px !important;
-    border-radius: 10px !important;
-    top: 50% !important;
-    bottom: auto !important;
-    transform: translateY(-50%) !important;
-    z-index: 85 !important;
-    background: rgba(17, 13, 34, 0.35) !important;
-    border: 1px solid rgba(229, 169, 59, 0.25) !important;
-    color: var(--amber) !important;
-    backdrop-filter: blur(6px) !important;
-    opacity: 0.28 !important;
-    transition: all 0.2s ease !important;
+    width: 36px;
+    height: 48px;
+    border-radius: 10px;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    z-index: 85;
+    background: rgba(17, 13, 34, 0.35);
+    border: 1px solid rgba(229, 169, 59, 0.25);
+    color: var(--amber);
+    backdrop-filter: blur(6px);
+    opacity: 0.28;
+    transition: all 0.2s ease;
   }
 
   .reader-float-nav:active,
   .reader-float-nav:hover {
-    opacity: 0.95 !important;
-    background: rgba(22, 18, 40, 0.9) !important;
-    border-color: var(--amber) !important;
-    transform: translateY(-50%) scale(1.06) !important;
+    opacity: 0.95;
+    background: rgba(22, 18, 40, 0.9);
+    border-color: var(--amber);
+    transform: translateY(-50%) scale(1.06);
   }
 
   .reader-float-nav.prev {
-    left: 4px !important;
+    left: 4px;
   }
 
   .reader-float-nav.next {
-    right: 4px !important;
+    right: 4px;
   }
 
   #viewLeitorIntegrado.sidebar-fechada .reader-float-nav.next {
-    right: 4px !important;
+    right: 4px;
   }
 
   .leitor-toolbar {
-    padding: 0 8px !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    gap: 6px !important;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease !important;
+    padding: 0 8px;
+    height: 46px;
+    min-height: 46px;
+    gap: 6px;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
   }
 
   .btn-fullscreen-toggle {
-    width: 30px !important;
-    height: 30px !important;
-    margin-right: 2px !important;
-    display: inline-flex !important;
+    width: 30px;
+    height: 30px;
+    margin-right: 2px;
+    display: inline-flex;
   }
 
   .leitor-btn-back {
-    padding: 6px 9px !important;
+    padding: 6px 9px;
   }
 
   .leitor-btn-back span,
@@ -5538,71 +5538,71 @@ body[data-theme="light"] .about-footer {
   .skill-toggle-text,
   .shortcut-badge,
   .leitor-book-author {
-    display: none !important;
+    display: none;
   }
 
   .leitor-book-title {
-    max-width: 125px !important;
-    font-size: 0.82rem !important;
+    max-width: 125px;
+    font-size: 0.82rem;
   }
 
   .leitor-page-stepper {
-    gap: 3px !important;
-    padding: 2px 4px !important;
+    gap: 3px;
+    padding: 2px 4px;
   }
 
   .leitor-page-indicator {
-    font-size: 0.76rem !important;
-    padding: 0 2px !important;
+    font-size: 0.76rem;
+    padding: 0 2px;
   }
 
   #inputLeitorPagina {
-    width: 36px !important;
-    height: 24px !important;
-    font-size: 0.78rem !important;
+    width: 36px;
+    height: 24px;
+    font-size: 0.78rem;
   }
 
   .btn-toggle-skill {
-    padding: 6px 10px !important;
-    gap: 4px !important;
-    font-size: 0.8rem !important;
-    border-radius: 8px !important;
+    padding: 6px 10px;
+    gap: 4px;
+    font-size: 0.8rem;
+    border-radius: 8px;
   }
 
   #readerSkillSidebar {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 72vh !important;
-    z-index: 150 !important;
-    border-top: 2px solid var(--amber) !important;
-    border-left: none !important;
-    border-top-left-radius: 20px !important;
-    border-top-right-radius: 20px !important;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85) !important;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 72vh;
+    z-index: 150;
+    border-top: 2px solid var(--amber);
+    border-left: none;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85);
     transform: translateY(0);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
-    background: #110d22 !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    background: #110d22;
     opacity: 1;
     pointer-events: auto;
   }
 
   #readerSkillSidebar.collapsed {
-    transform: translateY(100%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* 6. CHAT DO SKILLBOOK NO LEITOR INTERNO (MOBILE) */
   .reader-sidebar-header {
-    cursor: pointer !important;
-    padding: 8px 10px !important;
-    height: 42px !important;
-    user-select: none !important;
-    position: relative !important;
+    cursor: pointer;
+    padding: 8px 10px;
+    height: 42px;
+    user-select: none;
+    position: relative;
   }
 
   .reader-sidebar-header::before {
@@ -5618,517 +5618,517 @@ body[data-theme="light"] .about-footer {
   }
 
   .reader-sidebar-tabs {
-    border-bottom: 1px solid var(--border-subtle) !important;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .reader-tab-btn {
-    padding: 6px 8px !important;
-    font-size: 0.74rem !important;
-    gap: 4px !important;
+    padding: 6px 8px;
+    font-size: 0.74rem;
+    gap: 4px;
   }
 
   .reader-quick-actions {
-    display: flex !important;
-    overflow-x: auto !important;
-    gap: 4px !important;
-    padding: 5px 8px !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    flex-wrap: nowrap !important;
-    border-bottom: 1px solid var(--border-subtle) !important;
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 5px 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .reader-quick-actions::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   .reader-quick-chip {
-    flex-shrink: 0 !important;
-    font-size: 0.70rem !important;
-    padding: 4px 8px !important;
-    white-space: nowrap !important;
-    border-radius: 16px !important;
+    flex-shrink: 0;
+    font-size: 0.70rem;
+    padding: 4px 8px;
+    white-space: nowrap;
+    border-radius: 16px;
   }
 
   .reader-chat-feed {
-    padding: 8px 8px 4px 8px !important;
-    gap: 8px !important;
+    padding: 8px 8px 4px 8px;
+    gap: 8px;
   }
 
   .reader-chat-feed .copilot-msg {
-    display: flex !important;
-    gap: 6px !important;
-    align-items: flex-start !important;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
   }
 
   .reader-chat-feed .copilot-avatar {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 0.70rem !important;
-    margin-top: 1px !important;
+    width: 22px;
+    height: 22px;
+    font-size: 0.70rem;
+    margin-top: 1px;
   }
 
   .reader-chat-feed .copilot-msg-content {
-    padding: 6px 9px !important;
-    font-size: 0.82rem !important;
-    line-height: 1.42 !important;
-    max-width: 90% !important;
-    border-radius: 10px !important;
+    padding: 6px 9px;
+    font-size: 0.82rem;
+    line-height: 1.42;
+    max-width: 90%;
+    border-radius: 10px;
   }
 
   .reader-chat-feed .copilot-msg-content p {
-    margin-bottom: 4px !important;
-    line-height: 1.4 !important;
+    margin-bottom: 4px;
+    line-height: 1.4;
   }
 
   .reader-chat-input-bar {
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 6px)) 8px !important;
-    gap: 6px !important;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 6px)) 8px;
+    gap: 6px;
   }
 
   .reader-chat-textarea {
-    font-size: 15px !important; /* Evita zoom forçado no teclado Android */
-    min-height: 36px !important;
-    max-height: 80px !important;
-    padding: 6px 8px !important;
-    border-radius: 8px !important;
+    font-size: 15px; /* Evita zoom forçado no teclado Android */
+    min-height: 36px;
+    max-height: 80px;
+    padding: 6px 8px;
+    border-radius: 8px;
   }
 
   .reader-btn-send {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 8px !important;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
   }
 
   /* 7. WORKSPACE COPILOTO IA DEDICADO (100% RESPONSIVO NO CELULAR) */
   .copilot-workspace {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    border: none !important;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
   }
 
   .copilot-header {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    padding: 7px 10px !important;
-    gap: 5px !important;
-    position: relative !important;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 7px 10px;
+    gap: 5px;
+    position: relative;
   }
 
   .copilot-header-book {
-    padding-right: 34px !important; /* Espaço para o botão fechar */
-    gap: 8px !important;
+    padding-right: 34px; /* Espaço para o botão fechar */
+    gap: 8px;
   }
 
   .copilot-cover-thumb {
-    width: 26px !important;
-    height: 38px !important;
-    border-radius: 3px !important;
-    flex-shrink: 0 !important;
+    width: 26px;
+    height: 38px;
+    border-radius: 3px;
+    flex-shrink: 0;
   }
 
   .copilot-book-title {
-    font-size: 0.84rem !important;
-    max-width: 190px !important;
+    font-size: 0.84rem;
+    max-width: 190px;
   }
 
   .copilot-book-author {
-    font-size: 0.68rem !important;
+    font-size: 0.68rem;
   }
 
   .copilot-live-badge {
-    font-size: 0.62rem !important;
-    padding: 1px 6px !important;
+    font-size: 0.62rem;
+    padding: 1px 6px;
   }
 
   .copilot-header-actions {
-    display: flex !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-    gap: 4px !important;
-    padding: 1px 0 2px 0 !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    flex-wrap: nowrap !important;
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 1px 0 2px 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
   }
 
   .copilot-header-actions::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   .copilot-header-actions .btn-close-modal {
-    position: absolute !important;
-    top: 6px !important;
-    right: 8px !important;
-    margin: 0 !important;
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 1.25rem !important;
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    margin: 0;
+    width: 28px;
+    height: 28px;
+    font-size: 1.25rem;
   }
 
   .btn-copilot-header-tool {
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-    padding: 4px 7px !important;
-    font-size: 0.68rem !important;
-    gap: 3px !important;
-    border-radius: 5px !important;
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 4px 7px;
+    font-size: 0.68rem;
+    gap: 3px;
+    border-radius: 5px;
   }
 
   .copilot-model-pill {
-    flex-shrink: 0 !important;
-    padding: 3px 7px !important;
-    font-size: 0.66rem !important;
+    flex-shrink: 0;
+    padding: 3px 7px;
+    font-size: 0.66rem;
   }
 
   .copilot-index-progress-track {
-    height: 18px !important;
+    height: 18px;
   }
 
   .copilot-index-progress-text {
-    font-size: 0.65rem !important;
+    font-size: 0.65rem;
   }
 
   /* Feed de Conversa no Mobile - Otimização de Margin e Padding */
   .copilot-chat-feed {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 8px 8px 4px 8px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-    -webkit-overflow-scrolling: touch !important;
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 8px 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .copilot-messages-list {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 0 4px 0 !important;
-    gap: 8px !important;
-    display: flex !important;
-    flex-direction: column !important;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 0 4px 0;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
   }
 
   .copilot-msg-row {
-    display: flex !important;
-    gap: 6px !important;
-    align-items: flex-start !important;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
   }
 
   .copilot-msg-avatar {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    font-size: 0.75rem !important;
-    margin-top: 1px !important;
-    border-radius: 50% !important;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    font-size: 0.75rem;
+    margin-top: 1px;
+    border-radius: 50%;
   }
 
   .copilot-msg-bubble {
-    padding: 7px 10px !important;
-    border-radius: 12px !important;
-    font-size: 0.84rem !important;
-    line-height: 1.45 !important;
-    word-break: break-word !important;
+    padding: 7px 10px;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    word-break: break-word;
   }
 
   .copilot-msg-row.user .copilot-msg-bubble {
-    max-width: 88% !important;
-    border-bottom-right-radius: 2px !important;
+    max-width: 88%;
+    border-bottom-right-radius: 2px;
   }
 
   .copilot-msg-row.assistant .copilot-msg-bubble {
-    flex: 1 !important;
-    max-width: calc(100% - 30px) !important;
-    border-top-left-radius: 2px !important;
+    flex: 1;
+    max-width: calc(100% - 30px);
+    border-top-left-radius: 2px;
   }
 
   .copilot-msg-content p {
-    margin-bottom: 5px !important;
-    line-height: 1.42 !important;
+    margin-bottom: 5px;
+    line-height: 1.42;
   }
 
   .copilot-msg-content p:last-child {
-    margin-bottom: 0 !important;
+    margin-bottom: 0;
   }
 
   .copilot-msg-content h1,
   .copilot-msg-content h2,
   .copilot-msg-content h3 {
-    margin: 7px 0 3px !important;
-    font-size: 0.86rem !important;
-    gap: 4px !important;
+    margin: 7px 0 3px;
+    font-size: 0.86rem;
+    gap: 4px;
   }
 
   .copilot-msg-content ul,
   .copilot-msg-content ol {
-    margin: 3px 0 5px 14px !important;
-    padding-left: 2px !important;
+    margin: 3px 0 5px 14px;
+    padding-left: 2px;
   }
 
   .copilot-msg-content li {
-    margin-bottom: 2px !important;
-    line-height: 1.38 !important;
+    margin-bottom: 2px;
+    line-height: 1.38;
   }
 
   .copilot-msg-content blockquote {
-    margin: 5px 0 6px !important;
-    padding: 5px 8px !important;
-    font-size: 0.78rem !important;
-    line-height: 1.35 !important;
-    border-left-width: 2px !important;
+    margin: 5px 0 6px;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    border-left-width: 2px;
   }
 
   .copilot-msg-content .table-container {
-    margin: 6px 0 !important;
-    border-radius: 6px !important;
+    margin: 6px 0;
+    border-radius: 6px;
   }
 
   .copilot-msg-content table {
-    font-size: 0.74rem !important;
+    font-size: 0.74rem;
   }
 
   .copilot-msg-content th,
   .copilot-msg-content td {
-    padding: 4px 6px !important;
-    font-size: 0.72rem !important;
+    padding: 4px 6px;
+    font-size: 0.72rem;
   }
 
   .copilot-msg-content pre {
-    padding: 6px 8px !important;
-    margin: 5px 0 !important;
-    font-size: 0.74rem !important;
-    border-radius: 6px !important;
+    padding: 6px 8px;
+    margin: 5px 0;
+    font-size: 0.74rem;
+    border-radius: 6px;
   }
 
   .copilot-msg-content code {
-    padding: 1px 4px !important;
-    font-size: 0.76rem !important;
+    padding: 1px 4px;
+    font-size: 0.76rem;
   }
 
   .copilot-msg-actions {
-    margin-top: 3px !important;
-    padding-top: 3px !important;
-    gap: 4px !important;
+    margin-top: 3px;
+    padding-top: 3px;
+    gap: 4px;
   }
 
   .btn-msg-copy {
-    font-size: 0.66rem !important;
-    padding: 2px 5px !important;
+    font-size: 0.66rem;
+    padding: 2px 5px;
   }
 
   /* Hero / Empty State no Mobile */
   .copilot-hero-state {
-    padding: 8px 4px !important;
-    max-width: 100% !important;
+    padding: 8px 4px;
+    max-width: 100%;
   }
 
   .copilot-hero-icon-wrap {
-    margin-bottom: 6px !important;
+    margin-bottom: 6px;
   }
 
   .copilot-hero-icon {
-    width: 38px !important;
-    height: 38px !important;
-    font-size: 1.15rem !important;
+    width: 38px;
+    height: 38px;
+    font-size: 1.15rem;
   }
 
   .copilot-hero-title {
-    font-size: 1.0rem !important;
-    margin-bottom: 3px !important;
+    font-size: 1.0rem;
+    margin-bottom: 3px;
   }
 
   .copilot-hero-subtitle {
-    font-size: 0.75rem !important;
-    margin-bottom: 8px !important;
-    line-height: 1.32 !important;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    line-height: 1.32;
   }
 
   .copilot-hero-action-card {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 6px !important;
-    padding: 8px 10px !important;
-    margin-bottom: 8px !important;
-    border-radius: 10px !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 10px;
   }
 
   .action-card-text h4 {
-    font-size: 0.82rem !important;
-    margin: 1px 0 !important;
+    font-size: 0.82rem;
+    margin: 1px 0;
   }
 
   .action-card-text p {
-    font-size: 0.68rem !important;
-    line-height: 1.25 !important;
+    font-size: 0.68rem;
+    line-height: 1.25;
   }
 
   .btn-hero-action {
-    width: 100% !important;
-    justify-content: center !important;
-    font-size: 0.76rem !important;
-    padding: 5px 10px !important;
-    border-radius: 20px !important;
+    width: 100%;
+    justify-content: center;
+    font-size: 0.76rem;
+    padding: 5px 10px;
+    border-radius: 20px;
   }
 
   .copilot-prompt-grid {
-    grid-template-columns: 1fr !important;
-    gap: 5px !important;
+    grid-template-columns: 1fr;
+    gap: 5px;
   }
 
   .copilot-prompt-card {
-    padding: 6px 9px !important;
-    gap: 7px !important;
-    border-radius: 8px !important;
+    padding: 6px 9px;
+    gap: 7px;
+    border-radius: 8px;
   }
 
   .prompt-icon {
-    font-size: 0.95rem !important;
-    margin-top: 0 !important;
+    font-size: 0.95rem;
+    margin-top: 0;
   }
 
   .prompt-texts strong {
-    font-size: 0.74rem !important;
+    font-size: 0.74rem;
   }
 
   .prompt-texts span {
-    font-size: 0.66rem !important;
-    line-height: 1.22 !important;
+    font-size: 0.66rem;
+    line-height: 1.22;
   }
 
   /* Rodapé do Chat no Mobile */
   .copilot-footer {
-    padding: 5px 8px calc(5px + env(safe-area-inset-bottom, 8px)) 8px !important;
-    gap: 4px !important;
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom, 8px)) 8px;
+    gap: 4px;
   }
 
   .copilot-quick-chips-bar {
-    display: flex !important;
-    overflow-x: auto !important;
-    gap: 4px !important;
-    padding-bottom: 2px !important;
-    margin-bottom: 2px !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    flex-wrap: nowrap !important;
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
   }
 
   .copilot-quick-chips-bar::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   .copilot-mini-chip {
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-    font-size: 0.68rem !important;
-    padding: 3px 8px !important;
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.68rem;
+    padding: 3px 8px;
   }
 
   .copilot-input-card {
-    padding: 4px 6px 4px 10px !important;
-    border-radius: 14px !important;
-    gap: 6px !important;
+    padding: 4px 6px 4px 10px;
+    border-radius: 14px;
+    gap: 6px;
   }
 
   .copilot-textarea {
-    font-size: 15px !important; /* Evita zoom forçado no teclado Android */
-    min-height: 34px !important;
-    max-height: 80px !important;
-    padding: 2px 0 !important;
-    line-height: 1.35 !important;
+    font-size: 15px; /* Evita zoom forçado no teclado Android */
+    min-height: 34px;
+    max-height: 80px;
+    padding: 2px 0;
+    line-height: 1.35;
   }
 
   .btn-copilot-send {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
   }
 
   /* 8. ABA TUTOR IA NOS DETALHES DO LIVRO (MOBILE) */
   .skill-status-box {
-    padding: 8px 10px !important;
+    padding: 8px 10px;
   }
 
   .skill-status-actions {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-    justify-content: flex-start !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: flex-start;
   }
 
   .btn-action-skill {
-    flex-shrink: 0 !important;
-    font-size: 0.74rem !important;
-    padding: 5px 10px !important;
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    padding: 5px 10px;
   }
 
   .chat-messages-area {
-    padding: 4px 0 !important;
-    gap: 6px !important;
+    padding: 4px 0;
+    gap: 6px;
   }
 
   .chat-msg {
-    gap: 6px !important;
+    gap: 6px;
   }
 
   .chat-msg .msg-avatar {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 0.72rem !important;
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
   }
 
   .chat-msg .msg-content {
-    padding: 5px 8px !important;
-    font-size: 0.75rem !important;
-    line-height: 1.4 !important;
-    max-width: 90% !important;
-    border-radius: 8px !important;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    max-width: 90%;
+    border-radius: 8px;
   }
 
   .chat-msg .msg-content p {
-    margin-bottom: 3px !important;
+    margin-bottom: 3px;
   }
 
   .chat-chips-row {
-    display: flex !important;
-    overflow-x: auto !important;
-    gap: 4px !important;
-    flex-wrap: nowrap !important;
-    padding-bottom: 3px !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    flex-wrap: nowrap;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .chat-chips-row::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   .chat-chip {
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-    font-size: 0.68rem !important;
-    padding: 2px 7px !important;
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.68rem;
+    padding: 2px 7px;
   }
 
   .chat-input-bar {
-    padding: 4px 0 !important;
-    gap: 6px !important;
+    padding: 4px 0;
+    gap: 6px;
   }
 
   .chat-input-bar input {
-    font-size: 15px !important;
-    height: 36px !important;
-    padding: 4px 8px !important;
+    font-size: 15px;
+    height: 36px;
+    padding: 4px 8px;
   }
 
   .btn-send-chat {
-    width: 34px !important;
-    height: 34px !important;
+    width: 34px;
+    height: 34px;
   }
 }
 
@@ -6138,70 +6138,70 @@ body[data-theme="light"] .about-footer {
 @media (min-width: 769px) and (max-width: 1200px) {
   /* Estante em Tablets: 3 a 5 colunas perfeitamente fluidas */
   .book-grid {
-    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)) !important;
-    gap: 16px !important;
-    padding: 18px !important;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 16px;
+    padding: 18px;
   }
 
   /* Header em Tablets */
   header#appHeader {
-    padding: 12px 20px !important;
-    gap: 12px !important;
+    padding: 12px 20px;
+    gap: 12px;
   }
 
   .search-group {
-    max-width: 320px !important;
+    max-width: 320px;
   }
 
   /* Modais em Tablets: elegante e centralizado */
   .modal-backdrop {
-    padding: 20px !important;
+    padding: 20px;
   }
 
   .copilot-workspace {
-    width: 94vw !important;
-    max-width: 920px !important;
-    height: 88vh !important;
-    border-radius: 18px !important;
+    width: 94vw;
+    max-width: 920px;
+    height: 88vh;
+    border-radius: 18px;
   }
 
   .copilot-header {
-    padding: 12px 20px !important;
-    gap: 14px !important;
+    padding: 12px 20px;
+    gap: 14px;
   }
 
   .copilot-header-actions {
-    gap: 8px !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-end !important;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .btn-copilot-header-tool {
-    padding: 6px 12px !important;
-    font-size: 0.78rem !important;
+    padding: 6px 12px;
+    font-size: 0.78rem;
   }
 
   .copilot-prompt-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .book-dialog {
-    max-width: 620px !important;
+    max-width: 620px;
   }
 
   /* Leitor Interno no Tablet (Excelente aproveitamento de tela 11") */
   .reader-skill-sidebar {
-    width: 350px !important;
-    min-width: 350px !important;
+    width: 350px;
+    min-width: 350px;
   }
 
   .reader-skill-sidebar.collapsed {
-    margin-right: -350px !important;
+    margin-right: -350px;
   }
 
   #viewLeitorIntegrado.sidebar-fechada .reader-float-nav.next {
-    right: 18px !important;
+    right: 18px;
   }
 }
 
@@ -6212,14 +6212,14 @@ body[data-theme="light"] .about-footer {
 /* 1. Botão de Estatísticas na Barra de Controle */
 .btn-metricas-tab {
   margin-left: auto;
-  border-color: rgba(245, 158, 11, 0.25) !important;
-  color: var(--amber) !important;
-  background: var(--amber-glow) !important;
-  font-weight: 450 !important;
+  border-color: rgba(245, 158, 11, 0.25);
+  color: var(--amber);
+  background: var(--amber-glow);
+  font-weight: 450;
 }
 .btn-metricas-tab:hover {
-  background: rgba(245, 158, 11, 0.2) !important;
-  border-color: var(--amber) !important;
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--amber);
 }
 
 /* 2. Barra de Busca Textual Flutuante no Leitor */
@@ -6487,7 +6487,7 @@ body[data-theme="light"] .about-footer {
 
 /* 5. Modal de Estatísticas da Biblioteca */
 .modal-metricas-dialog {
-  max-width: 520px !important;
+  max-width: 520px;
 }
 .metricas-grid {
   display: grid;
@@ -6576,7 +6576,7 @@ body[data-theme="light"] .about-footer {
 
 /* Botão de Marcador Ativo na Toolbar */
 .leitor-btn-tool.marcador-ativo {
-  background: var(--amber-glow) !important;
-  color: var(--amber) !important;
-  border-color: var(--amber) !important;
+  background: var(--amber-glow);
+  color: var(--amber);
+  border-color: var(--amber);
 }
