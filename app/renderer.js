@@ -781,53 +781,7 @@ function renderizarGrade(lista) {
       </div>
     `;
 
-    // Ação do Botão SkillBook no Card (Badge Direto e Hover)
-    card.querySelector(".card-copilot-badge")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      abrirCopilotoIA(livro);
-    });
-
-    card.querySelector(".btn-cover-copilot")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      abrirCopilotoIA(livro);
-    });
-
-    // Ação Criar Skill Diretamente do Card (Book-to-Skill)
-    card.querySelector(".btn-cover-skill")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      criarSkillDiretoDoCard(livro);
-    });
-
-    // Ação do Botão Flutuante de Leitura na Capa (Abre no Leitor Interno)
-    card.querySelector(".btn-cover-read")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      abrirLeitorInterno(livro);
-    });
-
-    // Ação do Botão de Detalhes na Capa
-    card.querySelector(".btn-cover-info")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      abrirModalLivro(livro);
-    });
-
-    // Duplo clique no Card: Abre no Leitor Interno
-    card.addEventListener("dblclick", () => {
-      abrirLeitorInterno(livro);
-    });
-
-    // Clique no Card: Abre o Modal de Detalhes
-    card.addEventListener("click", (e) => {
-      if (e.target.closest(".fav-btn") || e.target.closest(".btn-cover-read") || e.target.closest(".btn-cover-copilot") || e.target.closest(".btn-cover-skill") || e.target.closest(".card-copilot-badge") || e.target.closest(".btn-cover-info")) return;
-      abrirModalLivro(livro);
-    });
-
-    // Botão Favoritar
-    const btnFav = card.querySelector(".fav-btn");
-    btnFav?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      alternarFavorito(livro.caminho, btnFav);
-    });
-
+    // Eventos são tratados centralizadamente via Event Delegation no container #grid
     grid.appendChild(card);
   });
 }
@@ -3545,6 +3499,45 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  // Event Delegation no Grid da Estante (unificado, alta performance, zero memory leaks)
+  const grid = document.getElementById("grid");
+  if (grid) {
+    grid.addEventListener("click", (e) => {
+      const card = e.target.closest(".book-card");
+      if (!card) return;
+      const caminho = card.dataset.caminho;
+      const livro = (state.livrosFiltrados && state.livrosFiltrados.find(l => l.caminho === caminho)) ||
+                    (state.todosLivros && state.todosLivros.find(l => l.caminho === caminho));
+      if (!livro) return;
+
+      if (e.target.closest(".fav-btn")) {
+        e.stopPropagation();
+        const btnFav = card.querySelector(".fav-btn");
+        alternarFavorito(livro.caminho, btnFav);
+      } else if (e.target.closest(".card-copilot-badge") || e.target.closest(".btn-cover-copilot")) {
+        e.stopPropagation();
+        abrirCopilotoIA(livro);
+      } else if (e.target.closest(".btn-cover-skill")) {
+        e.stopPropagation();
+        criarSkillDiretoDoCard(livro);
+      } else if (e.target.closest(".btn-cover-read")) {
+        e.stopPropagation();
+        abrirLeitorInterno(livro);
+      } else if (e.target.closest(".btn-cover-info") || card.contains(e.target)) {
+        abrirModalLivro(livro);
+      }
+    });
+
+    grid.addEventListener("dblclick", (e) => {
+      const card = e.target.closest(".book-card");
+      if (!card) return;
+      const caminho = card.dataset.caminho;
+      const livro = (state.livrosFiltrados && state.livrosFiltrados.find(l => l.caminho === caminho)) ||
+                    (state.todosLivros && state.todosLivros.find(l => l.caminho === caminho));
+      if (livro) abrirLeitorInterno(livro);
+    });
+  }
 
   // Menu Dropdown
   document.getElementById("menuToggle")?.addEventListener("click", (e) => {
