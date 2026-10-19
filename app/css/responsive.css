@@ -159,74 +159,56 @@
     z-index: 110;
   }
 
-  /* 2. BARRA DE ESTANTES E FILTROS FLUIDOS */
-  .control-bar {
-    padding: 6px 10px;
-    gap: 6px;
-  }
-
-  .control-row-top {
+  /* 2. TOOLBAR UNIFICADO NO CELULAR */
+  .unified-toolbar {
+    height: auto;
+    min-height: 48px;
+    padding: 8px 10px;
     flex-direction: column;
     align-items: stretch;
-    gap: 6px;
-    width: 100%;
+    gap: 8px;
+    top: 52px;
   }
 
-  .tabs-group {
-    display: flex;
-    overflow-x: auto;
+  .toolbar-left {
     width: 100%;
-    padding: 3px 2px;
-    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 2px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    scroll-snap-type: x proximity;
-    overscroll-behavior-x: contain;
   }
 
-  .tabs-group::-webkit-scrollbar {
-    display: none;
+  .shelf-pills-group {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
   }
+  .shelf-pills-group::-webkit-scrollbar { display: none; }
 
   .tab-btn {
     scroll-snap-align: start;
     flex-shrink: 0;
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    white-space: nowrap;
-    border-radius: 20px;
-    transition: transform 0.08s ease, background 0.18s ease, color 0.18s ease;
-  }
-
-  .tab-btn:active {
-    transform: scale(0.94);
-  }
-
-  .current-path-info {
-    width: 100%;
-    max-width: 100%;
-    font-size: 0.76rem;
     padding: 5px 10px;
-    justify-content: space-between;
-    border-radius: 8px;
+    font-size: 0.76rem;
   }
 
-  .control-row-bottom {
+  .toolbar-right {
+    width: 100%;
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
+    gap: 8px;
   }
 
-  .results-header {
-    font-size: 0.74rem;
-    padding: 3px 8px;
+  .toolbar-separator {
+    display: none;
   }
 
-  .controls-right {
-    gap: 6px;
+  .results-badge {
+    font-size: 0.72rem;
   }
 
   .sort-label {
@@ -241,6 +223,12 @@
 
   .view-mode-group {
     display: none; /* No celular, o grid duplo padrão é o ideal */
+  }
+
+  .current-path-info {
+    font-size: 0.74rem;
+    padding: 4px 8px;
+    max-width: 130px;
   }
 
   /* 3. ESTANTE DE LIVROS FLUIDA (2 COLUNAS NO CELULAR) */
