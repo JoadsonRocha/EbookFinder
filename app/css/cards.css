@@ -1,0 +1,522 @@
+   GRADE DE LIVROS (ESTANTE HARMONIOSA, CENTRALIZADA E COMPACTA)
+   ============================================================ */
+main#mainContent {
+  flex: 1;
+  padding: 20px 24px 40px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Grade Normal (Equilibrada e Compacta: ~122px - 140px) */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(122px, 140px));
+  gap: 16px 14px;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Grade Compacta */
+.book-grid.compact {
+  grid-template-columns: repeat(auto-fill, minmax(102px, 116px));
+  gap: 12px 10px;
+}
+
+.book-grid.compact .book-title {
+  font-size: 0.74rem;
+}
+.book-grid.compact .book-card-body {
+  padding: 5px 7px 6px;
+}
+
+/* Card Estilo Livro Físico - Moderno & Clean */
+.book-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  cursor: pointer;
+  box-shadow: var(--shadow-book);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: var(--shadow-book-hover);
+  background: var(--bg-card-hover);
+}
+
+/* Capa de Livro (Altura reduzida e proporcional: 1 : 1.34) */
+.book-cover-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.34;
+  background: #0e0d14;
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Efeito 3D sutil da lombada/vinco à esquerda */
+.book-cover-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(0, 0, 0, 0.18) 40%, 
+    rgba(0, 0, 0, 0.4) 80%, 
+    transparent 100%
+  );
+  z-index: 5;
+  pointer-events: none;
+}
+
+.book-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.book-card:hover .book-cover-image { transform: scale(1.04); }
+
+/* Animação suave para quando a capa for extraída em tempo real */
+.cover-fade-in {
+  animation: coverFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes coverFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Overlay de Ação Rápida na Capa */
+.cover-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 9, 11, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 6;
+}
+
+.book-card:hover .cover-hover-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.btn-cover-info {
+  position: absolute;
+  top: 8px;
+  right: 38px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 12;
+}
+.btn-cover-info:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.1);
+  color: #fff;
+}
+
+.btn-cover-read {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 86%;
+  max-width: 110px;
+  background: linear-gradient(135deg, var(--amber), #d97706);
+  color: #111115;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+  transform: translateY(4px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-card:hover .btn-cover-read {
+  transform: translateY(0);
+}
+
+.btn-cover-read:hover {
+  transform: scale(1.03) translateY(-1px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.5);
+  background: linear-gradient(135deg, #fbbf24, var(--amber));
+}
+
+/* Fallback de Capa com Textura de Livro Físico */
+.book-cover-fallback {
+  width: 100%;
+  height: 100%;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 3px solid var(--amber);
+  color: var(--text-primary);
+  text-align: center;
+  position: relative;
+}
+
+.fallback-book-ribbon {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: 8px;
+  height: 18px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);
+  opacity: 0.85;
+}
+
+.fallback-book-title {
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  margin: 4px 0;
+  word-break: break-word;
+}
+
+.fallback-book-author {
+  font-size: 0.68rem;
+  font-weight: 350;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+/* Badges e Botões na Capa */
+.badge-format {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.60rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.badge-reading-status {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  font-size: 0.64rem;
+  font-weight: 450;
+  letter-spacing: 0.01em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s ease;
+}
+
+.badge-reading-status.concluido,
+.badge-reading-status.concluidos {
+  background: rgba(16, 185, 129, 0.92);
+  color: #ffffff;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.badge-reading-status.lendo {
+  background: rgba(245, 158, 11, 0.92);
+  color: #111115;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.badge-reading-status.quero-ler {
+  background: rgba(139, 92, 246, 0.92);
+  color: #ffffff;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.badge-reading-status.nao-lido {
+  background: rgba(20, 18, 30, 0.85);
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Meta Bar de Status no Corpo do Card */
+.card-reading-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+body.is-mobile-app .book-card .meta-size {
+  display: none;
+}
+
+body.is-mobile-app .card-reading-meta-bar {
+  justify-content: flex-start;
+}
+
+.card-status-pill {
+  font-size: 0.64rem;
+  font-weight: 450;
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.card-status-pill.concluido,
+.card-status-pill.concluidos {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.card-status-pill.lendo {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--amber);
+}
+
+.card-status-pill.quero-ler {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+.card-status-pill.nao-lido {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* Indicador de Progresso com Barra */
+.card-progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.card-progress-indicator .progress-track {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.card-progress-indicator .progress-fill {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.card-progress-indicator .progress-fill.concluido {
+  background: #10b981;
+}
+
+.card-progress-indicator .progress-text {
+  font-size: 0.64rem;
+  font-weight: 450;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.fav-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  z-index: 12;
+}
+.fav-btn svg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 2;
+  transition: all 0.2s ease;
+}
+.fav-btn:hover {
+  transform: scale(1.1);
+  border-color: var(--amber);
+}
+.fav-btn:hover svg {
+  stroke: var(--amber);
+}
+.fav-btn.active {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--amber);
+}
+.fav-btn.active svg {
+  fill: var(--amber);
+  stroke: var(--amber);
+}
+
+/* Temas de Capa Dura Clássica */
+.theme-sapphire { background: linear-gradient(145deg, #132238, #0b1524); border-left-color: #38bdf8; }
+.theme-emerald  { background: linear-gradient(145deg, #063c2e, #02241b); border-left-color: #34d399; }
+.theme-burgundy { background: linear-gradient(145deg, #3d0718, #22020b); border-left-color: #fb7185; }
+.theme-obsidian { background: linear-gradient(145deg, #1c1926, #0e0d16); border-left-color: #f59e0b; }
+.theme-amethyst { background: linear-gradient(145deg, #2d0b4e, #18042b); border-left-color: #c084fc; }
+.theme-indigo   { background: linear-gradient(145deg, #181842, #0d0c24); border-left-color: #818cf8; }
+
+/* Modo de Exibição em Lista */
+.book-grid.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.book-grid.list-view .book-card {
+  flex-direction: row;
+  height: 60px;
+  align-items: center;
+  padding-right: 18px;
+  border-radius: var(--radius-sm);
+}
+
+.book-grid.list-view .book-cover-wrapper {
+  width: 42px;
+  min-width: 42px;
+  height: 60px;
+  aspect-ratio: auto;
+  border-radius: 4px 0 0 4px;
+}
+
+.book-grid.list-view .badge-format,
+.book-grid.list-view .badge-reading-status,
+.book-grid.list-view .fav-btn,
+.book-grid.list-view .cover-hover-overlay {
+  display: none;
+}
+
+.book-grid.list-view .book-card-body {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 16px;
+}
+
+.book-grid.list-view .book-title {
+  font-size: 0.86rem;
+  max-width: 420px;
+  margin: 0;
+  font-weight: 450;
+}
+
+.book-grid.list-view .book-meta {
+  margin: 0;
+  gap: 12px;
+}
+
+/* Corpo de Informações do Card (Ultra-compacto) */
+.book-card-body {
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.book-title {
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-meta {
+  font-size: 0.68rem;
+  font-weight: 350;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1px;
+}
+
+.meta-size { color: var(--text-muted); font-weight: 350; }
+.meta-ext { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.03em; color: var(--amber); text-transform: uppercase; }
+.meta-prog { font-size: 0.64rem; font-weight: 450; color: var(--emerald); }
+
+/* Barra de progresso discreta integrada na base da capa */
+.card-reading-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 5;
+}
+
+.card-progress-bar-bg { width: 100%; height: 100%; }
+.card-progress-bar-fill { height: 100%; background: var(--amber); transition: width 0.3s ease; }
+.card-progress-bar-fill.concluido { background: var(--emerald); }
+
+/* ============================================================

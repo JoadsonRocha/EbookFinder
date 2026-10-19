@@ -35,4 +35,5 @@ android/app/build/
 android/build/
 *.apk
 *.aab
+screenshot-*.png
 

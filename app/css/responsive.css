@@ -1,0 +1,1188 @@
+   RESPONSIVIDADE MOBILE & CAPACITOR (Telas <= 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 0. FLUIDEZ GLOBAL DE NAVEGAÇÃO & TOUCH */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, a, .tab-btn, .menu-item, .book-card, .btn-header, .fav-btn, .dialog-tab-btn {
+    touch-action: manipulation;
+  }
+
+  /* Feedback tátil imediato em toques (Zero lag visual) */
+  .btn-header:active,
+  .menu-toggle:active,
+  .btn-primary-action:active,
+  .btn-secondary-action:active,
+  .btn-copilot-action:active,
+  .btn-action-skill:active,
+  .btn-view-mode:active,
+  .fav-btn:active {
+    transform: scale(0.94);
+    transition: transform 0.08s ease;
+  }
+
+  /* 1. CABEÇALHO PRINCIPAL NO CELULAR */
+  header#appHeader {
+    padding: 9px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .logo {
+    gap: 8px;
+  }
+
+  .logo-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .logo-text {
+    font-size: 1.10rem;
+  }
+
+  .logo-badge {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  .btn-header {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  .btn-header .btn-label {
+    display: none; /* Mostra apenas o ícone no celular */
+  }
+
+  .btn-header svg,
+  .menu-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .menu-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .search-group {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+    order: 3;
+    padding: 6px 12px;
+    margin: 0;
+    border-radius: 12px;
+  }
+
+  .search-group input {
+    font-size: 16px; /* Evita zoom automático no iOS/Android */
+  }
+
+  /* MENU DROPDOWN EM FORMATO POPOVER / DRAWER FLUIDO NO MOBILE */
+  .menu-dropdown {
+    position: fixed;
+    top: 56px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: 440px;
+    margin: 0 auto;
+    max-height: calc(85vh - 56px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-subtle);
+    background: rgba(18, 16, 28, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding: 8px 10px;
+    animation: mobileMenuSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 120;
+  }
+
+  body[data-theme="light"] .menu-dropdown {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  @keyframes mobileMenuSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .menu-item {
+    min-height: 42px;
+    padding: 9px 12px;
+    font-size: 0.88rem;
+    border-radius: 10px;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+
+  .menu-item:active {
+    transform: scale(0.97);
+    background: rgba(255, 255, 255, 0.09);
+  }
+
+  .menu-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 110;
+  }
+
+  /* 2. BARRA DE ESTANTES E FILTROS FLUIDOS */
+  .control-bar {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .control-row-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .tabs-group {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding: 3px 2px;
+    gap: 5px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  .tabs-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    border-radius: 20px;
+    transition: transform 0.08s ease, background 0.18s ease, color 0.18s ease;
+  }
+
+  .tab-btn:active {
+    transform: scale(0.94);
+  }
+
+  .current-path-info {
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.76rem;
+    padding: 5px 10px;
+    justify-content: space-between;
+    border-radius: 8px;
+  }
+
+  .control-row-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .results-header {
+    font-size: 0.74rem;
+    padding: 3px 8px;
+  }
+
+  .controls-right {
+    gap: 6px;
+  }
+
+  .sort-label {
+    display: none;
+  }
+
+  .sort-select {
+    font-size: 0.76rem;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+
+  .view-mode-group {
+    display: none; /* No celular, o grid duplo padrão é o ideal */
+  }
+
+  /* 3. ESTANTE DE LIVROS FLUIDA (2 COLUNAS NO CELULAR) */
+  .book-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px 8px 30px 8px;
+  }
+
+  .book-card {
+    border-radius: 10px;
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+    will-change: transform;
+  }
+
+  .book-card:active {
+    transform: scale(0.96);
+  }
+
+  .book-cover-wrapper {
+    aspect-ratio: 2 / 3;
+  }
+
+  .book-title {
+    font-size: 0.82rem;
+    line-height: 1.25;
+    max-height: 2.5em;
+    -webkit-line-clamp: 2;
+  }
+
+  .book-meta {
+    font-size: 0.72rem;
+  }
+
+  /* No mobile, retira os MBs do PDF nos cards para maior clareza visual */
+  .book-card .meta-size {
+    display: none;
+  }
+
+  .card-reading-meta-bar {
+    justify-content: flex-start;
+  }
+
+  .fav-btn {
+    opacity: 1;
+    transform: none;
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+
+  .cover-hover-overlay {
+    display: none; /* Celulares não usam hover */
+  }
+
+  /* 4. MODAIS EM FORMATO BOTTOM-SHEET ULTRA-FLUIDO */
+  .modal-backdrop,
+  .modal-sobre-backdrop {
+    padding: 0;
+    align-items: flex-end; /* Desliza de baixo para cima */
+  }
+
+  @keyframes sheetSlideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0.7;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .book-dialog,
+  .config-dialog,
+  .about-dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.75);
+    border-bottom: none;
+    position: relative;
+    animation: sheetSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Puxador (Drag Handle) no topo dos Bottom-Sheets */
+  .book-dialog::before,
+  .config-dialog::before,
+  .about-dialog::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  body[data-theme="light"] .book-dialog::before,
+  body[data-theme="light"] .config-dialog::before,
+  body[data-theme="light"] .about-dialog::before {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .book-dialog-body {
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .book-dialog-top {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .book-dialog-cover {
+    width: 80px;
+    height: 115px;
+    flex-shrink: 0;
+  }
+
+  .book-dialog-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .book-dialog-actions button {
+    width: 100%;
+    height: 44px;
+    font-size: 0.92rem;
+    justify-content: center;
+  }
+
+  .config-dialog {
+    padding: 16px;
+  }
+
+  .config-dialog input,
+  .config-dialog select {
+    font-size: 16px; /* Evita zoom automático */
+  }
+
+  .about-pillars-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .about-header {
+    padding: 14px;
+  }
+
+  .about-body {
+    padding: 14px;
+    gap: 16px;
+  }
+
+  /* 5. LEITOR INTERNO COM EXPERIÊNCIA FLUIDA NO CELULAR */
+  .reader-split-layout {
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    height: calc(100vh - 46px);
+    transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #viewLeitorIntegrado.modo-imersivo .reader-split-layout {
+    height: 100vh;
+  }
+
+  .reader-pdf-viewport {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 8px 0 36px 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
+    scroll-behavior: auto;
+  }
+
+  .reader-pdf-container {
+    max-width: none;
+    margin: 8px auto 36px auto;
+    margin-left: auto;
+    margin-right: auto;
+    align-self: center;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+    border-radius: 4px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    background: #ffffff;
+  }
+
+  .reader-pdf-canvas {
+    max-width: none;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+  }
+
+  .reader-float-nav {
+    width: 36px;
+    height: 48px;
+    border-radius: 10px;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    z-index: 85;
+    background: rgba(17, 13, 34, 0.35);
+    border: 1px solid rgba(229, 169, 59, 0.25);
+    color: var(--amber);
+    backdrop-filter: blur(6px);
+    opacity: 0.28;
+    transition: all 0.2s ease;
+  }
+
+  .reader-float-nav:active,
+  .reader-float-nav:hover {
+    opacity: 0.95;
+    background: rgba(22, 18, 40, 0.9);
+    border-color: var(--amber);
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  .reader-float-nav.prev {
+    left: 4px;
+  }
+
+  .reader-float-nav.next {
+    right: 4px;
+  }
+
+  #viewLeitorIntegrado.sidebar-fechada .reader-float-nav.next {
+    right: 4px;
+  }
+
+  .leitor-toolbar {
+    padding: 0 8px;
+    height: 46px;
+    min-height: 46px;
+    gap: 6px;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
+  }
+
+  .btn-fullscreen-toggle {
+    width: 30px;
+    height: 30px;
+    margin-right: 2px;
+    display: inline-flex;
+  }
+
+  .leitor-btn-back {
+    padding: 6px 9px;
+  }
+
+  .leitor-btn-back span,
+  .leitor-zoom-controls,
+  .skill-toggle-text,
+  .shortcut-badge,
+  .leitor-book-author {
+    display: none;
+  }
+
+  .leitor-book-title {
+    max-width: 125px;
+    font-size: 0.82rem;
+  }
+
+  .leitor-page-stepper {
+    gap: 3px;
+    padding: 2px 4px;
+  }
+
+  .leitor-page-indicator {
+    font-size: 0.76rem;
+    padding: 0 2px;
+  }
+
+  #inputLeitorPagina {
+    width: 36px;
+    height: 24px;
+    font-size: 0.78rem;
+  }
+
+  .btn-toggle-skill {
+    padding: 6px 10px;
+    gap: 4px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  #readerSkillSidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 72vh;
+    z-index: 150;
+    border-top: 2px solid var(--amber);
+    border-left: none;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85);
+    transform: translateY(0);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    background: #110d22;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #readerSkillSidebar.collapsed {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 6. CHAT DO SKILLBOOK NO LEITOR INTERNO (MOBILE) */
+  .reader-sidebar-header {
+    cursor: pointer;
+    padding: 8px 10px;
+    height: 42px;
+    user-select: none;
+    position: relative;
+  }
+
+  .reader-sidebar-header::before {
+    content: "";
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 2px;
+  }
+
+  .reader-sidebar-tabs {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .reader-tab-btn {
+    padding: 6px 8px;
+    font-size: 0.74rem;
+    gap: 4px;
+  }
+
+  .reader-quick-actions {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 5px 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .reader-quick-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reader-quick-chip {
+    flex-shrink: 0;
+    font-size: 0.70rem;
+    padding: 4px 8px;
+    white-space: nowrap;
+    border-radius: 16px;
+  }
+
+  .reader-chat-feed {
+    padding: 8px 8px 4px 8px;
+    gap: 8px;
+  }
+
+  .reader-chat-feed .copilot-msg {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .reader-chat-feed .copilot-avatar {
+    width: 22px;
+    height: 22px;
+    font-size: 0.70rem;
+    margin-top: 1px;
+  }
+
+  .reader-chat-feed .copilot-msg-content {
+    padding: 6px 9px;
+    font-size: 0.82rem;
+    line-height: 1.42;
+    max-width: 90%;
+    border-radius: 10px;
+  }
+
+  .reader-chat-feed .copilot-msg-content p {
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  .reader-chat-input-bar {
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 6px)) 8px;
+    gap: 6px;
+  }
+
+  .reader-chat-textarea {
+    font-size: 15px; /* Evita zoom forçado no teclado Android */
+    min-height: 36px;
+    max-height: 80px;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .reader-btn-send {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  /* 7. WORKSPACE COPILOTO IA DEDICADO (100% RESPONSIVO NO CELULAR) */
+  .copilot-workspace {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .copilot-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 7px 10px;
+    gap: 5px;
+    position: relative;
+  }
+
+  .copilot-header-book {
+    padding-right: 34px; /* Espaço para o botão fechar */
+    gap: 8px;
+  }
+
+  .copilot-cover-thumb {
+    width: 26px;
+    height: 38px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .copilot-book-title {
+    font-size: 0.84rem;
+    max-width: 190px;
+  }
+
+  .copilot-book-author {
+    font-size: 0.68rem;
+  }
+
+  .copilot-live-badge {
+    font-size: 0.62rem;
+    padding: 1px 6px;
+  }
+
+  .copilot-header-actions {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 1px 0 2px 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+
+  .copilot-header-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .copilot-header-actions .btn-close-modal {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    margin: 0;
+    width: 28px;
+    height: 28px;
+    font-size: 1.25rem;
+  }
+
+  .btn-copilot-header-tool {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 4px 7px;
+    font-size: 0.68rem;
+    gap: 3px;
+    border-radius: 5px;
+  }
+
+  .copilot-model-pill {
+    flex-shrink: 0;
+    padding: 3px 7px;
+    font-size: 0.66rem;
+  }
+
+  .copilot-index-progress-track {
+    height: 18px;
+  }
+
+  .copilot-index-progress-text {
+    font-size: 0.65rem;
+  }
+
+  /* Feed de Conversa no Mobile - Otimização de Margin e Padding */
+  .copilot-chat-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 8px 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .copilot-messages-list {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 0 4px 0;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .copilot-msg-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .copilot-msg-avatar {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    font-size: 0.75rem;
+    margin-top: 1px;
+    border-radius: 50%;
+  }
+
+  .copilot-msg-bubble {
+    padding: 7px 10px;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .copilot-msg-row.user .copilot-msg-bubble {
+    max-width: 88%;
+    border-bottom-right-radius: 2px;
+  }
+
+  .copilot-msg-row.assistant .copilot-msg-bubble {
+    flex: 1;
+    max-width: calc(100% - 30px);
+    border-top-left-radius: 2px;
+  }
+
+  .copilot-msg-content p {
+    margin-bottom: 5px;
+    line-height: 1.42;
+  }
+
+  .copilot-msg-content p:last-child {
+    margin-bottom: 0;
+  }
+
+  .copilot-msg-content h1,
+  .copilot-msg-content h2,
+  .copilot-msg-content h3 {
+    margin: 7px 0 3px;
+    font-size: 0.86rem;
+    gap: 4px;
+  }
+
+  .copilot-msg-content ul,
+  .copilot-msg-content ol {
+    margin: 3px 0 5px 14px;
+    padding-left: 2px;
+  }
+
+  .copilot-msg-content li {
+    margin-bottom: 2px;
+    line-height: 1.38;
+  }
+
+  .copilot-msg-content blockquote {
+    margin: 5px 0 6px;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    border-left-width: 2px;
+  }
+
+  .copilot-msg-content .table-container {
+    margin: 6px 0;
+    border-radius: 6px;
+  }
+
+  .copilot-msg-content table {
+    font-size: 0.74rem;
+  }
+
+  .copilot-msg-content th,
+  .copilot-msg-content td {
+    padding: 4px 6px;
+    font-size: 0.72rem;
+  }
+
+  .copilot-msg-content pre {
+    padding: 6px 8px;
+    margin: 5px 0;
+    font-size: 0.74rem;
+    border-radius: 6px;
+  }
+
+  .copilot-msg-content code {
+    padding: 1px 4px;
+    font-size: 0.76rem;
+  }
+
+  .copilot-msg-actions {
+    margin-top: 3px;
+    padding-top: 3px;
+    gap: 4px;
+  }
+
+  .btn-msg-copy {
+    font-size: 0.66rem;
+    padding: 2px 5px;
+  }
+
+  /* Hero / Empty State no Mobile */
+  .copilot-hero-state {
+    padding: 8px 4px;
+    max-width: 100%;
+  }
+
+  .copilot-hero-icon-wrap {
+    margin-bottom: 6px;
+  }
+
+  .copilot-hero-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.15rem;
+  }
+
+  .copilot-hero-title {
+    font-size: 1.0rem;
+    margin-bottom: 3px;
+  }
+
+  .copilot-hero-subtitle {
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    line-height: 1.32;
+  }
+
+  .copilot-hero-action-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+  }
+
+  .action-card-text h4 {
+    font-size: 0.82rem;
+    margin: 1px 0;
+  }
+
+  .action-card-text p {
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  .btn-hero-action {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.76rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+  }
+
+  .copilot-prompt-grid {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .copilot-prompt-card {
+    padding: 6px 9px;
+    gap: 7px;
+    border-radius: 8px;
+  }
+
+  .prompt-icon {
+    font-size: 0.95rem;
+    margin-top: 0;
+  }
+
+  .prompt-texts strong {
+    font-size: 0.74rem;
+  }
+
+  .prompt-texts span {
+    font-size: 0.66rem;
+    line-height: 1.22;
+  }
+
+  /* Rodapé do Chat no Mobile */
+  .copilot-footer {
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom, 8px)) 8px;
+    gap: 4px;
+  }
+
+  .copilot-quick-chips-bar {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+
+  .copilot-quick-chips-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .copilot-mini-chip {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.68rem;
+    padding: 3px 8px;
+  }
+
+  .copilot-input-card {
+    padding: 4px 6px 4px 10px;
+    border-radius: 14px;
+    gap: 6px;
+  }
+
+  .copilot-textarea {
+    font-size: 15px; /* Evita zoom forçado no teclado Android */
+    min-height: 34px;
+    max-height: 80px;
+    padding: 2px 0;
+    line-height: 1.35;
+  }
+
+  .btn-copilot-send {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+  }
+
+  /* 8. ABA TUTOR IA NOS DETALHES DO LIVRO (MOBILE) */
+  .skill-status-box {
+    padding: 8px 10px;
+  }
+
+  .skill-status-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: flex-start;
+  }
+
+  .btn-action-skill {
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    padding: 5px 10px;
+  }
+
+  .chat-messages-area {
+    padding: 4px 0;
+    gap: 6px;
+  }
+
+  .chat-msg {
+    gap: 6px;
+  }
+
+  .chat-msg .msg-avatar {
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
+  }
+
+  .chat-msg .msg-content {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    max-width: 90%;
+    border-radius: 8px;
+  }
+
+  .chat-msg .msg-content p {
+    margin-bottom: 3px;
+  }
+
+  .chat-chips-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    flex-wrap: nowrap;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-chips-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chat-chip {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.68rem;
+    padding: 2px 7px;
+  }
+
+  .chat-input-bar {
+    padding: 4px 0;
+    gap: 6px;
+  }
+
+  .chat-input-bar input {
+    font-size: 15px;
+    height: 36px;
+    padding: 4px 8px;
+  }
+
+  .btn-send-chat {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVIDADE PARA TABLETS (769px até 1200px - 10", 11", 12"+)
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1200px) {
+  /* Estante em Tablets: 3 a 5 colunas perfeitamente fluidas */
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 16px;
+    padding: 18px;
+  }
+
+  /* Header em Tablets */
+  header#appHeader {
+    padding: 12px 20px;
+    gap: 12px;
+  }
+
+  .search-group {
+    max-width: 320px;
+  }
+
+  /* Modais em Tablets: elegante e centralizado */
+  .modal-backdrop {
+    padding: 20px;
+  }
+
+  .copilot-workspace {
+    width: 94vw;
+    max-width: 920px;
+    height: 88vh;
+    border-radius: 18px;
+  }
+
+  .copilot-header {
+    padding: 12px 20px;
+    gap: 14px;
+  }
+
+  .copilot-header-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .btn-copilot-header-tool {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  .copilot-prompt-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .book-dialog {
+    max-width: 620px;
+  }
+
+  /* Leitor Interno no Tablet (Excelente aproveitamento de tela 11") */
+  .reader-skill-sidebar {
+    width: 350px;
+    min-width: 350px;
+  }
+
+  .reader-skill-sidebar.collapsed {
+    margin-right: -350px;
+  }
+
+  #viewLeitorIntegrado.sidebar-fechada .reader-float-nav.next {
+    right: 18px;
+  }
+}
+

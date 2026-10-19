@@ -1,0 +1,571 @@
+/**
+ * ============================================================================
+ * EbookFinder - Estilos Globais e Design System
+ * ============================================================================
+ * @description Tema Bibliophile Dark com Glassmorphism, proporções reais de livro
+ *              (2:3), efeito de lombada e micro-animações refinadas.
+ * @author Joadson Rocha <joadson.dev@gmail.com>
+ * @license GPL-3.0
+ * ============================================================================
+ */
+
+:root {
+  /* Cores Principais - Refinadas & Elegantes */
+  --amber: #f59e0b;
+  --amber-hover: #fbbf24;
+  --amber-glow: rgba(245, 158, 11, 0.14);
+  --emerald: #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.15);
+  --rose: #f43f5e;
+
+  /* Superfícies Escuras - Clean Obsidian / Minimalist Slate */
+  --bg-main: #09090b;
+  --bg-surface: #111115;
+  --bg-card: #141418;
+  --bg-card-hover: #1c1c22;
+
+  /* Textos Nítidos & Finos */
+  --text-primary: #f4f4f6;
+  --text-secondary: #9494a3;
+  --text-muted: #5e5e6e;
+
+  /* Bordas Ultra-Finas (Hairline) */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.13);
+  --border-focus: rgba(245, 158, 11, 0.45);
+
+  /* Sombras Difusas e Suaves */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-book: 0 4px 20px rgba(0, 0, 0, 0.38), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-book-hover: 0 14px 34px rgba(0, 0, 0, 0.55), 0 0 14px var(--amber-glow);
+
+  /* Tipografia Moderna e Fina */
+  --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-title: "Outfit", "Plus Jakarta Sans", var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   TEMA CLARO (MODO CLARO / LIGHT THEME) - DESIGN EDITORIAL CLEAN
+   ============================================================ */
+body[data-theme="light"] {
+  --amber: #d97706;             /* Âmbar elegante e límpido */
+  --amber-hover: #b45309;
+  --amber-glow: rgba(217, 119, 6, 0.12);
+  --emerald: #059669;
+  --emerald-glow: rgba(5, 150, 105, 0.12);
+  --rose: #e11d48;
+
+  /* Superfícies Claras & Arejadas */
+  --bg-main: #f8f9fa;           /* Off-white minimalista e luminoso */
+  --bg-surface: #ffffff;        /* Branco puro para cards elevados e modais */
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f3f5;
+
+  /* Textos de Alta Definição com Tipografia Fina */
+  --text-primary: #0f172a;      /* Slate profundo 900 */
+  --text-secondary: #475569;    /* Slate 600 */
+  --text-muted: #94a3b8;        /* Slate 400 */
+
+  /* Bordas Suaves e Delicadas */
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-medium: rgba(15, 23, 42, 0.14);
+  --border-focus: rgba(217, 119, 6, 0.45);
+
+  /* Sombras Elegantes & Difusas */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-book: 0 4px 14px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-book-hover: 0 12px 28px rgba(15, 23, 42, 0.1), 0 0 14px rgba(217, 119, 6, 0.12);
+}
+
+body[data-theme="light"] ::-webkit-scrollbar-track { background: #f1f3f5; }
+body[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 2px solid #f1f3f5;
+}
+body[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+body[data-theme="light"] header#appHeader {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+body[data-theme="light"] .logo-text {
+  background: linear-gradient(135deg, #0f172a 35%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 500;
+}
+
+body[data-theme="light"] .logo-badge {
+  background: rgba(217, 119, 6, 0.08);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.25);
+  font-weight: 400;
+}
+
+body[data-theme="light"] .btn-header {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  font-weight: 400;
+}
+body[data-theme="light"] .btn-header:hover {
+  background: #f8f9fa;
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="light"] .menu-toggle {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+body[data-theme="light"] .menu-toggle:hover {
+  background: #f8f9fa;
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: scale(1.03);
+}
+
+body[data-theme="light"] .control-bar {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+body[data-theme="light"] .search-group {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+body[data-theme="light"] .search-group:focus-within {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+  background: #ffffff;
+}
+
+body[data-theme="light"] .search-icon {
+  color: #94a3b8;
+}
+body[data-theme="light"] .search-group:focus-within .search-icon {
+  color: var(--amber);
+}
+
+body[data-theme="light"] .search-group input {
+  color: #0f172a;
+  font-weight: 400;
+}
+body[data-theme="light"] .search-group input::placeholder {
+  color: #94a3b8;
+  font-weight: 350;
+}
+
+body[data-theme="light"] .btn-clear-search {
+  background: #e2e8f0;
+  color: #475569;
+}
+body[data-theme="light"] .btn-clear-search:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+
+body[data-theme="light"] .tabs-group {
+  background: #f1f3f5;
+  border: 1px solid var(--border-subtle);
+  padding: 3px;
+}
+
+body[data-theme="light"] .tab-btn {
+  color: #475569;
+  font-weight: 400;
+}
+body[data-theme="light"] .tab-btn:hover {
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+}
+body[data-theme="light"] .tab-btn.active {
+  background: #ffffff;
+  color: var(--amber);
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+body[data-theme="light"] .tab-badge {
+  background: rgba(15, 23, 42, 0.07);
+  color: inherit;
+  font-weight: 450;
+}
+
+body[data-theme="light"] .current-path-info {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #1e293b;
+  font-weight: 400;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+body[data-theme="light"] .current-path-info:hover {
+  background: #f8f9fa;
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+body[data-theme="light"] .results-header {
+  background: #f1f3f5;
+  border: 1px solid var(--border-subtle);
+  color: #475569;
+  font-weight: 450;
+}
+
+body[data-theme="light"] .sort-label {
+  color: #64748b;
+  font-weight: 400;
+}
+
+body[data-theme="light"] .sort-select {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #0f172a;
+  font-weight: 400;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+body[data-theme="light"] .sort-select:focus {
+  border-color: var(--amber);
+  outline: none;
+}
+
+body[data-theme="light"] .view-mode-group {
+  background: #f1f3f5;
+  border: 1px solid var(--border-subtle);
+}
+body[data-theme="light"] .btn-view-mode {
+  color: #64748b;
+}
+body[data-theme="light"] .btn-view-mode:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.04);
+}
+body[data-theme="light"] .btn-view-mode.active {
+  background: #ffffff;
+  color: var(--amber);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="light"] .btn-subpastas-toggle {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #334155;
+  font-weight: 400;
+}
+body[data-theme="light"] .btn-subpastas-toggle.active {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 450;
+}
+
+body[data-theme="light"] .menu-dropdown {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.1);
+}
+body[data-theme="light"] .menu-section-title {
+  color: #94a3b8;
+  font-weight: 500;
+}
+body[data-theme="light"] .menu-item {
+  color: #334155;
+  font-weight: 400;
+}
+body[data-theme="light"] .menu-item:hover {
+  background: #f8f9fa;
+  color: #0f172a;
+}
+body[data-theme="light"] .menu-item.active {
+  background: rgba(217, 119, 6, 0.08);
+  color: var(--amber);
+  border-color: rgba(217, 119, 6, 0.25);
+  font-weight: 450;
+}
+body[data-theme="light"] .badge-count {
+  background: #f1f3f5;
+  color: #475569;
+  font-weight: 450;
+}
+
+body[data-theme="light"] .book-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+body[data-theme="light"] .book-card:hover {
+  border-color: rgba(217, 119, 6, 0.4);
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12);
+}
+body[data-theme="light"] .book-cover-wrapper {
+  background: #f1f3f5;
+}
+body[data-theme="light"] .cover-hover-overlay {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+}
+body[data-theme="light"] .fav-btn {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+body[data-theme="light"] .fav-btn svg {
+  stroke: #64748b;
+}
+body[data-theme="light"] .fav-btn:hover {
+  background: #ffffff;
+  border-color: var(--amber);
+  transform: scale(1.1);
+}
+body[data-theme="light"] .fav-btn:hover svg {
+  stroke: var(--amber);
+}
+body[data-theme="light"] .fav-btn.active {
+  background: #fffbeb;
+  border-color: var(--amber);
+}
+body[data-theme="light"] .fav-btn.active svg {
+  fill: var(--amber);
+  stroke: var(--amber);
+}
+body[data-theme="light"] .btn-cover-info {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+body[data-theme="light"] .btn-cover-info:hover {
+  background: #ffffff;
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: scale(1.1);
+}
+body[data-theme="light"] .badge-format {
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 500;
+}
+body[data-theme="light"] .book-title {
+  color: #0f172a;
+  font-weight: 450;
+}
+body[data-theme="light"] .meta-size {
+  color: #94a3b8;
+  font-weight: 350;
+}
+body[data-theme="light"] .meta-ext {
+  color: var(--amber);
+  font-weight: 500;
+}
+
+body[data-theme="light"] .modal-backdrop {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+body[data-theme="light"] .book-dialog {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
+}
+body[data-theme="light"] .book-dialog-header {
+  border-bottom: 1px solid var(--border-subtle);
+  background: #ffffff;
+}
+body[data-theme="light"] .book-dialog-info h2 {
+  color: #0f172a;
+  font-weight: 500;
+}
+body[data-theme="light"] .book-dialog-info .book-author {
+  color: var(--amber);
+  font-weight: 400;
+}
+body[data-theme="light"] .status-label,
+body[data-theme="light"] .input-mini-label {
+  color: #64748b;
+  font-weight: 450;
+}
+body[data-theme="light"] .modal-filepath {
+  color: #94a3b8;
+  font-weight: 350;
+}
+
+body[data-theme="light"] .page-stepper-wrap input[type="number"],
+body[data-theme="light"] .bookmark-input-block input[type="text"],
+body[data-theme="light"] .chat-input-bar input,
+body[data-theme="light"] .input-password-wrap input {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: #0f172a;
+  font-weight: 400;
+}
+body[data-theme="light"] .page-stepper-wrap input[type="number"]:focus,
+body[data-theme="light"] .bookmark-input-block input[type="text"]:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+
+body[data-theme="light"] .reading-progress-section {
+  background: #f8f9fa;
+  border: 1px solid var(--border-subtle);
+}
+body[data-theme="light"] .progress-percentage-label {
+  background: rgba(217, 119, 6, 0.08);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.25);
+  font-weight: 500;
+}
+
+body[data-theme="light"] .btn-step {
+  background: #f1f3f5;
+  border: 1px solid var(--border-subtle);
+  color: #334155;
+  font-weight: 400;
+}
+body[data-theme="light"] .btn-step:hover {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+body[data-theme="light"] .btn-primary-action {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #ffffff;
+  font-weight: 450;
+}
+body[data-theme="light"] .btn-secondary-action {
+  background: #f1f3f5;
+  border: 1px solid var(--border-subtle);
+  color: #0f172a;
+  font-weight: 400;
+}
+body[data-theme="light"] .btn-secondary-action:hover {
+  background: #e2e8f0;
+}
+
+body[data-theme="light"] .spec-pill {
+  background: #f1f3f5;
+  color: #334155;
+  border: 1px solid var(--border-subtle);
+  font-weight: 400;
+}
+
+body[data-theme="light"] .btn-status {
+  background: #f1f3f5;
+  border: 1px solid var(--border-subtle);
+  color: #475569;
+  font-weight: 400;
+}
+body[data-theme="light"] .btn-status:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+body[data-theme="light"] .btn-status.active {
+  background: var(--amber);
+  color: #ffffff;
+  border-color: var(--amber);
+  font-weight: 450;
+}
+
+body[data-theme="light"] .btn-copilot-action {
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #b45309;
+  font-weight: 450;
+}
+body[data-theme="light"] .btn-copilot-action:hover {
+  background: var(--amber);
+  color: #ffffff;
+}
+
+body[data-theme="light"] .last-read-info {
+  color: #94a3b8;
+  font-weight: 400;
+}
+body[data-theme="light"] .btn-close-modal {
+  background: rgba(15, 23, 42, 0.06);
+  color: #64748b;
+}
+body[data-theme="light"] .btn-close-modal:hover {
+  background: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+[hidden],
+.popup-backdrop[hidden],
+.modal-backdrop[hidden],
+.drop-overlay[hidden],
+.menu-dropdown[hidden] {
+  display: none !important;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  user-select: auto;
+  -webkit-user-select: text;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Habilitar seleção e cópia de textos em todas as telas */
+p, span, h1, h2, h3, h4, h5, h6,
+.book-title, .book-meta, .meta-size, .meta-ext,
+.book-dialog-body, .book-dialog-info, .modal-filepath, .spec-pill,
+.copilot-chat-feed, .copilot-msg-bubble, .copilot-msg-content,
+.copilot-hero-title, .copilot-hero-subtitle,
+.skill-file-viewer, .skill-markdown-view, .skill-status-texts,
+pre, code, blockquote, label {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Evitar seleção acidental em botões interativos */
+button, .btn-header, .tab-btn, .fav-btn, .card-copilot-badge,
+.menu-toggle, .btn-cover-read, .btn-cover-copilot, .btn-cover-skill, .btn-cover-info {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb {
+  background: #1c1c24;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-main);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+/* ============================================================
