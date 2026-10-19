@@ -178,6 +178,34 @@ main#mainContent {
   background: linear-gradient(135deg, #fbbf24, var(--amber));
 }
 
+.btn-cover-copilot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 86%;
+  max-width: 110px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-cover-copilot:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: var(--amber);
+  transform: scale(1.03) translateY(-1px);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
 /* Fallback de Capa com Textura de Livro Físico */
 .book-cover-fallback {
   width: 100%;
@@ -488,6 +516,21 @@ body.is-mobile-app .card-reading-meta-bar {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.book-author {
+  font-size: 0.72rem;
+  font-weight: 350;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+  line-height: 1.2;
+}
+
+body[data-theme="light"] .book-author {
+  color: #64748b;
 }
 
 .book-meta {

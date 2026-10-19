@@ -497,12 +497,6 @@ function renderizarGrade(lista) {
       <div class="book-cover-wrapper">
         ${capaConteudo}
         <span class="badge-format">${escapeHtml(formato)}</span>
-        ${statusBadge}
-
-        <button class="card-copilot-badge" title="Conversar com o SkillBook deste livro">
-          <span class="copilot-sparkle-icon">✨</span>
-          <span class="copilot-badge-text">SkillBook</span>
-        </button>
 
         <button class="fav-btn ${isFav ? "active" : ""}" title="${isFav ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}">
           <svg width="14" height="14" viewBox="0 0 24 24">
@@ -511,24 +505,13 @@ function renderizarGrade(lista) {
         </button>
 
         <div class="cover-hover-overlay">
-          <button class="btn-cover-info" title="Ver detalhes da obra">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-          </button>
           <button class="btn-cover-read" title="Abrir e ler no leitor">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>Ler</span>
           </button>
           <button class="btn-cover-copilot" title="Conversar com o SkillBook deste livro">
             <span>✨</span>
             <span>SkillBook</span>
-          </button>
-          <button class="btn-cover-skill" title="Criar Skill deste livro (Book-to-Skill)">
-            <span>⚡</span>
-            <span>Criar Skill</span>
           </button>
         </div>
         ${progressHtml}
@@ -536,6 +519,7 @@ function renderizarGrade(lista) {
 
       <div class="book-card-body">
         <h3 class="book-title" title="${escapeHtml(livro.titulo || '')} (${escapeHtml(livro.nome || '')})">${tituloEscapado}</h3>
+        ${autorEscapado ? `<p class="book-author" title="${autorEscapado}">${autorEscapado}</p>` : ''}
         <div class="card-reading-meta-bar">
           <span class="card-status-pill ${statusClass}">${statusIcon} ${statusLabel}</span>
           <span class="meta-size">${tamanho}</span>
